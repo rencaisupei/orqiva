@@ -341,7 +341,7 @@ export default function AdminLogisticsScreen() {
 
         <SectionCard
           title="回拋網址 (ServerReplyURL)"
-          subtitle="請在綠界後台「系統介面設定」填入這一組網址。"
+          subtitle="由程式在每一次請求中自動帶入，綠界後台沒有這個欄位，不需要也無法填寫。"
         >
           <Pressable
             className="border-border bg-background flex-row items-center gap-2 rounded-xl border px-3 py-3"
@@ -356,7 +356,9 @@ export default function AdminLogisticsScreen() {
             <Copy size={15} color={BRAND.muted} />
           </Pressable>
           <Description>
-            門市電子地圖與物流狀態通知都會回拋到這個網址，並用 CheckMacValue 驗章。
+            門市電子地圖 (/Express/map) 與門市訂單建立 (/Express/Create) 的表單都會帶上這個
+            ServerReplyURL，綠界選店結果與後續貨態通知都回拋到這裡，並用 CheckMacValue 驗章。
+            這組網址是公開 HTTPS 端點，不需要登入即可接收綠界的 POST。
           </Description>
         </SectionCard>
 
