@@ -386,6 +386,41 @@ export default function SignInScreen() {
               <Typography type="body-xs" align="center" color="muted">
                 建立後會寄一次 6 位數驗證碼到你的 Email 完成啟用。
               </Typography>
+
+              <View className="flex-row flex-wrap items-center justify-center gap-x-1">
+                <Typography type="body-xs" color="muted">
+                  建立帳號即表示你已閱讀並同意
+                </Typography>
+                <Pressable
+                  accessibilityRole="link"
+                  onPress={() => router.push('/legal/terms')}
+                  hitSlop={6}
+                >
+                  <Typography
+                    type="body-xs"
+                    className="text-brand-blue"
+                    style={{ fontWeight: '600' }}
+                  >
+                    服務條款
+                  </Typography>
+                </Pressable>
+                <Typography type="body-xs" color="muted">
+                  與
+                </Typography>
+                <Pressable
+                  accessibilityRole="link"
+                  onPress={() => router.push('/legal/privacy')}
+                  hitSlop={6}
+                >
+                  <Typography
+                    type="body-xs"
+                    className="text-brand-blue"
+                    style={{ fontWeight: '600' }}
+                  >
+                    隱私權政策
+                  </Typography>
+                </Pressable>
+              </View>
             </>
           ) : null}
 

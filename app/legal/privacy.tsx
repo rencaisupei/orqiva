@@ -130,6 +130,9 @@ export default function PrivacyPolicyScreen() {
           <Button variant="secondary" onPress={() => router.push('/support/contact')}>
             <Button.Label>前往聯絡我們</Button.Label>
           </Button>
+          <Button variant="ghost" onPress={() => router.push('/legal/terms')}>
+            <Button.Label>閱讀服務條款</Button.Label>
+          </Button>
         </View>
       </ScrollView>
     </View>

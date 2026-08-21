@@ -11,6 +11,7 @@ import {
   LifeBuoy,
   LogOut,
   Receipt,
+  ScrollText,
   Settings,
   ShieldCheck,
   ShoppingCart,
@@ -174,6 +175,11 @@ export default function ProfileScreen() {
             icon={<LifeBuoy size={18} color={BRAND.blue} />}
             title="聯絡我們"
             onPress={() => router.push('/support/contact')}
+          />
+          <MenuRow
+            icon={<ScrollText size={18} color={BRAND.blue} />}
+            title="服務條款"
+            onPress={() => router.push('/legal/terms')}
           />
           <MenuRow
             icon={<FileLock2 size={18} color={BRAND.blue} />}

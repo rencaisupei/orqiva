@@ -212,6 +212,7 @@ export default function RootLayout() {
             <Stack.Screen name="admin/index" options={{ title: '平台管理' }} />
             <Stack.Screen name="admin/logistics" options={{ title: '物流串接設定' }} />
             <Stack.Screen name="legal/privacy" options={{ title: '隱私權政策' }} />
+            <Stack.Screen name="legal/terms" options={{ title: '服務條款' }} />
             <Stack.Screen name="support/contact" options={{ title: '聯絡我們' }} />
           </Stack>
           <InstallPrompt />

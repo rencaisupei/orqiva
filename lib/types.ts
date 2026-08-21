@@ -33,6 +33,8 @@ export type Category = {
   name_en: string | null;
   icon: string;
   sort_order: number;
+  /** false = closed for new listings (e.g. digital goods, which App Store rules push into IAP). */
+  is_listable: boolean;
 };
 
 export type CategoryWithCount = Category & { product_count: number };

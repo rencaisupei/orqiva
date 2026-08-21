@@ -36,8 +36,10 @@ export function useCategories() {
   return useQuery({
     queryKey: ['categories'],
     queryFn: async (): Promise<CategoryWithCount[]> => {
+      // is_listable = false categories are retired (digital/virtual goods) and stay out of
+      // both browsing and the seller listing flow.
       const [{ data: categories, error }, { data: productRows }] = await Promise.all([
-        bilt.from('categories').select('*').order('sort_order'),
+        bilt.from('categories').select('*').eq('is_listable', true).order('sort_order'),
         bilt.from('products').select('category_id').eq('status', 'active'),
       ]);
       if (error) throw new Error(error.message);

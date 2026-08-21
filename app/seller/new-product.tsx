@@ -352,17 +352,22 @@ export default function NewProductScreen() {
           ) : null}
 
           {step === 2 ? (
-            <OptionSelect
-              label="商品分類"
-              isRequired
-              searchable
-              searchPlaceholder="搜尋分類，例如：手機、寵物"
-              placeholder="請選擇商品分類"
-              description="選對分類，買家從分類頁就找得到你的商品。"
-              options={categoryOptions}
-              value={categoryId}
-              onChange={setCategoryId}
-            />
+            <>
+              <OptionSelect
+                label="商品分類"
+                isRequired
+                searchable
+                searchPlaceholder="搜尋分類，例如：手機、寵物"
+                placeholder="請選擇商品分類"
+                description="選對分類，買家從分類頁就找得到你的商品。"
+                options={categoryOptions}
+                value={categoryId}
+                onChange={setCategoryId}
+              />
+              <Typography type="body-xs" color="muted">
+                極貨網只開放實體商品。序號、點數、帳號、軟體授權等數位虛擬商品禁止上架，相關分類已停用。
+              </Typography>
+            </>
           ) : null}
 
           {step === 3 ? (
@@ -548,6 +553,19 @@ export default function NewProductScreen() {
                   </View>
                 ))}
               </View>
+              <Separator />
+              <Typography type="body-xs" color="muted">
+                送出即表示你確認商品為實體商品、資訊真實，且不屬於禁售品（數位虛擬商品、仿冒品、管制物品等）。
+              </Typography>
+              <Pressable onPress={() => router.push('/legal/terms')} hitSlop={6}>
+                <Typography
+                  type="body-xs"
+                  className="text-brand-blue"
+                  style={{ fontWeight: '600' }}
+                >
+                  查看服務條款與禁售清單
+                </Typography>
+              </Pressable>
             </>
           ) : null}
 
