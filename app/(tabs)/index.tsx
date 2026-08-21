@@ -74,7 +74,7 @@ export default function HomeScreen() {
           </Pressable>
 
           <View className="flex-1 items-center">
-            <OrqivaLogo size={26} showZh={false} />
+            <OrqivaLogo size={30} showZh={false} />
           </View>
 
           <View className="flex-row items-center">
@@ -125,7 +125,12 @@ export default function HomeScreen() {
             className="relative overflow-hidden rounded-3xl p-5"
           >
             <View className="absolute top-8 -right-5" pointerEvents="none">
-              <OrqivaMark size={132} strokeWidth={8} />
+              <OrqivaMark
+                size={140}
+                strokeWidth={9}
+                topColor="rgba(255,255,255,0.26)"
+                bottomColor="rgba(255,255,255,0.13)"
+              />
             </View>
 
             <View className="w-[62%]">

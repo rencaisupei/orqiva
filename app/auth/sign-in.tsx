@@ -3,9 +3,8 @@ import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import { Button, Description, FieldError, Input, InputOTP, Label, Typography } from 'heroui-native';
 import { router } from 'expo-router';
 
-import { OrqivaMark } from '@/components/brand/OrqivaLogo';
+import { OrqivaArtwork } from '@/components/brand/OrqivaLogo';
 import { bilt } from '@/lib/backend';
-import { BRAND_COPY } from '@/lib/brand';
 import { goBackOrReplace } from '@/lib/navigation';
 import { useSessionStore } from '@/lib/session';
 
@@ -79,15 +78,11 @@ export default function SignInScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View className="items-center gap-3">
-          <OrqivaMark size={56} />
-          <Typography type="h3" className="text-navy" style={{ fontWeight: '700' }}>
-            ORQIVA 歐奇瓦
-          </Typography>
+          <View className="bg-surface rounded-3xl px-6 py-4">
+            <OrqivaArtwork width={190} />
+          </View>
           <Typography type="body-sm" align="center" color="muted">
-            {BRAND_COPY.core}
-          </Typography>
-          <Typography type="body-xs" align="center" className="text-brand-blue">
-            {BRAND_COPY.slogan}
+            一組 ORQIVA 帳號，買賣都通
           </Typography>
         </View>
 
