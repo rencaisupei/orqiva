@@ -45,7 +45,8 @@ import {
 } from '@/lib/api/support';
 import { BRAND } from '@/lib/brand';
 import { formatDate, formatPrice, relativeTime } from '@/lib/format';
-import { useIsAdmin, useUserId } from '@/lib/session';
+import { WebOnlyNotice } from '@/components/WebOnlyNotice';
+import { ADMIN_CONSOLE_IS_WEB, useIsAdminConsole, useUserId } from '@/lib/session';
 import {
   MODERATION_STATUS_LABEL,
   ORDER_STATUS_LABEL,
@@ -287,7 +288,7 @@ function TicketCard({ ticket }: { ticket: SupportTicket }) {
 
 export default function AdminScreen() {
   const userId = useUserId();
-  const isAdmin = useIsAdmin();
+  const isAdmin = useIsAdminConsole();
   const { toast } = useToast();
   const [tab, setTab] = useState<TabKey>('overview');
 
@@ -308,6 +309,15 @@ export default function AdminScreen() {
   const setUserRole = useAdminSetUserRole();
   const resolveReport = useAdminResolveReport();
   const resolveFlag = useResolveMessageFlag();
+
+  if (!ADMIN_CONSOLE_IS_WEB) {
+    return (
+      <WebOnlyNotice
+        title="平台管理僅提供網頁版"
+        description="平台管理後台已改為網頁版專用。請用電腦或手機瀏覽器開啟極貨網網頁版，登入管理員帳號後即可使用。"
+      />
+    );
+  }
 
   if (!userId) {
     return <SignInRequired title="登入後查看平台管理" />;

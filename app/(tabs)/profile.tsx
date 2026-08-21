@@ -21,7 +21,7 @@ import { SignInRequired } from '@/components/SignInRequired';
 import { useMyStoreQuery } from '@/lib/api/seller';
 import { BRAND, BRAND_COPY } from '@/lib/brand';
 import { formatDate } from '@/lib/format';
-import { useIsAdmin, useSessionStore, useUserId } from '@/lib/session';
+import { useIsAdminConsole, useSessionStore, useUserId } from '@/lib/session';
 
 function MenuRow({
   icon,
@@ -52,7 +52,7 @@ export default function ProfileScreen() {
   const account = useSessionStore((s) => s.account);
   const profile = useSessionStore((s) => s.profile);
   const signOut = useSessionStore((s) => s.signOut);
-  const isAdmin = useIsAdmin();
+  const showAdmin = useIsAdminConsole();
   const { data: store } = useMyStoreQuery(userId);
 
   if (!userId) {
@@ -159,7 +159,7 @@ export default function ProfileScreen() {
               onPress={() => router.push('/seller/onboarding')}
             />
           )}
-          {isAdmin ? (
+          {showAdmin ? (
             <MenuRow
               icon={<ShieldCheck size={18} color={BRAND.blue} />}
               title="平台管理"

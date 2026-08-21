@@ -27,7 +27,8 @@ import {
 } from '@/lib/api/logistics';
 import { BRAND } from '@/lib/brand';
 import { formatDate } from '@/lib/format';
-import { useIsAdmin, useUserId } from '@/lib/session';
+import { WebOnlyNotice } from '@/components/WebOnlyNotice';
+import { ADMIN_CONSOLE_IS_WEB, useIsAdminConsole, useUserId } from '@/lib/session';
 import {
   LOGISTICS_SUB_TYPE_LABEL,
   LOGISTICS_TEST_STORE_ID,
@@ -99,7 +100,7 @@ function ToggleRow({
 
 export default function AdminLogisticsScreen() {
   const userId = useUserId();
-  const isAdmin = useIsAdmin();
+  const isAdmin = useIsAdminConsole();
   const { toast } = useToast();
 
   const query = useAdminLogistics(isAdmin);
@@ -127,6 +128,15 @@ export default function AdminLogisticsScreen() {
         : ['ECPAY_STAGE_MERCHANT_ID', 'ECPAY_STAGE_HASH_KEY', 'ECPAY_STAGE_HASH_IV'],
     [environment],
   );
+
+  if (!ADMIN_CONSOLE_IS_WEB) {
+    return (
+      <WebOnlyNotice
+        title="物流串接設定僅提供網頁版"
+        description="綠界物流串接設定屬於平台管理後台，已改為網頁版專用。請用瀏覽器開啟極貨網網頁版後操作。"
+      />
+    );
+  }
 
   if (!userId) {
     return <SignInRequired title="登入後設定物流串接" />;

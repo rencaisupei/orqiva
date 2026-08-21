@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { create } from 'zustand';
 import type { Session } from '@biltme/backend';
 
@@ -116,6 +117,15 @@ export function useIsSeller(): boolean {
 
 export function useIsAdmin(): boolean {
   return useSessionStore((s) => (s.account?.roles ?? []).includes('admin'));
+}
+
+/** The admin console is web-only; the mobile app never exposes it. */
+export const ADMIN_CONSOLE_IS_WEB = Platform.OS === 'web';
+
+/** True only for an admin account viewing the web build. */
+export function useIsAdminConsole(): boolean {
+  const isAdmin = useIsAdmin();
+  return ADMIN_CONSOLE_IS_WEB && isAdmin;
 }
 
 /** Adds a role to the signed-in account (a user can be buyer and seller at once). */

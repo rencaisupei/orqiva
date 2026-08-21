@@ -11,7 +11,7 @@ import {
 } from 'lucide-react-native';
 
 import { BRAND } from '@/lib/brand';
-import { useIsAdmin } from '@/lib/session';
+import { useIsAdminConsole } from '@/lib/session';
 
 type Item = {
   label: string;
@@ -21,7 +21,7 @@ type Item = {
 
 /** Always-visible quick-jump shortcuts under the home search field. */
 export function HomeQuickLinks() {
-  const isAdmin = useIsAdmin();
+  const showAdmin = useIsAdminConsole();
 
   const items: Item[] = [
     { label: '我的訂單', href: '/orders', icon: <Receipt size={15} color={BRAND.blue} /> },
@@ -31,7 +31,7 @@ export function HomeQuickLinks() {
     { label: '賣家中心', href: '/seller', icon: <StoreIcon size={15} color={BRAND.orange} /> },
   ];
 
-  if (isAdmin) {
+  if (showAdmin) {
     items.push({
       label: '平台管理',
       href: '/admin',
