@@ -14,6 +14,7 @@ import { Platform } from 'react-native';
 import { useEffect } from 'react';
 import * as DevClient from 'expo-dev-client';
 import { HeroUINativeProvider } from 'heroui-native';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Uniwind } from 'uniwind';
 import {
   ErrorBoundary as ExpoErrorBoundary,
@@ -26,6 +27,9 @@ import { initPostHog } from '@/lib/posthog';
 import { registerServiceWorker } from '@/lib/registerServiceWorker';
 import { reportErrorToParent } from '@/lib/reportPreviewError';
 import { InstallPrompt } from '@/components/InstallPrompt';
+import { BackButton } from '@/components/BackButton';
+import { BRAND } from '@/lib/brand';
+import { useSessionStore } from '@/lib/session';
 
 /**
  * Custom ErrorBoundary that reports React render errors to the parent window (Bilt preview iframe)
@@ -43,10 +47,16 @@ function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
 
 export { ErrorBoundary };
 
-// Starter is light-only by default. Remove this when implementing requested dark mode.
+// ORQIVA is a light-only brand experience.
 Uniwind.setTheme('light');
 
 void SplashScreen.preventAutoHideAsync();
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { retry: 1, staleTime: 15_000, refetchOnWindowFocus: false },
+  },
+});
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
@@ -55,6 +65,10 @@ export default function RootLayout() {
     Inter_600SemiBold,
     Inter_700Bold,
   });
+
+  const init = useSessionStore((s) => s.init);
+
+  useEffect(() => init(), [init]);
 
   // Report uncaught JS errors and unhandled promise rejections to parent (Bilt preview iframe)
   useEffect(() => {
@@ -81,10 +95,8 @@ export default function RootLayout() {
   }, []);
 
   // Inject Google Fonts link tag for web to ensure fonts load through proxy
-  // Also register font family names as fallback if expo-font fails
   useEffect(() => {
     if (Platform.OS === 'web') {
-      // Check if link already exists
       const existingLink = document.querySelector(
         'link[href*="fonts.googleapis.com/css2?family=Inter"]',
       );
@@ -97,12 +109,6 @@ export default function RootLayout() {
         link.crossOrigin = 'anonymous';
         document.head.appendChild(link);
       }
-
-      // Note: The @import in global.css and the link tag above ensure Inter font loads
-      // expo-font will register the font family names (Inter_400Regular, etc.)
-      // If expo-font fails due to proxy issues, the fonts should still be available
-      // via the direct Google Fonts CDN link, though the specific font family names
-      // might not be registered. The app should still render with Inter font.
     }
   }, []);
 
@@ -140,12 +146,44 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <HeroUINativeProvider>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ title: 'Habits', headerShown: false }} />
-        </Stack>
-        <InstallPrompt />
-      </HeroUINativeProvider>
+      <QueryClientProvider client={queryClient}>
+        <HeroUINativeProvider>
+          <Stack
+            screenOptions={{
+              headerStyle: { backgroundColor: BRAND.white },
+              headerTitleStyle: { color: BRAND.navy, fontWeight: '600' },
+              headerTintColor: BRAND.navy,
+              headerShadowVisible: false,
+              headerLeft: () => <BackButton />,
+              contentStyle: { backgroundColor: BRAND.background },
+            }}
+          >
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="auth/sign-in" options={{ title: '登入 / 註冊' }} />
+            <Stack.Screen name="products/index" options={{ title: '商品列表' }} />
+            <Stack.Screen name="products/[id]" options={{ title: '商品詳情' }} />
+            <Stack.Screen name="store/[id]" options={{ title: '店舖' }} />
+            <Stack.Screen name="cart" options={{ title: '購物車' }} />
+            <Stack.Screen name="checkout" options={{ title: '結帳' }} />
+            <Stack.Screen name="favorites" options={{ title: '我的收藏' }} />
+            <Stack.Screen name="orders/index" options={{ title: '我的訂單' }} />
+            <Stack.Screen name="orders/[id]" options={{ title: '訂單詳情' }} />
+            <Stack.Screen name="review/[productId]" options={{ title: '評價商品' }} />
+            <Stack.Screen name="notifications" options={{ title: '通知中心' }} />
+            <Stack.Screen name="messages/[id]" options={{ title: '聊天' }} />
+            <Stack.Screen name="profile/edit" options={{ title: '編輯個人資料' }} />
+            <Stack.Screen name="seller/index" options={{ title: '賣家中心' }} />
+            <Stack.Screen name="seller/onboarding" options={{ title: '成為 ORQIVA 賣家' }} />
+            <Stack.Screen name="seller/products" options={{ title: '商品管理' }} />
+            <Stack.Screen name="seller/new-product" options={{ title: '新增商品' }} />
+            <Stack.Screen name="seller/edit/[id]" options={{ title: '編輯商品' }} />
+            <Stack.Screen name="seller/orders" options={{ title: '訂單管理' }} />
+            <Stack.Screen name="seller/store" options={{ title: '店舖設定' }} />
+            <Stack.Screen name="admin/index" options={{ title: '平台管理' }} />
+          </Stack>
+          <InstallPrompt />
+        </HeroUINativeProvider>
+      </QueryClientProvider>
     </GestureHandlerRootView>
   );
 }

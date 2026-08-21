@@ -1,27 +1,233 @@
-import { Stack } from 'expo-router';
-import { Text } from 'heroui-native';
-import { View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, ScrollView, View } from 'react-native';
+import { Button, SearchField, Typography } from 'heroui-native';
+import { router } from 'expo-router';
+import { Bell, ChevronRight, ShoppingCart } from 'lucide-react-native';
 
-export default function Home() {
-  return <ScreenContent />;
+import { CategoryIcon } from '@/components/CategoryIcon';
+import { OrqivaLogo } from '@/components/brand/OrqivaLogo';
+import { ProductCard } from '@/components/ProductCard';
+import { LinearGradient } from '@/components/ui/primitives/LinearGradient';
+import { useFavoriteToggle } from '@/hooks/useFavoriteToggle';
+import { useCategories, useProducts } from '@/lib/api/catalog';
+import { useCartCount } from '@/lib/api/commerce';
+import { useUnreadNotificationCount } from '@/lib/api/social';
+import { BRAND, BRAND_COPY } from '@/lib/brand';
+import { useUserId } from '@/lib/session';
+
+function Badge({ count }: { count: number }) {
+  if (count <= 0) return null;
+  return (
+    <View className="bg-brand-orange absolute -top-1 -right-1 min-w-4 items-center justify-center rounded-full px-1">
+      <Typography type="body-xs" className="text-white" style={{ fontSize: 10, fontWeight: '700' }}>
+        {count > 99 ? '99+' : count}
+      </Typography>
+    </View>
+  );
 }
 
-function ScreenContent() {
+function SectionHeader({ title, onMore }: { title: string; onMore?: () => void }) {
   return (
-    <View className="bg-background p-safe flex basis-full flex-col">
-      <Stack.Screen
-        options={{
-          title: 'Home',
-        }}
-      />
-      <View className="flex-1 items-center justify-center">
-        <Text.Heading type="h2" align="center" className="mb-4">
-          Welcome to Your App
-        </Text.Heading>
-        <Text.Paragraph align="center" color="muted">
-          This is your starting point. Start building something amazing!
-        </Text.Paragraph>
+    <View className="mb-3 flex-row items-center justify-between">
+      <Typography type="h6" className="text-navy" style={{ fontWeight: '700' }}>
+        {title}
+      </Typography>
+      {onMore ? (
+        <Pressable className="flex-row items-center" onPress={onMore}>
+          <Typography type="body-sm" className="text-brand-blue">
+            查看全部
+          </Typography>
+          <ChevronRight size={14} color={BRAND.blue} />
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
+
+export default function HomeScreen() {
+  const [query, setQuery] = useState('');
+  const userId = useUserId();
+  const { data: categories } = useCategories();
+  const { data: popular } = useProducts({ sort: 'popular', limit: 6 });
+  const { data: newest } = useProducts({ sort: 'newest', limit: 6 });
+  const { data: cartCount } = useCartCount(userId);
+  const { data: unread } = useUnreadNotificationCount(userId);
+  const { isFavorite, onToggleFavorite } = useFavoriteToggle();
+
+  const submitSearch = () => {
+    const term = query.trim();
+    router.push(term ? { pathname: '/products', params: { q: term } } : '/products');
+  };
+
+  return (
+    <View className="bg-background flex-1">
+      <View className="bg-surface pt-safe">
+        <View className="flex-row items-center justify-between px-4 pt-2 pb-2">
+          <OrqivaLogo size={28} />
+          <View className="flex-row items-center gap-1">
+            <Pressable
+              className="h-10 w-10 items-center justify-center"
+              onPress={() => router.push('/notifications')}
+              accessibilityLabel="通知"
+            >
+              <View>
+                <Bell size={22} color={BRAND.navy} />
+                <Badge count={unread ?? 0} />
+              </View>
+            </Pressable>
+            <Pressable
+              className="h-10 w-10 items-center justify-center"
+              onPress={() => router.push('/cart')}
+              accessibilityLabel="購物車"
+            >
+              <View>
+                <ShoppingCart size={22} color={BRAND.navy} />
+                <Badge count={cartCount ?? 0} />
+              </View>
+            </Pressable>
+          </View>
+        </View>
+
+        <View className="px-4 pb-3">
+          <SearchField value={query} onChange={setQuery}>
+            <SearchField.Group>
+              <SearchField.SearchIcon />
+              <SearchField.Input
+                placeholder={BRAND_COPY.searchPlaceholder}
+                returnKeyType="search"
+                onSubmitEditing={submitSearch}
+              />
+              <SearchField.ClearButton />
+            </SearchField.Group>
+          </SearchField>
+        </View>
       </View>
+
+      <ScrollView contentContainerClassName="pb-10" showsVerticalScrollIndicator={false}>
+        <View className="px-4 pt-4">
+          <LinearGradient
+            colors={[BRAND.navy, BRAND.blue]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            className="overflow-hidden rounded-3xl p-5"
+          >
+            <Typography type="body-xs" className="text-brand-yellow" style={{ fontWeight: '700' }}>
+              {BRAND_COPY.slogan}
+            </Typography>
+            <Typography type="h3" className="mt-2 text-white" style={{ fontWeight: '700' }}>
+              {BRAND_COPY.bannerTitle}
+            </Typography>
+            <Typography type="body-sm" className="mt-1.5 text-white/85">
+              {BRAND_COPY.bannerSubtitle}
+            </Typography>
+            <Button
+              className="mt-4 self-start bg-white"
+              size="sm"
+              onPress={() => router.push('/products')}
+            >
+              <Button.Label className="text-navy">{BRAND_COPY.bannerCta}</Button.Label>
+            </Button>
+          </LinearGradient>
+        </View>
+
+        <View className="mt-5 px-4">
+          <View className="gap-1">
+            <Typography type="h5" className="text-navy" style={{ fontWeight: '700' }}>
+              {BRAND_COPY.tagline}
+            </Typography>
+            <Typography type="body-sm" color="muted">
+              {BRAND_COPY.subTagline}
+            </Typography>
+          </View>
+        </View>
+
+        <View className="mt-5 px-4">
+          <SectionHeader title="商品分類" onMore={() => router.push('/(tabs)/categories')} />
+          <View className="flex-row flex-wrap">
+            {(categories ?? []).slice(0, 8).map((category) => (
+              <Pressable
+                key={category.id}
+                className="mb-3 w-1/4 items-center gap-1.5"
+                onPress={() =>
+                  router.push({
+                    pathname: '/products',
+                    params: { categoryId: category.id, categoryName: category.name },
+                  })
+                }
+              >
+                <View className="bg-surface h-12 w-12 items-center justify-center rounded-2xl">
+                  <CategoryIcon name={category.icon} />
+                </View>
+                <Typography type="body-xs" className="text-navy" numberOfLines={1}>
+                  {category.name}
+                </Typography>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+
+        <View className="mt-2 px-4">
+          <SectionHeader
+            title="熱門商品"
+            onMore={() => router.push({ pathname: '/products', params: { sort: 'popular' } })}
+          />
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="-mx-1">
+            {(popular ?? []).map((product) => (
+              <View key={product.id} className="mx-1 w-40">
+                <ProductCard
+                  product={product}
+                  isFavorite={isFavorite(product.id)}
+                  onToggleFavorite={onToggleFavorite}
+                />
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+
+        <View className="mt-6 px-4">
+          <SectionHeader
+            title="最新上架"
+            onMore={() => router.push({ pathname: '/products', params: { sort: 'newest' } })}
+          />
+          <View className="flex-row flex-wrap justify-between">
+            {(newest ?? []).map((product) => (
+              <View key={product.id} className="mb-3 w-[48.5%]">
+                <ProductCard
+                  product={product}
+                  isFavorite={isFavorite(product.id)}
+                  onToggleFavorite={onToggleFavorite}
+                />
+              </View>
+            ))}
+          </View>
+        </View>
+
+        <View className="mt-2 px-4">
+          <Pressable
+            className="bg-surface flex-row items-center gap-3 rounded-2xl p-4"
+            onPress={() => router.push('/(tabs)/publish')}
+          >
+            <View className="bg-brand-orange-soft h-11 w-11 items-center justify-center rounded-xl">
+              <CategoryIcon name="Package" color={BRAND.orange} />
+            </View>
+            <View className="flex-1">
+              <Typography type="body" className="text-navy" style={{ fontWeight: '600' }}>
+                有東西想賣？
+              </Typography>
+              <Typography type="body-sm" color="muted">
+                開一間 ORQIVA 店舖，讓你的商品找到對的人
+              </Typography>
+            </View>
+            <ChevronRight size={18} color={BRAND.muted} />
+          </Pressable>
+        </View>
+
+        <View className="mt-6 items-center gap-1 px-4">
+          <Typography type="body-xs" color="muted">
+            {BRAND_COPY.core}
+          </Typography>
+        </View>
+      </ScrollView>
     </View>
   );
 }

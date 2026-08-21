@@ -17,6 +17,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     orientation: 'portrait',
     userInterfaceStyle: 'automatic',
     scheme: 'orqiva',
+    icon: './assets/icon.png',
     runtimeVersion: {
       policy: 'appVersion',
     },
@@ -30,6 +31,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     android: {
       package: process.env.BILT_ANDROID_PACKAGE ?? 'com.yourcompany.yourapp',
+      adaptiveIcon: {
+        foregroundImage: './assets/icon.png',
+        backgroundColor: '#08266B',
+      },
     },
     web: {
       bundler: 'metro',

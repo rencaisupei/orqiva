@@ -11,7 +11,6 @@ import RNMapView, {
   type MapType as NativeMapType,
   type MarkerDragStartEndEvent,
   type PoiClickEvent,
-  type Region,
   type UserLocationChangeEvent,
 } from 'react-native-maps';
 
@@ -203,7 +202,7 @@ const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
     ref,
     () => ({
       animateToRegion: (nextRegion, duration = 700) => {
-        nativeMapRef.current?.animateToRegion(nextRegion as Region, duration);
+        nativeMapRef.current?.animateToRegion(nextRegion, duration);
       },
       animateCamera: (camera, options) => {
         nativeMapRef.current?.animateCamera(toNativeCamera(camera), options);
@@ -255,8 +254,8 @@ const MapView = forwardRef<MapViewHandle, MapViewProps>(function MapView(
       <RNMapView
         ref={nativeMapRef}
         style={{ flex: 1 }}
-        initialRegion={initialRegion as Region}
-        region={region as Region | undefined}
+        initialRegion={initialRegion}
+        region={region}
         mapType={toNativeMapType(mapType)}
         loadingEnabled={loadingEnabled}
         loadingBackgroundColor={loadingBackgroundColor}
