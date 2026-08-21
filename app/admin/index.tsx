@@ -126,7 +126,7 @@ export default function AdminScreen() {
             </View>
             <View className="bg-surface rounded-2xl p-4">
               <Typography type="body-sm" color="muted">
-                ORQIVA 平台統計即時來自資料庫，包含所有買家與賣家的交易紀錄。
+                極貨網平台統計即時來自資料庫，包含所有買家與賣家的交易紀錄。
               </Typography>
             </View>
           </>

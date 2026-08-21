@@ -75,7 +75,7 @@ export default function OrdersScreen() {
             >
               <View className="flex-row items-center justify-between">
                 <Typography type="body-sm" className="text-navy" style={{ fontWeight: '600' }}>
-                  {item.store?.name ?? 'ORQIVA 賣家'}
+                  {item.store?.name ?? '極貨網賣家'}
                 </Typography>
                 <Chip
                   size="sm"

@@ -40,7 +40,7 @@ export default function CartScreen() {
       else
         map.set(storeId, {
           storeId,
-          storeName: item.product.store?.name ?? 'ORQIVA 賣家',
+          storeName: item.product.store?.name ?? '極貨網賣家',
           items: [item],
         });
     }
@@ -74,7 +74,7 @@ export default function CartScreen() {
         <EmptyState
           icon={<ShoppingCart size={26} color={BRAND.blue} />}
           title="購物車還是空的"
-          description="逛逛 ORQIVA，找到需求，遇見價值。"
+          description="逛逛極貨網，萬物皆品，極致首選。"
           action={
             <Button onPress={() => router.push('/products')}>
               <Button.Label>開始探索</Button.Label>

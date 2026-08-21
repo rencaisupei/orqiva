@@ -14,7 +14,7 @@ import {
 } from 'lucide-react-native';
 
 import { EmptyState } from '@/components/EmptyState';
-import { OrqivaBadge } from '@/components/brand/OrqivaLogo';
+import { JihuoBadge } from '@/components/brand/JihuoLogo';
 import { SellerStatTile } from '@/components/SellerStatTile';
 import { SellerTabBar } from '@/components/SellerTabBar';
 import { SignInRequired } from '@/components/SignInRequired';
@@ -92,7 +92,7 @@ export default function SellerDashboardScreen() {
       <View className="bg-background pt-safe flex-1">
         <EmptyState
           icon={<StoreIcon size={26} color={BRAND.blue} />}
-          title="還沒有 ORQIVA 店舖"
+          title="還沒有極貨網店舖"
           description="建立店舖後就能查看銷售數據與訂單。"
           action={
             <Button onPress={() => router.replace('/seller/onboarding')}>
@@ -108,7 +108,7 @@ export default function SellerDashboardScreen() {
     <View className="bg-background flex-1">
       <View className="bg-surface pt-safe px-4 pb-3">
         <View className="flex-row items-center gap-3 pt-2">
-          <OrqivaBadge size={42} />
+          <JihuoBadge size={42} />
           <View className="flex-1">
             <Typography type="h5" className="text-navy" style={{ fontWeight: '700' }}>
               賣家中心

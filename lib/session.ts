@@ -16,7 +16,7 @@ type SessionState = {
 
 async function ensureRows(session: Session, displayName?: string) {
   const user = session.user;
-  const fallbackName = displayName?.trim() || user.email?.split('@')[0] || 'ORQIVA 用戶';
+  const fallbackName = displayName?.trim() || user.email?.split('@')[0] || '極貨網用戶';
 
   // profiles must exist first — users.id references profiles.id.
   await bilt

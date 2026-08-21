@@ -47,7 +47,7 @@ function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
 
 export { ErrorBoundary };
 
-// ORQIVA is a light-only brand experience.
+// 極貨網 is a light-only brand experience.
 Uniwind.setTheme('light');
 
 void SplashScreen.preventAutoHideAsync();
@@ -173,7 +173,7 @@ export default function RootLayout() {
             <Stack.Screen name="messages/[id]" options={{ title: '聊天' }} />
             <Stack.Screen name="profile/edit" options={{ title: '編輯個人資料' }} />
             <Stack.Screen name="seller/index" options={{ headerShown: false }} />
-            <Stack.Screen name="seller/onboarding" options={{ title: '成為 ORQIVA 賣家' }} />
+            <Stack.Screen name="seller/onboarding" options={{ title: '成為極貨網賣家' }} />
             <Stack.Screen name="seller/products" options={{ title: '商品管理' }} />
             <Stack.Screen name="seller/analytics" options={{ title: '銷售分析' }} />
             <Stack.Screen name="seller/new-product" options={{ title: '新增商品' }} />

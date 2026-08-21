@@ -10,13 +10,13 @@ export default ({ config }: ConfigContext): ExpoConfig => {
 
   return {
     ...config,
-    name: 'ORQIVA',
-    slug: 'orqiva',
+    name: '極貨網',
+    slug: 'jihuowang',
     newArchEnabled: true,
     version: process.env.BILT_APP_VERSION ?? '1.0.0',
     orientation: 'portrait',
     userInterfaceStyle: 'automatic',
-    scheme: 'orqiva',
+    scheme: 'jihuowang',
     icon: './assets/icon.png',
     runtimeVersion: {
       policy: 'appVersion',

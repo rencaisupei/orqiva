@@ -44,7 +44,7 @@ export default function SellerOnboardingScreen() {
       <View className="bg-background flex-1 items-center justify-center gap-4 px-8">
         <ShieldCheck size={40} color={BRAND.blue} />
         <Typography type="h5" align="center" className="text-navy">
-          你已經有 ORQIVA 店舖
+          你已經有極貨網店舖
         </Typography>
         <Typography type="body-sm" align="center" color="muted">
           {existingStore.name}
@@ -96,7 +96,7 @@ export default function SellerOnboardingScreen() {
       <ScrollView contentContainerClassName="p-4 gap-3 pb-8" keyboardShouldPersistTaps="handled">
         <View className="bg-surface gap-2 rounded-2xl p-4">
           <Typography type="h5" className="text-navy" style={{ fontWeight: '700' }}>
-            成為 ORQIVA 賣家
+            成為極貨網賣家
           </Typography>
           <Typography type="body-sm" color="muted">
             買賣，不只是交易。是讓價值找到彼此。
@@ -136,7 +136,7 @@ export default function SellerOnboardingScreen() {
 
           <View>
             <Label isRequired>店舖名稱</Label>
-            <Input placeholder="例如：歐奇瓦 3C 嚴選" value={name} onChangeText={setName} />
+            <Input placeholder="例如：極貨網 3C 嚴選" value={name} onChangeText={setName} />
           </View>
 
           <View>

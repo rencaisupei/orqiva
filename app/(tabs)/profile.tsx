@@ -56,7 +56,7 @@ export default function ProfileScreen() {
   if (!userId) {
     return (
       <View className="bg-background pt-safe flex-1">
-        <SignInRequired title="登入 ORQIVA" description={BRAND_COPY.subTagline} />
+        <SignInRequired title="登入極貨網" description={BRAND_COPY.subTagline} />
       </View>
     );
   }
@@ -74,7 +74,7 @@ export default function ProfileScreen() {
             </Avatar>
             <View className="flex-1">
               <Typography type="h5" className="text-navy" style={{ fontWeight: '700' }}>
-                {profile?.display_name ?? 'ORQIVA 用戶'}
+                {profile?.display_name ?? '極貨網用戶'}
               </Typography>
               <Typography type="body-sm" color="muted">
                 {account?.email ?? ''}
@@ -177,7 +177,7 @@ export default function ProfileScreen() {
 
         <View className="mt-6 items-center">
           <Typography type="body-xs" color="muted">
-            {BRAND_COPY.name} {BRAND_COPY.nameZh} · {BRAND_COPY.slogan}
+            {BRAND_COPY.nameZh} {BRAND_COPY.name} · {BRAND_COPY.slogan}
           </Typography>
         </View>
       </ScrollView>

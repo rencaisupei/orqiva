@@ -3,7 +3,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import { Button, Description, FieldError, Input, InputOTP, Label, Typography } from 'heroui-native';
 import { router } from 'expo-router';
 
-import { OrqivaArtwork } from '@/components/brand/OrqivaLogo';
+import { JihuoArtwork } from '@/components/brand/JihuoLogo';
 import { bilt } from '@/lib/backend';
 import { goBackOrReplace } from '@/lib/navigation';
 import { useSessionStore } from '@/lib/session';
@@ -79,10 +79,10 @@ export default function SignInScreen() {
       >
         <View className="items-center gap-3">
           <View className="bg-surface rounded-3xl px-6 py-4">
-            <OrqivaArtwork width={190} />
+            <JihuoArtwork width={180} />
           </View>
           <Typography type="body-sm" align="center" color="muted">
-            一組 ORQIVA 帳號，買賣都通
+            一組極貨網帳號，買賣都通
           </Typography>
         </View>
 

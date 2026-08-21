@@ -6,7 +6,7 @@ import { Bell, ChevronRight, Menu, ShoppingCart } from 'lucide-react-native';
 
 import { CategoryIcon } from '@/components/CategoryIcon';
 import { HomeQuickMenu } from '@/components/HomeQuickMenu';
-import { OrqivaLogo, OrqivaMark } from '@/components/brand/OrqivaLogo';
+import { JihuoLogo, JihuoMark } from '@/components/brand/JihuoLogo';
 import { ProductCard } from '@/components/ProductCard';
 import { LinearGradient } from '@/components/ui/primitives/LinearGradient';
 import { useFavoriteToggle } from '@/hooks/useFavoriteToggle';
@@ -74,7 +74,7 @@ export default function HomeScreen() {
           </Pressable>
 
           <View className="flex-1 items-center">
-            <OrqivaLogo size={30} showZh={false} />
+            <JihuoLogo size={34} showEn={false} />
           </View>
 
           <View className="flex-row items-center">
@@ -125,11 +125,12 @@ export default function HomeScreen() {
             className="relative overflow-hidden rounded-3xl p-5"
           >
             <View className="absolute top-8 -right-5" pointerEvents="none">
-              <OrqivaMark
-                size={140}
-                strokeWidth={9}
-                topColor="rgba(255,255,255,0.26)"
-                bottomColor="rgba(255,255,255,0.13)"
+              <JihuoMark
+                size={150}
+                shieldColor="rgba(255,255,255,0.16)"
+                accentColor="rgba(255,255,255,0.26)"
+                arrowColor="rgba(255,255,255,0.3)"
+                letterColor="rgba(255,255,255,0.5)"
               />
             </View>
 
@@ -260,7 +261,7 @@ export default function HomeScreen() {
                 有東西想賣？
               </Typography>
               <Typography type="body-sm" color="muted">
-                開一間 ORQIVA 店舖，讓你的商品找到對的人
+                開一間極貨網店舖，讓你的商品找到對的人
               </Typography>
             </View>
             <ChevronRight size={18} color={BRAND.muted} />

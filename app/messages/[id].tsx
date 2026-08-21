@@ -46,7 +46,7 @@ export default function ChatScreen() {
 
   const isBuyer = conversation.buyer_id === userId;
   const counterpartName = isBuyer
-    ? (conversation.store?.name ?? 'ORQIVA 賣家')
+    ? (conversation.store?.name ?? '極貨網賣家')
     : (conversation.buyer?.display_name ?? '買家');
 
   const send = () => {

@@ -117,7 +117,7 @@ export default function OrderDetailScreen() {
           <View className="flex-row items-center gap-2">
             <Package size={15} color={BRAND.blue} />
             <Typography type="body" className="text-navy" style={{ fontWeight: '600' }}>
-              {order.store?.name ?? 'ORQIVA 賣家'}
+              {order.store?.name ?? '極貨網賣家'}
             </Typography>
           </View>
           {order.order_items.map((line) => (

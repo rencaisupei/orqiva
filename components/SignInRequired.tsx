@@ -11,7 +11,7 @@ type Props = {
 };
 
 export function SignInRequired({
-  title = '請先登入 ORQIVA',
+  title = '請先登入極貨網',
   description = BRAND_COPY.subTagline,
 }: Props) {
   return (

@@ -92,7 +92,7 @@ export function ProductCard({ product, isFavorite = false, onToggleFavorite, cla
         <View className="flex-row items-center gap-1">
           <MapPin size={11} color={BRAND.muted} />
           <Typography type="body-xs" color="muted" numberOfLines={1} className="flex-1">
-            {product.location} · {product.store?.name ?? 'ORQIVA 賣家'}
+            {product.location} · {product.store?.name ?? '極貨網賣家'}
           </Typography>
         </View>
       </View>

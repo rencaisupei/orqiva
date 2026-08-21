@@ -1,7 +1,7 @@
 {
-  "name": "ORQIVA 歐奇瓦",
-  "short_name": "ORQIVA",
-  "description": "買賣，一站式完成。買家與賣家都在同一個平台。",
+  "name": "極貨網 JIHUOWANG",
+  "short_name": "極貨網",
+  "description": "萬物皆品，極致首選。買家與賣家都在同一個平台。",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

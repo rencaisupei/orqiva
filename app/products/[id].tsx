@@ -269,7 +269,7 @@ export default function ProductDetailScreen() {
           <View className="flex-1">
             <View className="flex-row items-center gap-1.5">
               <Typography type="body" className="text-navy" style={{ fontWeight: '600' }}>
-                {product.store?.name ?? 'ORQIVA 賣家'}
+                {product.store?.name ?? '極貨網賣家'}
               </Typography>
               <ShieldCheck size={14} color={BRAND.blue} />
             </View>

@@ -58,7 +58,7 @@ export default function MessagesScreen() {
           renderItem={({ item }) => {
             const isBuyer = item.buyer_id === userId;
             const title = isBuyer
-              ? (item.store?.name ?? 'ORQIVA 賣家')
+              ? (item.store?.name ?? '極貨網賣家')
               : (item.buyer?.display_name ?? '買家');
             return (
               <Pressable

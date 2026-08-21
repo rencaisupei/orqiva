@@ -73,7 +73,7 @@ export default function PublishScreen() {
       <View className="bg-background pt-safe flex-1">
         <SignInRequired
           title="登入後即可發布商品"
-          description="同一個 ORQIVA 帳號可以同時是買家與賣家"
+          description="同一個極貨網帳號可以同時是買家與賣家"
         />
       </View>
     );
@@ -140,7 +140,7 @@ export default function PublishScreen() {
         ) : (
           <EmptyState
             icon={<StoreIcon size={26} color={BRAND.blue} />}
-            title="還沒有 ORQIVA 店舖"
+            title="還沒有極貨網店舖"
             description="建立店舖後就可以上架商品、接收訂單與回覆買家訊息。"
             action={
               <Button onPress={() => router.push('/seller/onboarding')}>

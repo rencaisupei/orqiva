@@ -82,7 +82,7 @@ export default function NewProductScreen() {
       <View className="bg-background flex-1">
         <EmptyState
           title="需要先建立店舖"
-          description="ORQIVA 的商品都屬於一間店舖，先完成店舖設定再上架。"
+          description="極貨網的商品都屬於一間店舖，先完成店舖設定再上架。"
           action={
             <Button onPress={() => router.replace('/seller/onboarding')}>
               <Button.Label>建立店舖</Button.Label>
@@ -101,7 +101,7 @@ export default function NewProductScreen() {
           商品已成功上架
         </Typography>
         <Typography type="body-sm" align="center" color="muted">
-          買家現在可以在 ORQIVA 搜尋到「{title}」。
+          買家現在可以在極貨網搜尋到「{title}」。
         </Typography>
         <View className="mt-2 w-full gap-2">
           <Button onPress={() => router.replace('/seller/products')}>
