@@ -172,9 +172,10 @@ export default function RootLayout() {
             <Stack.Screen name="notifications" options={{ title: '通知中心' }} />
             <Stack.Screen name="messages/[id]" options={{ title: '聊天' }} />
             <Stack.Screen name="profile/edit" options={{ title: '編輯個人資料' }} />
-            <Stack.Screen name="seller/index" options={{ title: '賣家中心' }} />
+            <Stack.Screen name="seller/index" options={{ headerShown: false }} />
             <Stack.Screen name="seller/onboarding" options={{ title: '成為 ORQIVA 賣家' }} />
             <Stack.Screen name="seller/products" options={{ title: '商品管理' }} />
+            <Stack.Screen name="seller/analytics" options={{ title: '銷售分析' }} />
             <Stack.Screen name="seller/new-product" options={{ title: '新增商品' }} />
             <Stack.Screen name="seller/edit/[id]" options={{ title: '編輯商品' }} />
             <Stack.Screen name="seller/orders" options={{ title: '訂單管理' }} />

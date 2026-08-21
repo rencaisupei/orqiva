@@ -5,6 +5,7 @@ import { PackagePlus, Pencil, Trash2 } from 'lucide-react-native';
 
 import { AppImage } from '@/components/AppImage';
 import { EmptyState } from '@/components/EmptyState';
+import { SellerTabBar } from '@/components/SellerTabBar';
 import { SignInRequired } from '@/components/SignInRequired';
 import { useDeleteProduct, useSellerProducts, useUpdateProduct } from '@/lib/api/seller';
 import { BRAND } from '@/lib/brand';
@@ -33,9 +34,10 @@ export default function SellerProductsScreen() {
   return (
     <View className="bg-background flex-1">
       <FlatList
+        className="flex-1"
         data={products ?? []}
         keyExtractor={(item) => item.id}
-        contentContainerClassName="p-4 gap-3 pb-24"
+        contentContainerClassName="p-4 gap-3 pb-6"
         ListEmptyComponent={
           <EmptyState
             icon={<PackagePlus size={26} color={BRAND.blue} />}
@@ -149,10 +151,13 @@ export default function SellerProductsScreen() {
         )}
       />
 
-      <View className="border-border bg-surface pb-safe-offset-3 absolute bottom-0 w-full border-t px-4 py-3">
-        <Button onPress={() => router.push('/seller/new-product')}>
-          <Button.Label>新增商品</Button.Label>
-        </Button>
+      <View className="bg-surface w-full">
+        <View className="border-border border-t px-4 py-3">
+          <Button onPress={() => router.push('/seller/new-product')}>
+            <Button.Label>新增商品</Button.Label>
+          </Button>
+        </View>
+        <SellerTabBar />
       </View>
     </View>
   );

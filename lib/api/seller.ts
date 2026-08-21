@@ -243,6 +243,10 @@ export type SellerDashboard = {
   todayViews: number;
   todayOrders: number;
   todayRevenue: number;
+  /** Change vs yesterday in percent, or null when yesterday has no data to compare against. */
+  viewsDelta: number | null;
+  ordersDelta: number | null;
+  revenueDelta: number | null;
   monthRevenue: number;
   productCount: number;
   pendingOrders: number;
@@ -252,6 +256,11 @@ export type SellerDashboard = {
 
 function isoDate(d: Date): string {
   return d.toISOString().slice(0, 10);
+}
+
+function deltaPercent(today: number, yesterday: number): number | null {
+  if (yesterday <= 0) return null;
+  return Math.round(((today - yesterday) / yesterday) * 100);
 }
 
 export function useSellerDashboard(userId: string | null, storeId: string | null) {
@@ -287,23 +296,28 @@ export function useSellerDashboard(userId: string | null, storeId: string | null
 
       const stats = (statsRes.data ?? []) as SellerStatistic[];
       const todayKey = iso(today);
+      const yesterdayKey = iso(new Date(today.getTime() - 86_400_000));
       const todayRow = stats.find((s) => s.stat_date === todayKey);
+      const yesterdayRow = stats.find((s) => s.stat_date === yesterdayKey);
       const monthRevenue = stats
         .filter((s) => s.stat_date >= iso(monthStart))
-        .reduce((sum, s) => sum + Number(s.revenue), 0);
+        .reduce((sum, s) => sum + s.revenue, 0);
 
       const trend: { date: string; revenue: number }[] = [];
       for (let i = 6; i >= 0; i -= 1) {
         const d = new Date(today.getTime() - i * 86_400_000);
         const key = iso(d);
         const row = stats.find((s) => s.stat_date === key);
-        trend.push({ date: key.slice(5), revenue: row ? Number(row.revenue) : 0 });
+        trend.push({ date: key.slice(5), revenue: row ? row.revenue : 0 });
       }
 
       return {
         todayViews: todayRow?.views ?? 0,
         todayOrders: todayRow?.orders_count ?? 0,
-        todayRevenue: Number(todayRow?.revenue ?? 0),
+        todayRevenue: todayRow?.revenue ?? 0,
+        viewsDelta: deltaPercent(todayRow?.views ?? 0, yesterdayRow?.views ?? 0),
+        ordersDelta: deltaPercent(todayRow?.orders_count ?? 0, yesterdayRow?.orders_count ?? 0),
+        revenueDelta: deltaPercent(todayRow?.revenue ?? 0, yesterdayRow?.revenue ?? 0),
         monthRevenue,
         productCount: productsRes.count ?? 0,
         pendingOrders: pendingRes.count ?? 0,

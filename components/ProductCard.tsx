@@ -18,7 +18,7 @@ type Props = {
 };
 
 export function ProductCard({ product, isFavorite = false, onToggleFavorite, className }: Props) {
-  const discount = discountPercent(Number(product.price), product.original_price);
+  const discount = discountPercent(product.price, product.original_price);
 
   return (
     <Pressable
@@ -48,28 +48,15 @@ export function ProductCard({ product, isFavorite = false, onToggleFavorite, cla
             </Typography>
           </View>
         ) : null}
-        {onToggleFavorite ? (
-          <Pressable
-            className="absolute right-2 bottom-2 h-8 w-8 items-center justify-center rounded-full bg-white/95"
-            onPress={() => onToggleFavorite(product.id)}
-            accessibilityLabel={isFavorite ? '取消收藏' : '收藏商品'}
-          >
-            <Heart
-              size={16}
-              color={isFavorite ? BRAND.orange : BRAND.muted}
-              fill={isFavorite ? BRAND.orange : 'transparent'}
-            />
-          </Pressable>
-        ) : null}
       </View>
 
-      <View className="gap-1.5 p-3">
-        <Typography type="body-sm" numberOfLines={2} className="text-navy leading-5">
+      <View className="gap-1 p-3">
+        <Typography type="body-sm" numberOfLines={1} className="text-navy">
           {product.title}
         </Typography>
 
         <View className="flex-row items-end gap-1.5">
-          <Typography type="h6" className="text-brand-orange" style={{ fontWeight: '700' }}>
+          <Typography type="h6" className="text-brand-blue" style={{ fontWeight: '700' }}>
             {formatPrice(product.price)}
           </Typography>
           {product.original_price ? (
@@ -79,11 +66,27 @@ export function ProductCard({ product, isFavorite = false, onToggleFavorite, cla
           ) : null}
         </View>
 
-        <View className="flex-row items-center justify-between">
-          <StarRating rating={Number(product.rating)} count={product.rating_count} />
-          <Typography type="body-xs" color="muted">
-            已售 {formatCompact(product.sold_count)}
-          </Typography>
+        <View className="mt-0.5 flex-row items-center justify-between">
+          <View className="flex-1 flex-row items-center gap-2">
+            <StarRating rating={product.rating} count={product.rating_count} />
+            <Typography type="body-xs" color="muted" numberOfLines={1}>
+              已售 {formatCompact(product.sold_count)}
+            </Typography>
+          </View>
+          {onToggleFavorite ? (
+            <Pressable
+              className="h-7 w-7 items-center justify-center"
+              hitSlop={6}
+              onPress={() => onToggleFavorite(product.id)}
+              accessibilityLabel={isFavorite ? '取消收藏' : '收藏商品'}
+            >
+              <Heart
+                size={16}
+                color={isFavorite ? BRAND.orange : BRAND.muted}
+                fill={isFavorite ? BRAND.orange : 'transparent'}
+              />
+            </Pressable>
+          ) : null}
         </View>
 
         <View className="flex-row items-center gap-1">

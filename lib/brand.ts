@@ -22,6 +22,10 @@ export const BRAND_COPY = {
   core: '買賣，不只是交易。是讓價值找到彼此。',
   bannerTitle: '買賣，一站式完成',
   bannerSubtitle: '更快找到好商品，也讓你的商品找到對的人。',
+  bannerLeadBuyer: '買家',
+  bannerLeadSeller: '賣家',
+  bannerHeadline: '一站式交易平台',
+  bannerHighlights: '更快 · 更安全 · 更有價值',
   bannerCta: '開始探索',
   searchPlaceholder: '搜尋商品、品牌或關鍵字',
 } as const;

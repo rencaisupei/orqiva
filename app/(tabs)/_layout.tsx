@@ -1,7 +1,6 @@
 import { Pressable, View, type GestureResponderEvent } from 'react-native';
 import { Tabs } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Typography } from 'heroui-native';
 import { Grid2x2, House, MessageCircle, Plus, User } from 'lucide-react-native';
 
 import { BRAND } from '@/lib/brand';
@@ -17,22 +16,21 @@ function PublishTabButton({ onPress }: TabButtonProps) {
         onPress={onPress}
         className="items-center justify-center rounded-full"
         style={{
-          width: 52,
-          height: 52,
-          marginTop: -18,
-          backgroundColor: BRAND.orange,
-          shadowColor: BRAND.orange,
+          width: 54,
+          height: 54,
+          marginTop: -22,
+          backgroundColor: BRAND.blue,
+          borderWidth: 4,
+          borderColor: BRAND.white,
+          shadowColor: BRAND.blue,
           shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.35,
+          shadowOpacity: 0.3,
           shadowRadius: 8,
           elevation: 6,
         }}
       >
-        <Plus size={26} color={BRAND.white} strokeWidth={2.6} />
+        <Plus size={26} color={BRAND.white} strokeWidth={2.8} />
       </Pressable>
-      <Typography type="body-xs" className="text-brand-orange mt-0.5" style={{ fontWeight: '600' }}>
-        發布
-      </Typography>
     </View>
   );
 }
@@ -48,12 +46,12 @@ export default function TabLayout() {
           tabBarStyle: {
             backgroundColor: BRAND.white,
             borderTopColor: BRAND.border,
-            height: 62,
+            height: 64,
             paddingTop: 6,
             paddingBottom: 6,
           },
-          tabBarLabelStyle: { fontSize: 11 },
-          tabBarActiveTintColor: BRAND.blue,
+          tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+          tabBarActiveTintColor: BRAND.orange,
           tabBarInactiveTintColor: BRAND.muted,
         }}
       >

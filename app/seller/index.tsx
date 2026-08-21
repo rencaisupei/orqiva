@@ -1,55 +1,68 @@
 import type { ReactNode } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
-import { Button, Separator, Spinner, Typography } from 'heroui-native';
-import { router } from 'expo-router';
+import { Button, Spinner, Typography } from 'heroui-native';
+import { router, type Href } from 'expo-router';
 import {
+  BarChart3,
+  ChevronRight,
   ClipboardList,
-  Eye,
+  MessageCircle,
   Package,
-  PackagePlus,
-  Receipt,
+  Plus,
+  Settings,
   Store as StoreIcon,
-  Wallet,
 } from 'lucide-react-native';
 
-import { AppImage } from '@/components/AppImage';
 import { EmptyState } from '@/components/EmptyState';
+import { OrqivaBadge } from '@/components/brand/OrqivaLogo';
+import { SellerStatTile } from '@/components/SellerStatTile';
+import { SellerTabBar } from '@/components/SellerTabBar';
 import { SignInRequired } from '@/components/SignInRequired';
+import { LinearGradient } from '@/components/ui/primitives/LinearGradient';
 import { useMyStoreQuery, useSellerDashboard } from '@/lib/api/seller';
 import { BRAND } from '@/lib/brand';
 import { formatCompact, formatNumber, formatPrice } from '@/lib/format';
 import { useUserId } from '@/lib/session';
 
-function StatCard({
-  label,
-  value,
-  icon,
-  accent = false,
-}: {
-  label: string;
-  value: string;
+type MenuRowProps = {
   icon: ReactNode;
-  accent?: boolean;
-}) {
+  iconBg: string;
+  label: string;
+  badge?: number;
+  href: Href;
+};
+
+function MenuRow({ icon, iconBg, label, badge, href }: MenuRowProps) {
   return (
-    <View
-      className="min-w-[46%] flex-1 gap-1.5 rounded-2xl p-4"
-      style={{ backgroundColor: accent ? BRAND.navy : BRAND.white }}
+    <Pressable
+      className="bg-surface flex-row items-center gap-3 rounded-2xl px-4 py-3.5"
+      style={{
+        shadowColor: 'rgba(8, 38, 107, 0.08)',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 1,
+        shadowRadius: 6,
+        elevation: 1,
+      }}
+      onPress={() => router.push(href)}
     >
-      <View className="flex-row items-center gap-2">
-        {icon}
-        <Typography type="body-xs" className={accent ? 'text-white/75' : 'text-muted'}>
-          {label}
-        </Typography>
-      </View>
-      <Typography
-        type="h5"
-        className={accent ? 'text-white' : 'text-navy'}
-        style={{ fontWeight: '700' }}
+      <View
+        className="h-9 w-9 items-center justify-center rounded-xl"
+        style={{ backgroundColor: iconBg }}
       >
-        {value}
+        {icon}
+      </View>
+      <Typography type="body" className="text-navy flex-1" style={{ fontWeight: '600' }}>
+        {label}
       </Typography>
-    </View>
+      {badge && badge > 0 ? (
+        <View className="bg-brand-orange min-w-6 items-center rounded-full px-2 py-0.5">
+          <Typography type="body-xs" className="text-white" style={{ fontWeight: '700' }}>
+            {badge > 99 ? '99+' : badge}
+          </Typography>
+        </View>
+      ) : null}
+      <ChevronRight size={18} color={BRAND.muted} />
+    </Pressable>
   );
 }
 
@@ -59,7 +72,11 @@ export default function SellerDashboardScreen() {
   const { data: stats, isLoading: statsLoading } = useSellerDashboard(userId, store?.id ?? null);
 
   if (!userId) {
-    return <SignInRequired title="登入後進入賣家中心" />;
+    return (
+      <View className="bg-background pt-safe flex-1">
+        <SignInRequired title="登入後進入賣家中心" />
+      </View>
+    );
   }
 
   if (storeLoading) {
@@ -72,7 +89,7 @@ export default function SellerDashboardScreen() {
 
   if (!store) {
     return (
-      <View className="bg-background flex-1">
+      <View className="bg-background pt-safe flex-1">
         <EmptyState
           icon={<StoreIcon size={26} color={BRAND.blue} />}
           title="還沒有 ORQIVA 店舖"
@@ -87,22 +104,37 @@ export default function SellerDashboardScreen() {
     );
   }
 
-  const maxRevenue = Math.max(1, ...(stats?.trend ?? []).map((t) => t.revenue));
-
   return (
     <View className="bg-background flex-1">
-      <ScrollView contentContainerClassName="p-4 gap-3 pb-10">
-        <View className="bg-surface gap-1 rounded-2xl p-4">
-          <Typography type="body-xs" color="muted">
-            賣家中心
-          </Typography>
-          <Typography type="h5" className="text-navy" style={{ fontWeight: '700' }}>
-            {store.name}
-          </Typography>
-          <Typography type="body-xs" color="muted">
-            {store.location} · 評價 {Number(store.rating).toFixed(1)}（{store.rating_count}）
-          </Typography>
+      <View className="bg-surface pt-safe px-4 pb-3">
+        <View className="flex-row items-center gap-3 pt-2">
+          <OrqivaBadge size={42} />
+          <View className="flex-1">
+            <Typography type="h5" className="text-navy" style={{ fontWeight: '700' }}>
+              賣家中心
+            </Typography>
+            <Typography type="body-xs" color="muted" numberOfLines={1}>
+              {store.name} · 評價 {store.rating.toFixed(1)}（{store.rating_count}）
+            </Typography>
+          </View>
+          <Pressable
+            className="h-10 w-10 items-center justify-center"
+            accessibilityLabel="店舖設定"
+            onPress={() => router.push('/seller/store')}
+          >
+            <Settings size={22} color={BRAND.navy} />
+          </Pressable>
         </View>
+      </View>
+
+      <ScrollView
+        className="flex-1"
+        contentContainerClassName="p-4 gap-3 pb-8"
+        showsVerticalScrollIndicator={false}
+      >
+        <Typography type="h6" className="text-navy" style={{ fontWeight: '700' }}>
+          今日數據
+        </Typography>
 
         {statsLoading ? (
           <View className="py-8">
@@ -110,126 +142,100 @@ export default function SellerDashboardScreen() {
           </View>
         ) : (
           <>
-            <View className="flex-row flex-wrap gap-3">
-              <StatCard
-                accent
-                label="今日營收"
-                value={formatPrice(stats?.todayRevenue ?? 0)}
-                icon={<Wallet size={15} color={BRAND.white} />}
-              />
-              <StatCard
-                label="本月營收"
-                value={formatPrice(stats?.monthRevenue ?? 0)}
-                icon={<Wallet size={15} color={BRAND.blue} />}
-              />
-              <StatCard
-                label="今日瀏覽"
+            <View className="flex-row gap-2">
+              <SellerStatTile
+                label="瀏覽數"
                 value={formatCompact(stats?.todayViews ?? 0)}
-                icon={<Eye size={15} color={BRAND.blue} />}
+                delta={stats?.viewsDelta ?? null}
               />
-              <StatCard
-                label="今日訂單"
+              <SellerStatTile
+                label="訂單數"
                 value={formatNumber(stats?.todayOrders ?? 0)}
-                icon={<Receipt size={15} color={BRAND.blue} />}
+                delta={stats?.ordersDelta ?? null}
               />
-              <StatCard
-                label="商品數量"
-                value={formatNumber(stats?.productCount ?? 0)}
-                icon={<Package size={15} color={BRAND.blue} />}
-              />
-              <StatCard
-                label="待處理訂單"
-                value={formatNumber(stats?.pendingOrders ?? 0)}
-                icon={<ClipboardList size={15} color={BRAND.orange} />}
+              <SellerStatTile
+                label="營收"
+                value={formatPrice(stats?.todayRevenue ?? 0)}
+                delta={stats?.revenueDelta ?? null}
               />
             </View>
 
-            <View className="bg-surface gap-3 rounded-2xl p-4">
-              <Typography type="body" className="text-navy" style={{ fontWeight: '600' }}>
-                近 7 日銷售趨勢
-              </Typography>
-              <View className="h-32 flex-row items-end gap-2">
-                {(stats?.trend ?? []).map((point) => (
-                  <View key={point.date} className="flex-1 items-center gap-1">
-                    <View
-                      className="w-full rounded-t-md"
-                      style={{
-                        height: Math.max(4, (point.revenue / maxRevenue) * 96),
-                        backgroundColor: point.revenue > 0 ? BRAND.blue : BRAND.border,
-                      }}
-                    />
-                    <Typography type="body-xs" color="muted" style={{ fontSize: 9 }}>
-                      {point.date}
-                    </Typography>
-                  </View>
-                ))}
-              </View>
-            </View>
-
-            <View className="bg-surface gap-3 rounded-2xl p-4">
-              <Typography type="body" className="text-navy" style={{ fontWeight: '600' }}>
-                熱門商品
-              </Typography>
-              {(stats?.topProducts ?? []).length === 0 ? (
-                <Typography type="body-sm" color="muted">
-                  還沒有商品，先上架第一件商品吧。
+            <View className="bg-surface flex-row items-center justify-between rounded-2xl px-4 py-3">
+              <View>
+                <Typography type="body-xs" color="muted">
+                  本月營收
                 </Typography>
-              ) : (
-                (stats?.topProducts ?? []).map((product) => (
-                  <Pressable
-                    key={product.id}
-                    className="flex-row items-center gap-3"
-                    onPress={() =>
-                      router.push({ pathname: '/products/[id]', params: { id: product.id } })
-                    }
-                  >
-                    <AppImage uri={product.cover_url} className="h-12 w-12 rounded-xl" />
-                    <View className="flex-1">
-                      <Typography type="body-sm" numberOfLines={1} className="text-navy">
-                        {product.title}
-                      </Typography>
-                      <Typography type="body-xs" color="muted">
-                        已售 {product.sold_count} · 庫存 {product.stock} · 瀏覽 {product.view_count}
-                      </Typography>
-                    </View>
-                    <Typography
-                      type="body-sm"
-                      className="text-brand-orange"
-                      style={{ fontWeight: '600' }}
-                    >
-                      {formatPrice(product.price)}
-                    </Typography>
-                  </Pressable>
-                ))
-              )}
+                <Typography type="body" className="text-navy" style={{ fontWeight: '700' }}>
+                  {formatPrice(stats?.monthRevenue ?? 0)}
+                </Typography>
+              </View>
+              <View className="items-end">
+                <Typography type="body-xs" color="muted">
+                  商品 / 待處理訂單
+                </Typography>
+                <Typography type="body" className="text-navy" style={{ fontWeight: '700' }}>
+                  {formatNumber(stats?.productCount ?? 0)} /{' '}
+                  {formatNumber(stats?.pendingOrders ?? 0)}
+                </Typography>
+              </View>
             </View>
           </>
         )}
 
-        <View className="bg-surface gap-2 rounded-2xl p-4">
-          <Typography type="body" className="text-navy" style={{ fontWeight: '600' }}>
-            快速操作
-          </Typography>
-          <Separator />
-          <Button className="mt-1" onPress={() => router.push('/seller/new-product')}>
-            <View className="flex-row items-center gap-2">
-              <PackagePlus size={16} color={BRAND.white} />
-              <Typography type="body-sm" className="text-white" style={{ fontWeight: '600' }}>
-                新增商品
-              </Typography>
-            </View>
-          </Button>
-          <Button variant="secondary" onPress={() => router.push('/seller/products')}>
-            <Button.Label>商品管理</Button.Label>
-          </Button>
-          <Button variant="secondary" onPress={() => router.push('/seller/orders')}>
-            <Button.Label>訂單管理</Button.Label>
-          </Button>
-          <Button variant="secondary" onPress={() => router.push('/seller/store')}>
-            <Button.Label>店舖設定</Button.Label>
-          </Button>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="新增商品"
+          onPress={() => router.push('/seller/new-product')}
+        >
+          <LinearGradient
+            colors={[BRAND.yellow, BRAND.orange]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            className="flex-row items-center justify-center gap-2 rounded-2xl py-4"
+          >
+            <Plus size={20} color={BRAND.white} strokeWidth={2.8} />
+            <Typography type="body" className="text-white" style={{ fontWeight: '700' }}>
+              新增商品
+            </Typography>
+          </LinearGradient>
+        </Pressable>
+
+        <View className="gap-2.5">
+          <MenuRow
+            icon={<Package size={18} color={BRAND.blue} />}
+            iconBg={BRAND.blueSoft}
+            label="商品管理"
+            href="/seller/products"
+          />
+          <MenuRow
+            icon={<ClipboardList size={18} color={BRAND.orange} />}
+            iconBg={BRAND.orangeSoft}
+            label="訂單管理"
+            badge={stats?.pendingOrders ?? 0}
+            href="/seller/orders"
+          />
+          <MenuRow
+            icon={<BarChart3 size={18} color={BRAND.blue} />}
+            iconBg={BRAND.blueSoft}
+            label="銷售分析"
+            href="/seller/analytics"
+          />
+          <MenuRow
+            icon={<MessageCircle size={18} color={BRAND.blue} />}
+            iconBg={BRAND.blueSoft}
+            label="買家訊息"
+            href="/(tabs)/messages"
+          />
+          <MenuRow
+            icon={<StoreIcon size={18} color={BRAND.navy} />}
+            iconBg={BRAND.blueSoft}
+            label="店舖設定"
+            href="/seller/store"
+          />
         </View>
       </ScrollView>
+
+      <SellerTabBar />
     </View>
   );
 }

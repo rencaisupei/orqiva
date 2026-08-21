@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { Button, SearchField, Typography } from 'heroui-native';
 import { router } from 'expo-router';
-import { Bell, ChevronRight, ShoppingCart } from 'lucide-react-native';
+import { Bell, ChevronRight, Menu, ShoppingCart } from 'lucide-react-native';
 
 import { CategoryIcon } from '@/components/CategoryIcon';
-import { OrqivaLogo } from '@/components/brand/OrqivaLogo';
+import { HomeQuickMenu } from '@/components/HomeQuickMenu';
+import { OrqivaLogo, OrqivaMark } from '@/components/brand/OrqivaLogo';
 import { ProductCard } from '@/components/ProductCard';
 import { LinearGradient } from '@/components/ui/primitives/LinearGradient';
 import { useFavoriteToggle } from '@/hooks/useFavoriteToggle';
@@ -46,9 +47,10 @@ function SectionHeader({ title, onMore }: { title: string; onMore?: () => void }
 
 export default function HomeScreen() {
   const [query, setQuery] = useState('');
+  const [menuOpen, setMenuOpen] = useState(false);
   const userId = useUserId();
   const { data: categories } = useCategories();
-  const { data: popular } = useProducts({ sort: 'popular', limit: 6 });
+  const { data: popular } = useProducts({ sort: 'popular', limit: 4 });
   const { data: newest } = useProducts({ sort: 'newest', limit: 6 });
   const { data: cartCount } = useCartCount(userId);
   const { data: unread } = useUnreadNotificationCount(userId);
@@ -62,9 +64,20 @@ export default function HomeScreen() {
   return (
     <View className="bg-background flex-1">
       <View className="bg-surface pt-safe">
-        <View className="flex-row items-center justify-between px-4 pt-2 pb-2">
-          <OrqivaLogo size={28} />
-          <View className="flex-row items-center gap-1">
+        <View className="flex-row items-center px-2 pt-2 pb-1">
+          <Pressable
+            className="h-10 w-10 items-center justify-center"
+            onPress={() => setMenuOpen(true)}
+            accessibilityLabel="快速前往"
+          >
+            <Menu size={22} color={BRAND.navy} />
+          </Pressable>
+
+          <View className="flex-1 items-center">
+            <OrqivaLogo size={26} showZh={false} />
+          </View>
+
+          <View className="flex-row items-center">
             <Pressable
               className="h-10 w-10 items-center justify-center"
               onPress={() => router.push('/notifications')}
@@ -88,9 +101,9 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        <View className="px-4 pb-3">
+        <View className="px-4 pt-1 pb-3">
           <SearchField value={query} onChange={setQuery}>
-            <SearchField.Group>
+            <SearchField.Group className="rounded-full">
               <SearchField.SearchIcon />
               <SearchField.Input
                 placeholder={BRAND_COPY.searchPlaceholder}
@@ -106,48 +119,61 @@ export default function HomeScreen() {
       <ScrollView contentContainerClassName="pb-10" showsVerticalScrollIndicator={false}>
         <View className="px-4 pt-4">
           <LinearGradient
-            colors={[BRAND.navy, BRAND.blue]}
+            colors={[BRAND.navy, '#0B3FA8', BRAND.blue]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            className="overflow-hidden rounded-3xl p-5"
+            className="relative overflow-hidden rounded-3xl p-5"
           >
-            <Typography type="body-xs" className="text-brand-yellow" style={{ fontWeight: '700' }}>
-              {BRAND_COPY.slogan}
-            </Typography>
-            <Typography type="h3" className="mt-2 text-white" style={{ fontWeight: '700' }}>
-              {BRAND_COPY.bannerTitle}
-            </Typography>
-            <Typography type="body-sm" className="mt-1.5 text-white/85">
-              {BRAND_COPY.bannerSubtitle}
-            </Typography>
-            <Button
-              className="mt-4 self-start bg-white"
-              size="sm"
-              onPress={() => router.push('/products')}
-            >
-              <Button.Label className="text-navy">{BRAND_COPY.bannerCta}</Button.Label>
-            </Button>
+            <View className="absolute top-8 -right-5" pointerEvents="none">
+              <OrqivaMark size={132} strokeWidth={8} />
+            </View>
+
+            <View className="w-[62%]">
+              <View className="flex-row items-center gap-1.5">
+                <Typography type="h4" className="text-white" style={{ fontWeight: '700' }}>
+                  {BRAND_COPY.bannerLeadBuyer}
+                </Typography>
+                <Typography type="h5" className="text-brand-orange" style={{ fontWeight: '700' }}>
+                  ×
+                </Typography>
+                <Typography type="h4" className="text-white" style={{ fontWeight: '700' }}>
+                  {BRAND_COPY.bannerLeadSeller}
+                </Typography>
+              </View>
+              <Typography type="h4" className="text-white" style={{ fontWeight: '700' }}>
+                {BRAND_COPY.bannerHeadline}
+              </Typography>
+              <Typography type="body-sm" className="mt-2 text-white/85">
+                {BRAND_COPY.bannerHighlights}
+              </Typography>
+              <Button
+                className="mt-4 self-start rounded-full bg-white"
+                size="sm"
+                onPress={() => router.push('/products')}
+              >
+                <Button.Label className="text-navy" style={{ fontWeight: '700' }}>
+                  {BRAND_COPY.bannerCta}
+                </Button.Label>
+              </Button>
+            </View>
           </LinearGradient>
         </View>
 
-        <View className="mt-5 px-4">
-          <View className="gap-1">
-            <Typography type="h5" className="text-navy" style={{ fontWeight: '700' }}>
-              {BRAND_COPY.tagline}
-            </Typography>
-            <Typography type="body-sm" color="muted">
-              {BRAND_COPY.subTagline}
-            </Typography>
-          </View>
+        <View className="mt-4 px-4">
+          <Typography type="h6" className="text-navy" style={{ fontWeight: '700' }}>
+            {BRAND_COPY.tagline}
+          </Typography>
+          <Typography type="body-sm" color="muted">
+            {BRAND_COPY.subTagline}
+          </Typography>
         </View>
 
-        <View className="mt-5 px-4">
-          <SectionHeader title="商品分類" onMore={() => router.push('/(tabs)/categories')} />
+        <View className="mt-4 px-3">
           <View className="flex-row flex-wrap">
             {(categories ?? []).slice(0, 8).map((category) => (
               <Pressable
                 key={category.id}
-                className="mb-3 w-1/4 items-center gap-1.5"
+                className="mb-2 w-1/4 items-center px-1"
                 onPress={() =>
                   router.push({
                     pathname: '/products',
@@ -155,10 +181,24 @@ export default function HomeScreen() {
                   })
                 }
               >
-                <View className="bg-surface h-12 w-12 items-center justify-center rounded-2xl">
-                  <CategoryIcon name={category.icon} />
+                <View
+                  className="bg-surface h-16 w-full items-center justify-center rounded-2xl"
+                  style={{
+                    shadowColor: 'rgba(8, 38, 107, 0.08)',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 1,
+                    shadowRadius: 6,
+                    elevation: 1,
+                  }}
+                >
+                  <CategoryIcon name={category.icon} size={26} color={BRAND.navy} />
                 </View>
-                <Typography type="body-xs" className="text-navy" numberOfLines={1}>
+                <Typography
+                  type="body-xs"
+                  className="text-navy mt-1.5"
+                  numberOfLines={1}
+                  style={{ fontWeight: '600' }}
+                >
                   {category.name}
                 </Typography>
               </Pressable>
@@ -166,14 +206,14 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        <View className="mt-2 px-4">
+        <View className="mt-3 px-4">
           <SectionHeader
-            title="熱門商品"
+            title="熱門推薦"
             onMore={() => router.push({ pathname: '/products', params: { sort: 'popular' } })}
           />
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="-mx-1">
+          <View className="flex-row flex-wrap justify-between">
             {(popular ?? []).map((product) => (
-              <View key={product.id} className="mx-1 w-40">
+              <View key={product.id} className="mb-3 w-[48.5%]">
                 <ProductCard
                   product={product}
                   isFavorite={isFavorite(product.id)}
@@ -181,10 +221,10 @@ export default function HomeScreen() {
                 />
               </View>
             ))}
-          </ScrollView>
+          </View>
         </View>
 
-        <View className="mt-6 px-4">
+        <View className="mt-2 px-4">
           <SectionHeader
             title="最新上架"
             onMore={() => router.push({ pathname: '/products', params: { sort: 'newest' } })}
@@ -202,7 +242,7 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        <View className="mt-2 px-4">
+        <View className="mt-1 px-4">
           <Pressable
             className="bg-surface flex-row items-center gap-3 rounded-2xl p-4"
             onPress={() => router.push('/(tabs)/publish')}
@@ -228,6 +268,8 @@ export default function HomeScreen() {
           </Typography>
         </View>
       </ScrollView>
+
+      <HomeQuickMenu isOpen={menuOpen} onOpenChange={setMenuOpen} />
     </View>
   );
 }

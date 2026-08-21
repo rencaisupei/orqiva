@@ -6,6 +6,7 @@ import { ClipboardList } from 'lucide-react-native';
 
 import { AppImage } from '@/components/AppImage';
 import { EmptyState } from '@/components/EmptyState';
+import { SellerTabBar } from '@/components/SellerTabBar';
 import { SignInRequired } from '@/components/SignInRequired';
 import { useSetOrderStatus } from '@/lib/api/commerce';
 import { useSellerOrders } from '@/lib/api/seller';
@@ -66,9 +67,10 @@ export default function SellerOrdersScreen() {
         </View>
       ) : (
         <FlatList
+          className="flex-1"
           data={filtered}
           keyExtractor={(item) => item.id}
-          contentContainerClassName="p-4 gap-3 pb-10"
+          contentContainerClassName="p-4 gap-3 pb-6"
           ListEmptyComponent={
             <EmptyState
               icon={<ClipboardList size={26} color={BRAND.blue} />}
@@ -161,6 +163,8 @@ export default function SellerOrdersScreen() {
           )}
         />
       )}
+
+      <SellerTabBar />
     </View>
   );
 }
