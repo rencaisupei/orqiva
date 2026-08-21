@@ -12,7 +12,7 @@ import {
   Typography,
 } from 'heroui-native';
 import { router } from 'expo-router';
-import { CheckCircle2, ImagePlus, Plus, Trash2, X } from 'lucide-react-native';
+import { CheckCircle2, ImagePlus, Plus, ShieldAlert, Trash2, X } from 'lucide-react-native';
 
 import { AppImage } from '@/components/AppImage';
 import { EmptyState } from '@/components/EmptyState';
@@ -24,7 +24,12 @@ import { pickImages, uploadImage } from '@/lib/api/upload';
 import { BRAND } from '@/lib/brand';
 import { formatPrice } from '@/lib/format';
 import { useUserId } from '@/lib/session';
-import { LOCATIONS, SHIPPING_METHODS, type ProductCondition } from '@/lib/types';
+import {
+  LOCATIONS,
+  SHIPPING_METHODS,
+  type ModerationResult,
+  type ProductCondition,
+} from '@/lib/types';
 
 const STEPS = [
   '商品圖片',
@@ -65,6 +70,7 @@ export default function NewProductScreen() {
   const [location, setLocation] = useState<string>(LOCATIONS[0]);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const [moderation, setModeration] = useState<ModerationResult | null>(null);
 
   const categoryOptions = useMemo<SelectOption[]>(
     () =>
@@ -105,15 +111,44 @@ export default function NewProductScreen() {
   }
 
   if (done) {
+    const verdict = moderation?.verdict ?? 'pending';
+    const heading =
+      verdict === 'approved'
+        ? '商品已通過審核並上架'
+        : verdict === 'rejected'
+          ? '商品未通過 AI 審核'
+          : verdict === 'flagged'
+            ? '已送出，等待人工覆核'
+            : '已送出，AI 正在審核';
+    const detail =
+      verdict === 'approved'
+        ? `買家現在可以在極貨網搜尋到「${title}」。`
+        : moderation
+          ? `${moderation.summary} ${moderation.suggestion}`.trim()
+          : `「${title}」已建立，審核通過後買家就會看到。可在商品管理查看結果。`;
+
     return (
       <View className="bg-background flex-1 items-center justify-center gap-4 px-8">
-        <CheckCircle2 size={56} color={BRAND.blue} />
+        {verdict === 'approved' ? (
+          <CheckCircle2 size={56} color={BRAND.blue} />
+        ) : (
+          <ShieldAlert size={56} color={verdict === 'rejected' ? BRAND.orange : BRAND.yellow} />
+        )}
         <Typography type="h4" align="center" className="text-navy" style={{ fontWeight: '700' }}>
-          商品已成功上架
+          {heading}
         </Typography>
         <Typography type="body-sm" align="center" color="muted">
-          買家現在可以在極貨網搜尋到「{title}」。
+          {detail}
         </Typography>
+        {moderation && moderation.labels.length > 0 ? (
+          <View className="flex-row flex-wrap justify-center gap-1.5">
+            {moderation.labels.map((label) => (
+              <Chip key={label} size="sm" variant="soft" color="warning">
+                {label}
+              </Chip>
+            ))}
+          </View>
+        ) : null}
         <View className="mt-2 w-full gap-2">
           <Button onPress={() => router.replace('/seller/products')}>
             <Button.Label>查看我的商品</Button.Label>
@@ -122,6 +157,7 @@ export default function NewProductScreen() {
             variant="secondary"
             onPress={() => {
               setDone(false);
+              setModeration(null);
               setStep(0);
               setImages([]);
               setTitle('');
@@ -219,7 +255,10 @@ export default function NewProductScreen() {
     createProduct.mutate(
       { userId, storeId: store.id, draft },
       {
-        onSuccess: () => setDone(true),
+        onSuccess: (result) => {
+          setModeration(result.moderation);
+          setDone(true);
+        },
         onError: (err: Error) => setError(err.message),
       },
     );

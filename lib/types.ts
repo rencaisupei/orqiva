@@ -5,9 +5,17 @@ export type UserAccount = {
   email: string | null;
   phone: string | null;
   roles: Role[];
+  notify_messages: boolean;
+  notify_orders: boolean;
+  notify_moderation: boolean;
   created_at: string;
   updated_at: string;
 };
+
+export type NotificationPrefs = Pick<
+  UserAccount,
+  'notify_messages' | 'notify_orders' | 'notify_moderation'
+>;
 
 export type Profile = {
   id: string;
@@ -51,6 +59,64 @@ export type StoreSummary = Pick<
 export type ProductCondition = 'new' | 'used';
 export type ProductStatus = 'active' | 'draft' | 'suspended';
 
+/* ── AI 驗證審核 ────────────────────────────────────────────── */
+
+export type ModerationStatus = 'pending' | 'approved' | 'flagged' | 'rejected';
+
+export const MODERATION_STATUS_LABEL: Record<ModerationStatus, string> = {
+  pending: '審核中',
+  approved: '審核通過',
+  flagged: '待人工覆核',
+  rejected: '審核未通過',
+};
+
+export type ModerationVerdict = 'approved' | 'flagged' | 'rejected';
+
+export type ModerationReview = {
+  id: string;
+  target_type: 'product' | 'message' | 'report';
+  target_id: string;
+  owner_id: string | null;
+  verdict: ModerationVerdict;
+  risk_score: number;
+  labels: string[];
+  summary: string;
+  suggestion: string | null;
+  engine: 'openai' | 'rules' | 'admin';
+  model: string | null;
+  created_at: string;
+};
+
+export type MessageFlag = {
+  id: string;
+  message_id: string;
+  conversation_id: string;
+  sender_id: string | null;
+  risk_score: number;
+  labels: string[];
+  reason: string;
+  excerpt: string | null;
+  status: 'open' | 'reviewed' | 'dismissed';
+  created_at: string;
+};
+
+export type ModerationResult = {
+  verdict: ModerationVerdict;
+  risk: number;
+  labels: string[];
+  summary: string;
+  suggestion: string;
+  engine: 'openai' | 'rules';
+};
+
+export type MessageScanResult = {
+  flagged: boolean;
+  risk: number;
+  labels?: string[];
+  summary?: string;
+  suggestion?: string;
+};
+
 export type Product = {
   id: string;
   store_id: string;
@@ -66,6 +132,13 @@ export type Product = {
   shipping_methods: string[];
   specs: Record<string, string>;
   status: ProductStatus;
+  moderation_status: ModerationStatus;
+  moderation_risk: number;
+  moderation_labels: string[];
+  moderation_summary: string | null;
+  moderation_engine: string | null;
+  moderation_model: string | null;
+  moderated_at: string | null;
   rating: number;
   rating_count: number;
   sold_count: number;
@@ -177,7 +250,11 @@ export type NotificationType =
   | 'seller_reply'
   | 'product_sold'
   | 'product_published'
-  | 'system';
+  | 'system'
+  | 'message'
+  | 'moderation'
+  | 'support'
+  | 'logistics';
 
 export type AppNotification = {
   id: string;
@@ -199,6 +276,15 @@ export type SellerStatistic = {
   revenue: number;
 };
 
+export type ReportSeverity = 'low' | 'medium' | 'high' | 'critical';
+
+export const REPORT_SEVERITY_LABEL: Record<ReportSeverity, string> = {
+  low: '輕微',
+  medium: '一般',
+  high: '高風險',
+  critical: '緊急',
+};
+
 export type Report = {
   id: string;
   reporter_id: string;
@@ -206,7 +292,57 @@ export type Report = {
   target_id: string;
   reason: string;
   status: 'open' | 'reviewing' | 'resolved';
+  severity: ReportSeverity | null;
+  ai_summary: string | null;
+  ai_labels: string[];
+  suggested_action: string | null;
+  triaged_at: string | null;
   created_at: string;
+};
+
+/* ── 客服工單（聯絡我們）──────────────────────────────────────── */
+
+export type SupportCategory =
+  | 'order'
+  | 'payment'
+  | 'logistics'
+  | 'account'
+  | 'product'
+  | 'report'
+  | 'other';
+
+export const SUPPORT_CATEGORY_LABEL: Record<SupportCategory, string> = {
+  order: '訂單問題',
+  payment: '付款問題',
+  logistics: '物流與取貨',
+  account: '帳號與登入',
+  product: '商品與上架',
+  report: '檢舉與申訴',
+  other: '其他',
+};
+
+export type SupportTicketStatus = 'open' | 'in_progress' | 'closed';
+
+export const SUPPORT_STATUS_LABEL: Record<SupportTicketStatus, string> = {
+  open: '待處理',
+  in_progress: '處理中',
+  closed: '已結案',
+};
+
+export type SupportTicket = {
+  id: string;
+  user_id: string | null;
+  name: string;
+  email: string;
+  phone: string | null;
+  category: SupportCategory;
+  subject: string;
+  message: string;
+  status: SupportTicketStatus;
+  admin_reply: string | null;
+  replied_at: string | null;
+  created_at: string;
+  updated_at: string;
 };
 
 export type SortKey = 'newest' | 'popular' | 'price_asc' | 'price_desc' | 'rating';

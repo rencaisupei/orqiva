@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { FlatList, KeyboardAvoidingView, Platform, Pressable, View } from 'react-native';
 import { Input, Spinner, Typography, useToast } from 'heroui-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Send } from 'lucide-react-native';
+import { Send, ShieldAlert } from 'lucide-react-native';
 
 import { AppImage } from '@/components/AppImage';
 import { EmptyState } from '@/components/EmptyState';
@@ -23,6 +23,7 @@ export default function ChatScreen() {
   const { data: messages } = useMessages(id);
   const sendMessage = useSendMessage();
   const [draft, setDraft] = useState('');
+  const [riskNotice, setRiskNotice] = useState<string | null>(null);
 
   if (!userId) {
     return <SignInRequired title="登入後才能聊天" />;
@@ -54,8 +55,17 @@ export default function ChatScreen() {
     if (!body) return;
     setDraft('');
     sendMessage.mutate(
-      { conversationId: conversation.id, senderId: userId, body },
+      { conversationId: conversation.id, body },
       {
+        onSuccess: (result) => {
+          // AI 風險掃描：命中時提醒雙方留在平台內完成交易。
+          if (result.moderation?.flagged) {
+            setRiskNotice(
+              result.moderation.suggestion ??
+                '這則訊息可能涉及站外交易或付款風險，請在極貨網平台內完成交易。',
+            );
+          }
+        },
         onError: (error: Error) => toast.show({ variant: 'danger', label: error.message }),
       },
     );
@@ -123,25 +133,40 @@ export default function ChatScreen() {
         }}
       />
 
-      <View className="border-border bg-surface pb-safe-offset-2 flex-row items-center gap-2 border-t px-3 py-2.5">
-        <View className="flex-1">
-          <Input
-            placeholder="輸入訊息…"
-            value={draft}
-            onChangeText={setDraft}
-            returnKeyType="send"
-            onSubmitEditing={send}
-          />
+      <View className="border-border bg-surface pb-safe-offset-2 border-t px-3 py-2.5">
+        {riskNotice ? (
+          <Pressable
+            className="mb-2 flex-row items-start gap-2 rounded-xl px-3 py-2"
+            style={{ backgroundColor: BRAND.orangeSoft }}
+            onPress={() => setRiskNotice(null)}
+            accessibilityLabel="關閉安全提醒"
+          >
+            <ShieldAlert size={16} color={BRAND.orange} />
+            <Typography type="body-xs" className="text-navy flex-1">
+              {riskNotice}
+            </Typography>
+          </Pressable>
+        ) : null}
+        <View className="flex-row items-center gap-2">
+          <View className="flex-1">
+            <Input
+              placeholder="輸入訊息…"
+              value={draft}
+              onChangeText={setDraft}
+              returnKeyType="send"
+              onSubmitEditing={send}
+            />
+          </View>
+          <Pressable
+            className="h-11 w-11 items-center justify-center rounded-full"
+            style={{ backgroundColor: draft.trim() ? BRAND.blue : BRAND.border }}
+            disabled={!draft.trim() || sendMessage.isPending}
+            onPress={send}
+            accessibilityLabel="送出"
+          >
+            <Send size={18} color={BRAND.white} />
+          </Pressable>
         </View>
-        <Pressable
-          className="h-11 w-11 items-center justify-center rounded-full"
-          style={{ backgroundColor: draft.trim() ? BRAND.blue : BRAND.border }}
-          disabled={!draft.trim() || sendMessage.isPending}
-          onPress={send}
-          accessibilityLabel="送出"
-        >
-          <Send size={18} color={BRAND.white} />
-        </Pressable>
       </View>
     </KeyboardAvoidingView>
   );

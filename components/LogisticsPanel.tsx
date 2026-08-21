@@ -9,6 +9,7 @@ import {
   useSyncLogisticsOrder,
 } from '@/lib/api/logistics';
 import { BRAND } from '@/lib/brand';
+import { formatPrice } from '@/lib/format';
 import {
   LOGISTICS_STATUS_LABEL,
   LOGISTICS_SUB_TYPE_LABEL,
@@ -77,6 +78,20 @@ export function LogisticsPanel({ order, role }: Props) {
       ) : null}
 
       {isLoading ? <Spinner size="sm" /> : null}
+
+      <View className="bg-background gap-1 rounded-xl p-3">
+        <View className="flex-row items-center justify-between gap-2">
+          <Typography type="body-xs" color="muted" className="flex-1">
+            代收金額（商品總金額 + 運費）
+          </Typography>
+          <Typography type="body-sm" className="text-brand-orange" style={{ fontWeight: '700' }}>
+            {formatPrice(shipment?.collection_amount ?? order.subtotal + order.shipping_fee)}
+          </Typography>
+        </View>
+        <Typography type="body-xs" color="muted" numberOfLines={1}>
+          商品名稱：{shipment?.goods_name ?? order.order_items[0]?.title ?? '商品一批'}
+        </Typography>
+      </View>
 
       {shipment?.shipment_no ? (
         <Pressable

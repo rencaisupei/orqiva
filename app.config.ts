@@ -48,7 +48,19 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     extra: {
       appStoreAppId: process.env.BILT_APP_STORE_APP_ID,
     },
-    plugins: ['expo-router', 'expo-font', 'expo-web-browser', ...nativePlugins],
+    plugins: [
+      'expo-router',
+      'expo-font',
+      'expo-web-browser',
+      [
+        'expo-notifications',
+        {
+          // Push notifications for new messages, order status and moderation results.
+          color: '#006BFF',
+        },
+      ],
+      ...nativePlugins,
+    ],
     experiments: {
       typedRoutes: true,
       reactCompiler: true,

@@ -29,6 +29,7 @@ import { reportErrorToParent } from '@/lib/reportPreviewError';
 import { InstallPrompt } from '@/components/InstallPrompt';
 import { BackButton } from '@/components/BackButton';
 import { BRAND } from '@/lib/brand';
+import { usePushNotifications } from '@/lib/push';
 import { useSessionStore } from '@/lib/session';
 
 /**
@@ -69,6 +70,9 @@ export default function RootLayout() {
   const init = useSessionStore((s) => s.init);
 
   useEffect(() => init(), [init]);
+
+  // Registers the device for push and routes notification taps.
+  usePushNotifications();
 
   // Report uncaught JS errors and unhandled promise rejections to parent (Bilt preview iframe)
   useEffect(() => {
@@ -182,6 +186,8 @@ export default function RootLayout() {
             <Stack.Screen name="seller/store" options={{ title: '店舖設定' }} />
             <Stack.Screen name="admin/index" options={{ title: '平台管理' }} />
             <Stack.Screen name="admin/logistics" options={{ title: '物流串接設定' }} />
+            <Stack.Screen name="legal/privacy" options={{ title: '隱私權政策' }} />
+            <Stack.Screen name="support/contact" options={{ title: '聯絡我們' }} />
           </Stack>
           <InstallPrompt />
         </HeroUINativeProvider>

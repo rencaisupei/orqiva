@@ -1,8 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { bilt } from '@/lib/backend';
+import { bilt, callModeration } from '@/lib/backend';
 import { addRole } from '@/lib/session';
-import type { Order, Product, ProductCondition, SellerStatistic, Store } from '@/lib/types';
+import type {
+  ModerationResult,
+  Order,
+  Product,
+  ProductCondition,
+  SellerStatistic,
+  Store,
+} from '@/lib/types';
 
 export function useMyStoreQuery(userId: string | null) {
   return useQuery({
@@ -122,7 +129,11 @@ export type ProductDraft = {
 export function useCreateProduct() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { userId: string; storeId: string; draft: ProductDraft }) => {
+    mutationFn: async (input: {
+      userId: string;
+      storeId: string;
+      draft: ProductDraft;
+    }): Promise<{ productId: string; moderation: ModerationResult | null }> => {
       const { draft } = input;
       const { data, error } = await bilt
         .from('products')
@@ -140,6 +151,7 @@ export function useCreateProduct() {
           shipping_methods: draft.shippingMethods,
           specs: draft.specs,
           status: draft.status,
+          moderation_status: 'pending',
           cover_url: draft.images[0] ?? null,
         })
         .select('id')
@@ -156,21 +168,22 @@ export function useCreateProduct() {
         if (imgError) throw new Error(imgError.message);
       }
 
-      await bilt.from('notifications').insert({
-        user_id: input.userId,
-        type: 'product_published',
-        title: '商品已成功上架',
-        body: `「${draft.title}」已上架，買家現在可以看到這件商品。`,
-        link: '/seller/products',
-      });
+      // AI 驗證審核：通過才會對買家公開，結果與通知都由審核函式寫入。
+      let moderation: ModerationResult | null = null;
+      try {
+        moderation = await callModeration<ModerationResult>('moderate_product', { productId });
+      } catch {
+        // 審核服務暫時無法使用時商品留在「審核中」，管理員可在後台重新送審。
+      }
 
-      return productId;
+      return { productId, moderation };
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['seller-products'] });
       void qc.invalidateQueries({ queryKey: ['products'] });
       void qc.invalidateQueries({ queryKey: ['categories'] });
       void qc.invalidateQueries({ queryKey: ['notifications'] });
+      void qc.invalidateQueries({ queryKey: ['moderation'] });
     },
   });
 }
@@ -194,16 +207,34 @@ export function useUpdateProduct() {
         specs: Record<string, string>;
       }>;
     }) => {
+      const contentChanged = ['title', 'description', 'price', 'category_id'].some(
+        (key) => key in input.patch,
+      );
+
       const { error } = await bilt
         .from('products')
-        .update({ ...input.patch, updated_at: new Date().toISOString() })
+        .update({
+          ...input.patch,
+          ...(contentChanged ? { moderation_status: 'pending' } : {}),
+          updated_at: new Date().toISOString(),
+        })
         .eq('id', input.productId);
       if (error) throw new Error(error.message);
+
+      // 內容改過就重新送 AI 審核，避免用審核過的舊內容夾帶新文案。
+      if (contentChanged) {
+        try {
+          await callModeration('moderate_product', { productId: input.productId });
+        } catch {
+          // 審核服務暫時無法使用時商品留在「審核中」。
+        }
+      }
     },
     onSuccess: (_data, input) => {
       void qc.invalidateQueries({ queryKey: ['seller-products'] });
       void qc.invalidateQueries({ queryKey: ['products'] });
       void qc.invalidateQueries({ queryKey: ['product', input.productId] });
+      void qc.invalidateQueries({ queryKey: ['moderation'] });
     },
   });
 }

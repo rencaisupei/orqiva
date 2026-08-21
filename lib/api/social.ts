@@ -1,7 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { bilt } from '@/lib/backend';
-import type { AppNotification, Conversation, Message, Profile } from '@/lib/types';
+import { bilt, callNotify } from '@/lib/backend';
+import type {
+  AppNotification,
+  Conversation,
+  Message,
+  MessageScanResult,
+  NotificationPrefs,
+  Profile,
+} from '@/lib/types';
 
 const CONVERSATION_SELECT =
   '*, store:stores(id, name, logo_url), product:products(id, title, cover_url, price), buyer:profiles!conversations_buyer_profile_fkey(id, display_name, avatar_url)';
@@ -101,25 +108,20 @@ export function useStartConversation() {
   });
 }
 
+/**
+ * Sends through the `notify` function: the recipient's in-app notification, the
+ * push and the AI risk scan all need the service key.
+ */
 export function useSendMessage() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { conversationId: string; senderId: string; body: string }) => {
-      const { error } = await bilt.from('messages').insert({
-        conversation_id: input.conversationId,
-        sender_id: input.senderId,
-        body: input.body,
-      });
-      if (error) throw new Error(error.message);
-
-      await bilt
-        .from('conversations')
-        .update({
-          last_message: input.body,
-          last_message_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', input.conversationId);
+    mutationFn: async (input: { conversationId: string; body: string }) => {
+      const result = await callNotify<{
+        ok: boolean;
+        messageId: string;
+        moderation: MessageScanResult | null;
+      }>('send_message', { conversationId: input.conversationId, body: input.body });
+      return result;
     },
     onSuccess: (_data, input) => {
       void qc.invalidateQueries({ queryKey: ['messages', input.conversationId] });
@@ -209,6 +211,45 @@ export function useUpdateProfile() {
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['profile'] });
+    },
+  });
+}
+
+/** 推播偏好：訊息 / 訂單 / 審核三類可分開關閉。 */
+export function useNotificationPrefs(userId: string | null) {
+  return useQuery({
+    enabled: !!userId,
+    queryKey: ['notification-prefs', userId],
+    queryFn: async (): Promise<NotificationPrefs> => {
+      const { data, error } = await bilt
+        .from('users')
+        .select('notify_messages, notify_orders, notify_moderation')
+        .eq('id', userId!)
+        .maybeSingle();
+      if (error) throw new Error(error.message);
+      return (
+        data ?? {
+          notify_messages: true,
+          notify_orders: true,
+          notify_moderation: true,
+        }
+      );
+    },
+  });
+}
+
+export function useUpdateNotificationPrefs() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { userId: string; patch: Partial<NotificationPrefs> }) => {
+      const { error } = await bilt
+        .from('users')
+        .update({ ...input.patch, updated_at: new Date().toISOString() })
+        .eq('id', input.userId);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['notification-prefs'] });
     },
   });
 }

@@ -268,7 +268,7 @@ export default function CheckoutScreen() {
           </View>
           <Typography type="body-xs" color="muted">
             {mode === 'cvs'
-              ? '超商取貨付款：到店取貨時付款，賣家出貨後會收到寄貨編號。'
+              ? `超商取貨付款：到店取貨時支付代收金額 ${formatPrice(total)}（商品總金額 + 運費），賣家出貨後會收到寄貨編號。`
               : '宅配目前為貨到付款流程，線上金流將在下一階段開放。'}
           </Typography>
         </View>

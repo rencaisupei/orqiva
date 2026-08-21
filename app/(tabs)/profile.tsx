@@ -5,8 +5,10 @@ import { router } from 'expo-router';
 import {
   Bell,
   ChevronRight,
+  FileLock2,
   Heart,
   LayoutDashboard,
+  LifeBuoy,
   LogOut,
   Receipt,
   Settings,
@@ -164,6 +166,19 @@ export default function ProfileScreen() {
               onPress={() => router.push('/admin')}
             />
           ) : null}
+        </View>
+
+        <View className="bg-surface mx-4 mt-3 overflow-hidden rounded-2xl">
+          <MenuRow
+            icon={<LifeBuoy size={18} color={BRAND.blue} />}
+            title="聯絡我們"
+            onPress={() => router.push('/support/contact')}
+          />
+          <MenuRow
+            icon={<FileLock2 size={18} color={BRAND.blue} />}
+            title="隱私權政策"
+            onPress={() => router.push('/legal/privacy')}
+          />
         </View>
 
         <View className="bg-surface mx-4 mt-3 overflow-hidden rounded-2xl">

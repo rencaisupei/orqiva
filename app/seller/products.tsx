@@ -1,16 +1,18 @@
 import { FlatList, Pressable, View } from 'react-native';
 import { Button, Chip, Spinner, Typography, useToast } from 'heroui-native';
 import { router } from 'expo-router';
-import { PackagePlus, Pencil, Trash2 } from 'lucide-react-native';
+import { PackagePlus, Pencil, ShieldAlert, Trash2 } from 'lucide-react-native';
 
 import { AppImage } from '@/components/AppImage';
 import { EmptyState } from '@/components/EmptyState';
 import { SellerTabBar } from '@/components/SellerTabBar';
 import { SignInRequired } from '@/components/SignInRequired';
+import { useModerateProduct } from '@/lib/api/moderation';
 import { useDeleteProduct, useSellerProducts, useUpdateProduct } from '@/lib/api/seller';
 import { BRAND } from '@/lib/brand';
 import { formatPrice } from '@/lib/format';
 import { useUserId } from '@/lib/session';
+import { MODERATION_STATUS_LABEL } from '@/lib/types';
 
 export default function SellerProductsScreen() {
   const userId = useUserId();
@@ -18,6 +20,7 @@ export default function SellerProductsScreen() {
   const { data: products, isLoading } = useSellerProducts(userId);
   const updateProduct = useUpdateProduct();
   const deleteProduct = useDeleteProduct();
+  const moderate = useModerateProduct();
 
   if (!userId) {
     return <SignInRequired title="登入後管理商品" />;
@@ -73,25 +76,68 @@ export default function SellerProductsScreen() {
                     庫存 {item.stock} · 已售 {item.sold_count}
                   </Typography>
                 </View>
-                <Chip
-                  size="sm"
-                  variant="soft"
-                  color={
-                    item.status === 'active'
-                      ? 'success'
-                      : item.status === 'suspended'
-                        ? 'danger'
-                        : 'default'
-                  }
-                >
-                  {item.status === 'active'
-                    ? '上架中'
-                    : item.status === 'draft'
-                      ? '未上架'
-                      : '已停用'}
-                </Chip>
+                <View className="flex-row flex-wrap items-center gap-1.5">
+                  <Chip
+                    size="sm"
+                    variant="soft"
+                    color={
+                      item.status === 'active'
+                        ? 'success'
+                        : item.status === 'suspended'
+                          ? 'danger'
+                          : 'default'
+                    }
+                  >
+                    {item.status === 'active'
+                      ? '上架中'
+                      : item.status === 'draft'
+                        ? '未上架'
+                        : '已停用'}
+                  </Chip>
+                  {item.moderation_status !== 'approved' ? (
+                    <Chip
+                      size="sm"
+                      variant="soft"
+                      color={item.moderation_status === 'rejected' ? 'danger' : 'warning'}
+                    >
+                      {MODERATION_STATUS_LABEL[item.moderation_status]}
+                    </Chip>
+                  ) : null}
+                </View>
               </View>
             </Pressable>
+
+            {item.moderation_status !== 'approved' ? (
+              <View className="bg-background gap-2 rounded-xl p-3">
+                <View className="flex-row items-start gap-2">
+                  <ShieldAlert size={15} color={BRAND.orange} />
+                  <Typography type="body-xs" color="muted" className="flex-1">
+                    {item.moderation_summary ?? 'AI 正在審核這件商品，通過後買家才會看到。'}
+                  </Typography>
+                </View>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  isDisabled={moderate.isPending}
+                  onPress={() =>
+                    moderate.mutate(item.id, {
+                      onSuccess: (result) =>
+                        toast.show({
+                          variant: result.verdict === 'approved' ? 'success' : 'warning',
+                          label:
+                            result.verdict === 'approved'
+                              ? '審核通過，商品已公開'
+                              : result.summary || '仍未通過，請調整內容',
+                        }),
+                      onError: (error: Error) =>
+                        toast.show({ variant: 'danger', label: error.message }),
+                    })
+                  }
+                >
+                  <Button.Label>{moderate.isPending ? '送審中…' : '重新送審'}</Button.Label>
+                </Button>
+              </View>
+            ) : null}
 
             <View className="flex-row gap-2">
               <Button

@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { bilt } from '@/lib/backend';
-import type { Order, Product, Profile, Report, Store, UserAccount } from '@/lib/types';
+import type { Order, Product, Profile, Report, Role, Store, UserAccount } from '@/lib/types';
 
 export type AdminOverview = {
   userCount: number;
@@ -144,6 +144,35 @@ export function useAdminSetUserSuspended() {
       const { error } = await bilt
         .from('users')
         .update({ is_suspended: input.suspended, updated_at: new Date().toISOString() })
+        .eq('id', input.userId);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['admin'] });
+    },
+  });
+}
+
+/** 管理員權限管理：授予或收回 admin / seller 角色（buyer 永遠保留）。 */
+export function useAdminSetUserRole() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { userId: string; role: Role; grant: boolean }) => {
+      const { data, error: readError } = await bilt
+        .from('users')
+        .select('roles')
+        .eq('id', input.userId)
+        .maybeSingle();
+      if (readError) throw new Error(readError.message);
+
+      const current = new Set<Role>(data?.roles ?? ['buyer']);
+      if (input.grant) current.add(input.role);
+      else current.delete(input.role);
+      current.add('buyer');
+
+      const { error } = await bilt
+        .from('users')
+        .update({ roles: [...current], updated_at: new Date().toISOString() })
         .eq('id', input.userId);
       if (error) throw new Error(error.message);
     },

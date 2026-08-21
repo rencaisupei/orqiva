@@ -77,3 +77,48 @@ export async function callLogistics<T>(
 
   return data as T;
 }
+
+export type NotifyAction =
+  | 'register_token'
+  | 'unregister_token'
+  | 'send_message'
+  | 'support_reply'
+  | 'push_test';
+
+/**
+ * Calls the `notify` edge function: device tokens, chat messages and every
+ * cross-user push notification are handled there with the service key.
+ */
+export async function callNotify<T>(
+  action: NotifyAction,
+  payload: Record<string, unknown> = {},
+): Promise<T> {
+  const { data, error } = await bilt.functions.invoke('notify', {
+    body: { action, ...payload },
+  });
+
+  if (error) throw await invokeError(error, '推播服務暫時無法使用，請稍後再試');
+
+  return data as T;
+}
+
+export type ModerationAction =
+  | 'moderate_product'
+  | 'admin_decide'
+  | 'scan_message'
+  | 'resolve_flag'
+  | 'triage_report';
+
+/** Calls the `ai-moderation` edge function (OpenAI key stays server-side). */
+export async function callModeration<T>(
+  action: ModerationAction,
+  payload: Record<string, unknown> = {},
+): Promise<T> {
+  const { data, error } = await bilt.functions.invoke('ai-moderation', {
+    body: { action, ...payload },
+  });
+
+  if (error) throw await invokeError(error, 'AI 審核服務暫時無法使用，請稍後再試');
+
+  return data as T;
+}

@@ -1,22 +1,33 @@
-import { FlatList, Pressable, View } from 'react-native';
-import { Button, Spinner, Typography } from 'heroui-native';
-import { router } from 'expo-router';
+import { useState } from 'react';
+import { FlatList, Platform, Pressable, View } from 'react-native';
+import { Button, Separator, Spinner, Switch, Typography, useToast } from 'heroui-native';
 import {
   BellRing,
   CheckCircle2,
+  LifeBuoy,
   Megaphone,
+  MessageCircle,
   PackageCheck,
   Receipt,
+  Settings2,
+  ShieldCheck,
   Store as StoreIcon,
+  Truck,
 } from 'lucide-react-native';
 
 import { EmptyState } from '@/components/EmptyState';
 import { SignInRequired } from '@/components/SignInRequired';
-import { useMarkNotificationsRead, useNotifications } from '@/lib/api/social';
+import {
+  useMarkNotificationsRead,
+  useNotificationPrefs,
+  useNotifications,
+  useUpdateNotificationPrefs,
+} from '@/lib/api/social';
 import { BRAND } from '@/lib/brand';
 import { relativeTime } from '@/lib/format';
+import { openNotificationLink } from '@/lib/push';
 import { useUserId } from '@/lib/session';
-import type { NotificationType } from '@/lib/types';
+import type { NotificationPrefs, NotificationType } from '@/lib/types';
 
 function iconFor(type: NotificationType) {
   switch (type) {
@@ -24,6 +35,14 @@ function iconFor(type: NotificationType) {
       return <Receipt size={18} color={BRAND.blue} />;
     case 'order_status':
       return <PackageCheck size={18} color={BRAND.blue} />;
+    case 'logistics':
+      return <Truck size={18} color={BRAND.blue} />;
+    case 'message':
+      return <MessageCircle size={18} color={BRAND.blue} />;
+    case 'moderation':
+      return <ShieldCheck size={18} color={BRAND.blue} />;
+    case 'support':
+      return <LifeBuoy size={18} color={BRAND.blue} />;
     case 'seller_reply':
       return <StoreIcon size={18} color={BRAND.blue} />;
     case 'product_sold':
@@ -35,30 +54,20 @@ function iconFor(type: NotificationType) {
   }
 }
 
-function openLink(link: string | null) {
-  if (!link) return;
-  switch (link) {
-    case '/orders':
-      router.push('/orders');
-      break;
-    case '/seller':
-      router.push('/seller');
-      break;
-    case '/seller/orders':
-      router.push('/seller/orders');
-      break;
-    case '/seller/products':
-      router.push('/seller/products');
-      break;
-    default:
-      break;
-  }
-}
+const PREF_ROWS: { key: keyof NotificationPrefs; label: string; hint: string }[] = [
+  { key: 'notify_messages', label: '新訊息', hint: '買家或賣家傳訊息時推播' },
+  { key: 'notify_orders', label: '訂單與物流', hint: '成立、付款、出貨、到店可取貨' },
+  { key: 'notify_moderation', label: '審核結果', hint: '商品通過或需要修正時通知' },
+];
 
 export default function NotificationsScreen() {
   const userId = useUserId();
+  const { toast } = useToast();
   const { data: notifications, isLoading } = useNotifications(userId);
+  const { data: prefs } = useNotificationPrefs(userId);
   const markRead = useMarkNotificationsRead();
+  const updatePrefs = useUpdateNotificationPrefs();
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   if (!userId) {
     return <SignInRequired title="登入後查看通知" />;
@@ -68,16 +77,61 @@ export default function NotificationsScreen() {
 
   return (
     <View className="bg-background flex-1">
-      {unreadCount > 0 ? (
-        <View className="bg-surface flex-row items-center justify-between px-4 py-3">
-          <Typography type="body-sm" color="muted">
-            {unreadCount} 則未讀通知
+      <View className="bg-surface gap-3 px-4 py-3">
+        <View className="flex-row items-center justify-between gap-3">
+          <Typography type="body-sm" color="muted" className="flex-1">
+            {unreadCount > 0 ? `${unreadCount} 則未讀通知` : '沒有未讀通知'}
           </Typography>
-          <Button size="sm" variant="secondary" onPress={() => markRead.mutate({ userId })}>
-            <Button.Label>全部標為已讀</Button.Label>
+          {unreadCount > 0 ? (
+            <Button size="sm" variant="secondary" onPress={() => markRead.mutate({ userId })}>
+              <Button.Label>全部已讀</Button.Label>
+            </Button>
+          ) : null}
+          <Button size="sm" variant="tertiary" onPress={() => setSettingsOpen((v) => !v)}>
+            <View className="flex-row items-center gap-1.5">
+              <Settings2 size={14} color={BRAND.navy} />
+              <Typography type="body-sm" className="text-navy">
+                推播設定
+              </Typography>
+            </View>
           </Button>
         </View>
-      ) : null}
+
+        {settingsOpen ? (
+          <View className="bg-background gap-3 rounded-2xl p-3">
+            {PREF_ROWS.map((row) => (
+              <View key={row.key} className="flex-row items-center gap-3">
+                <View className="flex-1">
+                  <Typography type="body-sm" className="text-navy">
+                    {row.label}
+                  </Typography>
+                  <Typography type="body-xs" color="muted">
+                    {row.hint}
+                  </Typography>
+                </View>
+                <Switch
+                  isSelected={prefs?.[row.key] ?? true}
+                  onSelectedChange={(value) =>
+                    updatePrefs.mutate(
+                      { userId, patch: { [row.key]: value } },
+                      {
+                        onError: (error: Error) =>
+                          toast.show({ variant: 'danger', label: error.message }),
+                      },
+                    )
+                  }
+                />
+              </View>
+            ))}
+            <Separator />
+            <Typography type="body-xs" color="muted">
+              {Platform.OS === 'web'
+                ? '推播通知需要在 iOS 或 Android App 上開啟；網頁版只會顯示站內通知。'
+                : '關閉後仍會保留站內通知，只是不會再跳出手機推播。'}
+            </Typography>
+          </View>
+        ) : null}
+      </View>
 
       {isLoading ? (
         <View className="flex-1 items-center justify-center">
@@ -92,7 +146,7 @@ export default function NotificationsScreen() {
             <EmptyState
               icon={<BellRing size={26} color={BRAND.blue} />}
               title="目前沒有通知"
-              description="訂單、上架與賣家回覆的通知會顯示在這裡。"
+              description="訂單、物流、訊息與審核結果的通知會顯示在這裡。"
             />
           }
           renderItem={({ item }) => (
@@ -100,7 +154,7 @@ export default function NotificationsScreen() {
               className="bg-surface flex-row gap-3 rounded-2xl p-4"
               onPress={() => {
                 if (!item.read) markRead.mutate({ userId, id: item.id });
-                openLink(item.link);
+                openNotificationLink(item.link);
               }}
             >
               <View className="bg-brand-blue-soft h-9 w-9 items-center justify-center rounded-xl">
