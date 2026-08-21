@@ -6,6 +6,7 @@ import Constants from 'expo-constants';
 import { router } from 'expo-router';
 
 import { callNotify } from '@/lib/backend';
+import { setRegisteredPushToken, unregisterPushToken } from '@/lib/pushToken';
 import { useSessionStore } from '@/lib/session';
 
 /** Foreground behaviour: show the banner so chat pushes are not silently swallowed. */
@@ -135,16 +136,27 @@ export async function getExpoPushToken(): Promise<string | null> {
  */
 export function usePushNotifications() {
   const userId = useSessionStore((s) => s.session?.user.id ?? null);
-  const tokenRef = useRef<string | null>(null);
+  const previousUserId = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!userId || Platform.OS === 'web') return undefined;
+    if (Platform.OS === 'web') return undefined;
+
+    // Signed out (or switched account): drop the old device registration first.
+    if (!userId) {
+      if (previousUserId.current) {
+        previousUserId.current = null;
+        void unregisterPushToken();
+      }
+      return undefined;
+    }
+
+    previousUserId.current = userId;
 
     let cancelled = false;
     void (async () => {
       const token = await getExpoPushToken();
       if (!token || cancelled) return;
-      tokenRef.current = token;
+      setRegisteredPushToken(token);
       try {
         await callNotify('register_token', {
           token,

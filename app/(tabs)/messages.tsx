@@ -1,4 +1,4 @@
-import { FlatList, Pressable, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, View } from 'react-native';
 import { Spinner, Typography } from 'heroui-native';
 import { router } from 'expo-router';
 import { MessagesSquare } from 'lucide-react-native';
@@ -6,6 +6,7 @@ import { MessagesSquare } from 'lucide-react-native';
 import { AppImage } from '@/components/AppImage';
 import { EmptyState } from '@/components/EmptyState';
 import { SignInRequired } from '@/components/SignInRequired';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { useConversations } from '@/lib/api/social';
 import { BRAND } from '@/lib/brand';
 import { relativeTime } from '@/lib/format';
@@ -14,6 +15,7 @@ import { useUserId } from '@/lib/session';
 export default function MessagesScreen() {
   const userId = useUserId();
   const { data: conversations, isLoading } = useConversations(userId);
+  const { refreshing, onRefresh } = usePullToRefresh();
 
   if (!userId) {
     return (
@@ -48,6 +50,14 @@ export default function MessagesScreen() {
           data={conversations ?? []}
           keyExtractor={(item) => item.id}
           contentContainerClassName="p-4 gap-2.5 pb-10"
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={BRAND.blue}
+              colors={[BRAND.blue]}
+            />
+          }
           ListEmptyComponent={
             <EmptyState
               icon={<MessagesSquare size={26} color={BRAND.blue} />}

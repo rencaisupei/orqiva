@@ -1,6 +1,6 @@
 import { Pressable, View, type GestureResponderEvent } from 'react-native';
 import { Tabs } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Grid2x2, House, MessageCircle, Plus, User } from 'lucide-react-native';
 
 import { BRAND } from '@/lib/brand';
@@ -36,62 +36,63 @@ function PublishTabButton({ onPress }: TabButtonProps) {
 }
 
 export default function TabLayout() {
+  // A hard-coded tabBar height overrides React Navigation's automatic bottom
+  // inset, which pushes the labels under the iOS home indicator and the Android
+  // gesture bar. Add the inset back explicitly.
+  const insets = useSafeAreaInsets();
+
   return (
-    <>
-      {/* eslint-disable-next-line react/style-prop-object -- expo-status-bar's `style` is a string enum ('dark'/'light'), not a RN style object */}
-      <StatusBar style="dark" />
-      <Tabs
-        screenOptions={{
-          headerShown: false,
-          sceneStyle: { backgroundColor: BRAND.background },
-          tabBarStyle: {
-            backgroundColor: BRAND.white,
-            borderTopColor: BRAND.border,
-            height: 64,
-            paddingTop: 6,
-            paddingBottom: 6,
-          },
-          tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
-          tabBarActiveTintColor: BRAND.orange,
-          tabBarInactiveTintColor: BRAND.muted,
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        sceneStyle: { backgroundColor: BRAND.background },
+        tabBarStyle: {
+          backgroundColor: BRAND.white,
+          borderTopColor: BRAND.border,
+          height: 64 + insets.bottom,
+          paddingTop: 6,
+          paddingBottom: 6 + insets.bottom,
+        },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+        tabBarActiveTintColor: BRAND.orange,
+        tabBarInactiveTintColor: BRAND.muted,
+      }}
+    >
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: '首頁',
+          tabBarIcon: ({ color, size }) => <House color={color} size={size ?? 22} />,
         }}
-      >
-        <Tabs.Screen
-          name="index"
-          options={{
-            title: '首頁',
-            tabBarIcon: ({ color, size }) => <House color={color} size={size ?? 22} />,
-          }}
-        />
-        <Tabs.Screen
-          name="categories"
-          options={{
-            title: '分類',
-            tabBarIcon: ({ color, size }) => <Grid2x2 color={color} size={size ?? 22} />,
-          }}
-        />
-        <Tabs.Screen
-          name="publish"
-          options={{
-            title: '發布',
-            tabBarButton: (props) => <PublishTabButton {...props} />,
-          }}
-        />
-        <Tabs.Screen
-          name="messages"
-          options={{
-            title: '訊息',
-            tabBarIcon: ({ color, size }) => <MessageCircle color={color} size={size ?? 22} />,
-          }}
-        />
-        <Tabs.Screen
-          name="profile"
-          options={{
-            title: '我的',
-            tabBarIcon: ({ color, size }) => <User color={color} size={size ?? 22} />,
-          }}
-        />
-      </Tabs>
-    </>
+      />
+      <Tabs.Screen
+        name="categories"
+        options={{
+          title: '分類',
+          tabBarIcon: ({ color, size }) => <Grid2x2 color={color} size={size ?? 22} />,
+        }}
+      />
+      <Tabs.Screen
+        name="publish"
+        options={{
+          title: '發布',
+          tabBarButton: (props) => <PublishTabButton {...props} />,
+        }}
+      />
+      <Tabs.Screen
+        name="messages"
+        options={{
+          title: '訊息',
+          tabBarIcon: ({ color, size }) => <MessageCircle color={color} size={size ?? 22} />,
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: '我的',
+          tabBarIcon: ({ color, size }) => <User color={color} size={size ?? 22} />,
+        }}
+      />
+    </Tabs>
   );
 }

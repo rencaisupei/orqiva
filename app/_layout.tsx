@@ -10,11 +10,13 @@ import {
   useFonts,
 } from '@expo-google-fonts/inter';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
-import { Platform } from 'react-native';
+import { Platform, AppState, type AppStateStatus } from 'react-native';
 import { useEffect } from 'react';
 import * as DevClient from 'expo-dev-client';
+import * as SystemUI from 'expo-system-ui';
+import { StatusBar } from 'expo-status-bar';
 import { HeroUINativeProvider } from 'heroui-native';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, focusManager } from '@tanstack/react-query';
 import { Uniwind } from 'uniwind';
 import {
   ErrorBoundary as ExpoErrorBoundary,
@@ -55,7 +57,10 @@ void SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: { retry: 1, staleTime: 15_000, refetchOnWindowFocus: false },
+    // Reads are pull-only, so a refetch when the app/tab regains focus is what
+    // keeps carts, orders and chats from going stale on a phone that never
+    // unmounts its screens. staleTime throttles the burst.
+    queries: { retry: 1, staleTime: 15_000, refetchOnWindowFocus: true },
   },
 });
 
@@ -138,6 +143,23 @@ export default function RootLayout() {
     registerServiceWorker();
   }, []);
 
+  // Keeps the window behind the React tree on brand background instead of
+  // system black/white, which shows through during rotation and overscroll.
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    void SystemUI.setBackgroundColorAsync(BRAND.background);
+  }, []);
+
+  // React Query's focus detection is browser-only; on iOS/Android the app
+  // returning to the foreground is the equivalent signal.
+  useEffect(() => {
+    if (Platform.OS === 'web') return undefined;
+    const subscription = AppState.addEventListener('change', (status: AppStateStatus) => {
+      focusManager.setFocused(status === 'active');
+    });
+    return () => subscription.remove();
+  }, []);
+
   useEffect(() => {
     if (loaded || error) {
       void SplashScreen.hideAsync();
@@ -150,6 +172,8 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+      {/* eslint-disable-next-line react/style-prop-object -- expo-status-bar's `style` is a string enum ('dark'/'light'), not a RN style object */}
+      <StatusBar style="dark" translucent />
       <QueryClientProvider client={queryClient}>
         <HeroUINativeProvider>
           <Stack

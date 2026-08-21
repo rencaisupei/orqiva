@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FlatList, Pressable, ScrollView, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { Button, Chip, Spinner, Typography } from 'heroui-native';
 import { router } from 'expo-router';
 import { Receipt } from 'lucide-react-native';
@@ -7,6 +7,7 @@ import { Receipt } from 'lucide-react-native';
 import { AppImage } from '@/components/AppImage';
 import { EmptyState } from '@/components/EmptyState';
 import { SignInRequired } from '@/components/SignInRequired';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { useMyOrders } from '@/lib/api/commerce';
 import { BRAND } from '@/lib/brand';
 import { formatDateTime, formatPrice } from '@/lib/format';
@@ -26,6 +27,7 @@ export default function OrdersScreen() {
   const userId = useUserId();
   const [filter, setFilter] = useState<OrderStatus | 'all'>('all');
   const { data: orders, isLoading } = useMyOrders(userId);
+  const { refreshing, onRefresh } = usePullToRefresh();
 
   if (!userId) {
     return <SignInRequired title="登入後查看訂單" />;
@@ -56,6 +58,14 @@ export default function OrdersScreen() {
           data={filtered}
           keyExtractor={(item) => item.id}
           contentContainerClassName="p-4 gap-3 pb-10"
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={BRAND.blue}
+              colors={[BRAND.blue]}
+            />
+          }
           ListEmptyComponent={
             <EmptyState
               icon={<Receipt size={26} color={BRAND.blue} />}

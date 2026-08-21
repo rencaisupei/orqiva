@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { FlatList, Platform, Pressable, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { FlatList, Platform, Pressable, RefreshControl, View } from 'react-native';
 import { Button, Separator, Spinner, Switch, Typography, useToast } from 'heroui-native';
 import {
   BellRing,
@@ -17,6 +17,7 @@ import {
 
 import { EmptyState } from '@/components/EmptyState';
 import { SignInRequired } from '@/components/SignInRequired';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import {
   useMarkNotificationsRead,
   useNotificationPrefs,
@@ -26,6 +27,7 @@ import {
 import { BRAND } from '@/lib/brand';
 import { relativeTime } from '@/lib/format';
 import { openNotificationLink } from '@/lib/push';
+import { setAppBadgeCount } from '@/lib/pushToken';
 import { useUserId } from '@/lib/session';
 import type { NotificationPrefs, NotificationType } from '@/lib/types';
 
@@ -68,12 +70,21 @@ export default function NotificationsScreen() {
   const markRead = useMarkNotificationsRead();
   const updatePrefs = useUpdateNotificationPrefs();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const { refreshing, onRefresh } = usePullToRefresh();
+
+  const unread = (notifications ?? []).filter((n) => !n.read).length;
+
+  // Keep the iOS/Android app icon badge in step with the unread list.
+  useEffect(() => {
+    if (!notifications) return;
+    void setAppBadgeCount(unread);
+  }, [notifications, unread]);
 
   if (!userId) {
     return <SignInRequired title="登入後查看通知" />;
   }
 
-  const unreadCount = (notifications ?? []).filter((n) => !n.read).length;
+  const unreadCount = unread;
 
   return (
     <View className="bg-background flex-1">
@@ -142,6 +153,14 @@ export default function NotificationsScreen() {
           data={notifications ?? []}
           keyExtractor={(item) => item.id}
           contentContainerClassName="p-4 gap-2.5 pb-10"
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={BRAND.blue}
+              colors={[BRAND.blue]}
+            />
+          }
           ListEmptyComponent={
             <EmptyState
               icon={<BellRing size={26} color={BRAND.blue} />}

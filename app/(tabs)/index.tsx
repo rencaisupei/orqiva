@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { Button, SearchField, Typography } from 'heroui-native';
 import { router } from 'expo-router';
 import { Bell, ChevronRight, LayoutGrid, ShoppingCart } from 'lucide-react-native';
@@ -10,6 +10,7 @@ import { JihuoLogo, JihuoMark } from '@/components/brand/JihuoLogo';
 import { ProductCard } from '@/components/ProductCard';
 import { LinearGradient } from '@/components/ui/primitives/LinearGradient';
 import { useFavoriteToggle } from '@/hooks/useFavoriteToggle';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { useCategories, useProducts } from '@/lib/api/catalog';
 import { useCartCount } from '@/lib/api/commerce';
 import { useUnreadNotificationCount } from '@/lib/api/social';
@@ -59,6 +60,7 @@ export default function HomeScreen() {
   const { data: cartCount } = useCartCount(userId);
   const { data: unread } = useUnreadNotificationCount(userId);
   const { isFavorite, onToggleFavorite } = useFavoriteToggle();
+  const { refreshing, onRefresh } = usePullToRefresh();
 
   const submitSearch = () => {
     const term = query.trim();
@@ -114,7 +116,18 @@ export default function HomeScreen() {
         <HomeQuickLinks />
       </View>
 
-      <ScrollView contentContainerClassName="pb-10" showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerClassName="pb-10"
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={BRAND.blue}
+            colors={[BRAND.blue]}
+          />
+        }
+      >
         <View className="px-4 pt-4">
           <LinearGradient
             colors={[BRAND.navy, '#0B3FA8', BRAND.blue]}

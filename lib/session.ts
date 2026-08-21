@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import type { Session } from '@biltme/backend';
 
 import { bilt } from '@/lib/backend';
+import { unregisterPushToken } from '@/lib/pushToken';
 import type { Profile, Role, UserAccount } from '@/lib/types';
 
 type SessionState = {
@@ -92,6 +93,9 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   },
 
   signOut: async () => {
+    // Detach the device from this account first — the notify function needs the
+    // still-valid session token to delete the push registration.
+    await unregisterPushToken();
     await bilt.auth.signOut();
     set({ session: null, account: null, profile: null });
   },

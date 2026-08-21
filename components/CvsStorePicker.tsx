@@ -31,31 +31,12 @@ export function CvsStorePicker({ availableSubTypes, value, onChange, orderId }: 
   const mapUrl = useStoreMapUrl();
   const selection = useMapSelection();
 
-  const openMap = () => {
+  const fetchSelection = (activeToken: string, quiet = false) => {
     setError(null);
-    mapUrl.mutate(
-      { logisticsSubType: subType, orderId },
-      {
-        onSuccess: async ({ token: newToken, url }) => {
-          setToken(newToken);
-          if (Platform.OS === 'web') {
-            globalThis.open?.(url, '_blank');
-          } else {
-            await WebBrowser.openBrowserAsync(url);
-          }
-        },
-        onError: (err: Error) => setError(err.message),
-      },
-    );
-  };
-
-  const loadSelection = () => {
-    if (!token) return;
-    setError(null);
-    selection.mutate(token, {
+    selection.mutate(activeToken, {
       onSuccess: (result) => {
         if (result.status !== 'selected' || !result.store_id) {
-          setError('還沒收到門市資料，請先在瀏覽器完成選店再回來讀取。');
+          if (!quiet) setError('還沒收到門市資料，請先在瀏覽器完成選店再回來讀取。');
           return;
         }
         onChange({
@@ -66,8 +47,36 @@ export function CvsStorePicker({ availableSubTypes, value, onChange, orderId }: 
           storePhone: result.store_phone,
         });
       },
-      onError: (err: Error) => setError(err.message),
+      onError: (err: Error) => {
+        if (!quiet) setError(err.message);
+      },
     });
+  };
+
+  const openMap = () => {
+    setError(null);
+    mapUrl.mutate(
+      { logisticsSubType: subType, orderId },
+      {
+        onSuccess: async ({ token: newToken, url }) => {
+          setToken(newToken);
+          if (Platform.OS === 'web') {
+            globalThis.open?.(url, '_blank');
+          } else {
+            // openBrowserAsync resolves when the in-app browser is dismissed, so
+            // the chosen store can be pulled back without an extra tap.
+            await WebBrowser.openBrowserAsync(url);
+            fetchSelection(newToken, true);
+          }
+        },
+        onError: (err: Error) => setError(err.message),
+      },
+    );
+  };
+
+  const loadSelection = () => {
+    if (!token) return;
+    fetchSelection(token);
   };
 
   if (availableSubTypes.length === 0) return null;
@@ -148,7 +157,7 @@ export function CvsStorePicker({ availableSubTypes, value, onChange, orderId }: 
       ) : null}
 
       <Typography type="body-xs" color="muted">
-        選店頁會在瀏覽器開啟，選完請回到 App 按「讀取門市」帶回資料。
+        選店頁會在瀏覽器開啟；關閉瀏覽器後會自動帶回門市，若沒帶回請按「讀取門市」。
       </Typography>
     </View>
   );
