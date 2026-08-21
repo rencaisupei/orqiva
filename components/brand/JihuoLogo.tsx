@@ -1,13 +1,6 @@
 import { Image, View } from 'react-native';
 import { Typography } from 'heroui-native';
-import Svg, {
-  Defs,
-  LinearGradient as SvgGradient,
-  Path,
-  Polygon,
-  Stop,
-  Text as SvgText,
-} from 'react-native-svg';
+import Svg, { Defs, LinearGradient as SvgGradient, Path, Polygon, Stop } from 'react-native-svg';
 
 import { LinearGradient } from '@/components/ui/primitives/LinearGradient';
 import { BRAND, BRAND_COPY } from '@/lib/brand';
@@ -16,40 +9,8 @@ import { cn } from '@/lib/utils';
 /* The supplied brand artwork: full lockup (shield mark + 極貨網 + JIHUOWANG + slogan). */
 import LOGO_SOURCE from '@/assets/jihuowang-logo.png';
 
-/** Artwork aspect only — the crop below is expressed in fractions, so real pixel size does not matter. */
+/** Aspect of the supplied lockup artwork, used to size it without distortion. */
 const ART = { w: 353, h: 481 };
-/**
- * Region of the artwork that holds only the shield mark (no wordmark).
- * Kept generous on every edge so the shield outline and the arrow tip that breaks
- * out of the top-right corner are never clipped.
- */
-const MARK_CROP = { x: 0.075, y: 0.008, w: 0.905, h: 0.492 };
-const MARK_IMAGE_RATIO = (MARK_CROP.w * ART.w) / (MARK_CROP.h * ART.h);
-
-/**
- * The real shield mark, cropped out of the supplied brand artwork.
- * Use on light surfaces (the artwork carries a near-white background).
- */
-export function JihuoMarkImage({ size = 30 }: { size?: number }) {
-  const boxWidth = size * MARK_IMAGE_RATIO;
-  const imageWidth = boxWidth / MARK_CROP.w;
-  const imageHeight = size / MARK_CROP.h;
-
-  return (
-    <View style={{ width: boxWidth, height: size, overflow: 'hidden' }}>
-      <Image
-        source={LOGO_SOURCE}
-        resizeMode="stretch"
-        style={{
-          width: imageWidth,
-          height: imageHeight,
-          marginLeft: -MARK_CROP.x * imageWidth,
-          marginTop: -MARK_CROP.y * imageHeight,
-        }}
-      />
-    </View>
-  );
-}
 
 /** The complete brand lockup artwork, for large light surfaces. */
 export function JihuoArtwork({ width = 220 }: { width?: number }) {
@@ -110,11 +71,17 @@ export function JihuoMark({
 
       <Path d={SHIELD_OUTER} fill={shield} />
       <Path d={SHIELD_INNER} fill={accent} />
-      <SvgText x={32} y={41} fontSize={27} fontWeight="700" fill={letterColor} textAnchor="middle">
-        J
-      </SvgText>
-      <Path d="M40 50 L56 17" stroke={arrow} strokeWidth={6} strokeLinecap="round" fill="none" />
-      <Polygon points="61,6 50.1,12.6 61.5,18.8" fill={arrow} />
+      {/* The "J" drawn as a stroke so it renders identically on every platform (no font lookup). */}
+      <Path
+        d="M35.4 20.5 V35.2 C35.4 40.6 30.2 42.9 26.6 39.3"
+        stroke={letterColor}
+        strokeWidth={4.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+      <Path d="M39 47 L55 19" stroke={arrow} strokeWidth={5.6} strokeLinecap="round" fill="none" />
+      <Polygon points="59,12 57.6,21.4 50,17" fill={arrow} />
     </Svg>
   );
 }
@@ -129,16 +96,18 @@ type LogoProps = {
 export function JihuoLogo({ size = 30, showEn = true, className, onLight = true }: LogoProps) {
   return (
     <View className={cn('flex-row items-center gap-2', className)}>
-      {onLight ? (
-        <JihuoMarkImage size={size} />
-      ) : (
-        <JihuoMark
-          size={size}
-          shieldColor="rgba(255,255,255,0.24)"
-          accentColor={BRAND.orange}
-          arrowColor="rgba(255,255,255,0.92)"
-        />
-      )}
+      <View style={{ width: size, height: size, flexShrink: 0 }}>
+        {onLight ? (
+          <JihuoMark size={size} />
+        ) : (
+          <JihuoMark
+            size={size}
+            shieldColor="rgba(255,255,255,0.24)"
+            accentColor={BRAND.orange}
+            arrowColor="rgba(255,255,255,0.92)"
+          />
+        )}
+      </View>
       <View className="shrink">
         <Typography
           type="h5"

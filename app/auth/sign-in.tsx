@@ -94,6 +94,8 @@ export default function SignInScreen() {
         { id: userId, email: userEmail ?? null },
         { onConflict: 'id', ignoreDuplicates: true },
       );
+    /* Bootstrap: while the platform has no administrator at all, the first account becomes one. */
+    await bilt.rpc('claim_first_admin');
     await useSessionStore.getState().reload();
     setBusy(false);
     goBackOrReplace('/(tabs)');
