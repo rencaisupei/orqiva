@@ -295,6 +295,10 @@ export default function AdminLogisticsScreen() {
             <Typography type="body-xs" color="muted">
               金鑰放在後端環境變數，前端讀不到：{envVarNames.join('、')}
             </Typography>
+            <Typography type="body-xs" color="muted">
+              檢查碼演算法：{query.data?.checkMacAlgorithm ?? 'MD5'}
+              （物流 API 規格，不送 EncryptType；SHA256 只用於金流 AIO API）
+            </Typography>
           </View>
 
           <Button variant="secondary" isDisabled={verify.isPending} onPress={runVerify}>

@@ -110,6 +110,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       [
         'expo-notifications',
         {
+          // Android status-bar icon: must be a white silhouette on transparency,
+          // Android tints it with `color` and discards every non-alpha pixel.
+          icon: './assets/notification-icon.png',
           // Push notifications for new messages, order status and moderation results.
           color: '#006BFF',
           // Matches the channel created in lib/push.ts so Android pushes inherit

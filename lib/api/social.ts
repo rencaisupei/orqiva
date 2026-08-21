@@ -253,3 +253,10 @@ export function useUpdateNotificationPrefs() {
     },
   });
 }
+
+/** 送一則測試推播給自己，用來確認權限、token 與頻道設定是否正確。 */
+export function useSendTestPush() {
+  return useMutation({
+    mutationFn: () => callNotify<{ ok: boolean; sent: number }>('push_test'),
+  });
+}

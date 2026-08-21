@@ -15,6 +15,8 @@ export type AdminLogisticsPayload = {
   callbackUrl: string;
   apiHost: string;
   supportedSubTypes: LogisticsSubType[];
+  /** 物流 API 的檢查碼演算法（綠界規定 MD5；SHA256 只用於金流 AIO API）。 */
+  checkMacAlgorithm: string;
   credentials: {
     stage: { ready: boolean; merchantId: string | null };
     production: { ready: boolean; merchantId: string | null };

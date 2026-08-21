@@ -16,6 +16,7 @@ import {
 } from 'lucide-react-native';
 
 import { EmptyState } from '@/components/EmptyState';
+import { PushDiagnosticsCard } from '@/components/PushDiagnosticsCard';
 import { SignInRequired } from '@/components/SignInRequired';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import {
@@ -86,6 +87,47 @@ export default function NotificationsScreen() {
 
   const unreadCount = unread;
 
+  // The panel scrolls with the list: on a phone the preference rows plus the
+  // diagnostics card are taller than the fixed header can afford.
+  const settingsPanel = (
+    <View className="gap-3 pb-1">
+      <View className="bg-surface gap-3 rounded-2xl p-3">
+        {PREF_ROWS.map((row) => (
+          <View key={row.key} className="flex-row items-center gap-3">
+            <View className="flex-1">
+              <Typography type="body-sm" className="text-navy">
+                {row.label}
+              </Typography>
+              <Typography type="body-xs" color="muted">
+                {row.hint}
+              </Typography>
+            </View>
+            <Switch
+              isSelected={prefs?.[row.key] ?? true}
+              onSelectedChange={(value) =>
+                updatePrefs.mutate(
+                  { userId, patch: { [row.key]: value } },
+                  {
+                    onError: (error: Error) =>
+                      toast.show({ variant: 'danger', label: error.message }),
+                  },
+                )
+              }
+            />
+          </View>
+        ))}
+        <Separator />
+        <Typography type="body-xs" color="muted">
+          {Platform.OS === 'web'
+            ? '推播通知需要在 iOS 或 Android App 上開啟；網頁版只會顯示站內通知。'
+            : '關閉後仍會保留站內通知，只是不會再跳出手機推播。'}
+        </Typography>
+      </View>
+
+      <PushDiagnosticsCard />
+    </View>
+  );
+
   return (
     <View className="bg-background flex-1">
       <View className="bg-surface gap-3 px-4 py-3">
@@ -107,41 +149,6 @@ export default function NotificationsScreen() {
             </View>
           </Button>
         </View>
-
-        {settingsOpen ? (
-          <View className="bg-background gap-3 rounded-2xl p-3">
-            {PREF_ROWS.map((row) => (
-              <View key={row.key} className="flex-row items-center gap-3">
-                <View className="flex-1">
-                  <Typography type="body-sm" className="text-navy">
-                    {row.label}
-                  </Typography>
-                  <Typography type="body-xs" color="muted">
-                    {row.hint}
-                  </Typography>
-                </View>
-                <Switch
-                  isSelected={prefs?.[row.key] ?? true}
-                  onSelectedChange={(value) =>
-                    updatePrefs.mutate(
-                      { userId, patch: { [row.key]: value } },
-                      {
-                        onError: (error: Error) =>
-                          toast.show({ variant: 'danger', label: error.message }),
-                      },
-                    )
-                  }
-                />
-              </View>
-            ))}
-            <Separator />
-            <Typography type="body-xs" color="muted">
-              {Platform.OS === 'web'
-                ? '推播通知需要在 iOS 或 Android App 上開啟；網頁版只會顯示站內通知。'
-                : '關閉後仍會保留站內通知，只是不會再跳出手機推播。'}
-            </Typography>
-          </View>
-        ) : null}
       </View>
 
       {isLoading ? (
@@ -153,6 +160,7 @@ export default function NotificationsScreen() {
           data={notifications ?? []}
           keyExtractor={(item) => item.id}
           contentContainerClassName="p-4 gap-2.5 pb-10"
+          ListHeaderComponent={settingsOpen ? settingsPanel : null}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}

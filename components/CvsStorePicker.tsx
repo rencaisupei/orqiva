@@ -16,44 +16,59 @@ type Props = {
   orderId?: string;
 };
 
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 /**
  * 綠界門市電子地圖選店。
- * 綠界的地圖必須以表單 POST 開啟網頁，因此透過系統瀏覽器（不使用內嵌 iframe，
- * 綠界文件明確禁止），選完後由後端回拋寫入，App 再拉回結果。
+ * 綠界的地圖必須以表單 POST 開啟網頁，因此透過系統／App 內瀏覽器（不使用內嵌
+ * iframe，綠界文件明確禁止），選完後由後端回拋寫入，App 再拉回結果。
  */
 export function CvsStorePicker({ availableSubTypes, value, onChange, orderId }: Props) {
-  const [subType, setSubType] = useState<LogisticsSubType>(
-    (value?.logisticsSubType as LogisticsSubType | undefined) ?? availableSubTypes[0],
+  // 先選超商才能開地圖：綠界的地圖網址必須帶 LogisticsSubType。
+  const [subType, setSubType] = useState<LogisticsSubType | null>(
+    (value?.logisticsSubType as LogisticsSubType | undefined) ?? null,
   );
   const [token, setToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pulling, setPulling] = useState(false);
 
   const mapUrl = useStoreMapUrl();
   const selection = useMapSelection();
 
-  const fetchSelection = (activeToken: string, quiet = false) => {
+  /** 回拋寫入可能比瀏覽器關閉稍慢，所以重試幾次再回報失敗。 */
+  const pullSelection = async (activeToken: string, attempts: number) => {
     setError(null);
-    selection.mutate(activeToken, {
-      onSuccess: (result) => {
-        if (result.status !== 'selected' || !result.store_id) {
-          if (!quiet) setError('還沒收到門市資料，請先在瀏覽器完成選店再回來讀取。');
-          return;
+    setPulling(true);
+    try {
+      for (let attempt = 0; attempt < attempts; attempt++) {
+        try {
+          const result = await selection.mutateAsync(activeToken);
+          if (result.status === 'selected' && result.store_id) {
+            onChange({
+              logisticsSubType: result.logistics_sub_type,
+              storeId: result.store_id,
+              storeName: result.store_name,
+              storeAddress: result.store_address,
+              storePhone: result.store_phone,
+            });
+            return;
+          }
+        } catch (err) {
+          if (attempt === attempts - 1) {
+            setError((err as Error).message);
+            return;
+          }
         }
-        onChange({
-          logisticsSubType: result.logistics_sub_type,
-          storeId: result.store_id,
-          storeName: result.store_name,
-          storeAddress: result.store_address,
-          storePhone: result.store_phone,
-        });
-      },
-      onError: (err: Error) => {
-        if (!quiet) setError(err.message);
-      },
-    });
+        if (attempt < attempts - 1) await wait(1200);
+      }
+      setError('還沒收到門市資料，請確認已在瀏覽器完成選店，再按「讀取門市」。');
+    } finally {
+      setPulling(false);
+    }
   };
 
   const openMap = () => {
+    if (!subType) return;
     setError(null);
     mapUrl.mutate(
       { logisticsSubType: subType, orderId },
@@ -66,7 +81,7 @@ export function CvsStorePicker({ availableSubTypes, value, onChange, orderId }: 
             // openBrowserAsync resolves when the in-app browser is dismissed, so
             // the chosen store can be pulled back without an extra tap.
             await WebBrowser.openBrowserAsync(url);
-            fetchSelection(newToken, true);
+            await pullSelection(newToken, 3);
           }
         },
         onError: (err: Error) => setError(err.message),
@@ -74,17 +89,12 @@ export function CvsStorePicker({ availableSubTypes, value, onChange, orderId }: 
     );
   };
 
-  const loadSelection = () => {
-    if (!token) return;
-    fetchSelection(token);
-  };
-
   if (availableSubTypes.length === 0) return null;
 
   return (
     <View className="gap-3">
       <View>
-        <Label isRequired>選擇超商</Label>
+        <Label isRequired>取貨超商</Label>
         <View className="flex-row flex-wrap gap-2">
           {availableSubTypes.map((item) => (
             <Pressable
@@ -92,11 +102,12 @@ export function CvsStorePicker({ availableSubTypes, value, onChange, orderId }: 
               onPress={() => {
                 setSubType(item);
                 setToken(null);
+                setError(null);
                 onChange(null);
               }}
             >
               <Chip size="sm" variant={subType === item ? 'primary' : 'tertiary'}>
-                {LOGISTICS_SUB_TYPE_LABEL[item]}
+                {LOGISTICS_SUB_TYPE_LABEL[item]} 取貨付款
               </Chip>
             </Pressable>
           ))}
@@ -108,13 +119,14 @@ export function CvsStorePicker({ availableSubTypes, value, onChange, orderId }: 
           <View className="flex-row items-center gap-2">
             <Store size={15} color={BRAND.blue} />
             <Typography type="body-sm" className="text-navy flex-1" style={{ fontWeight: '600' }}>
-              {value.storeName ?? '已選擇門市'}
+              已選門市：{value.storeName ?? '未提供店名'}（門市代號：{value.storeId}）
             </Typography>
           </View>
-          <Typography type="body-xs" color="muted">
-            店號 {value.storeId}
-            {value.storeAddress ? ` · ${value.storeAddress}` : ''}
-          </Typography>
+          {value.storeAddress ? (
+            <Typography type="body-xs" color="muted">
+              地址 {value.storeAddress}
+            </Typography>
+          ) : null}
           {value.storePhone ? (
             <Typography type="body-xs" color="muted">
               電話 {value.storePhone}
@@ -127,11 +139,15 @@ export function CvsStorePicker({ availableSubTypes, value, onChange, orderId }: 
         <Button
           variant={value ? 'secondary' : 'primary'}
           className="flex-1"
-          isDisabled={mapUrl.isPending}
+          isDisabled={!subType || mapUrl.isPending || pulling}
           onPress={openMap}
         >
           <View className="flex-row items-center gap-2">
-            {mapUrl.isPending ? <Spinner size="sm" /> : <MapPin size={15} color={BRAND.white} />}
+            {mapUrl.isPending || pulling ? (
+              <Spinner size="sm" />
+            ) : (
+              <MapPin size={15} color={value ? BRAND.navy : BRAND.white} />
+            )}
             <Typography type="body-sm" className={value ? 'text-navy' : 'text-white'}>
               {value ? '重新選擇門市' : '選擇取貨門市'}
             </Typography>
@@ -139,11 +155,15 @@ export function CvsStorePicker({ availableSubTypes, value, onChange, orderId }: 
         </Button>
 
         {token ? (
-          <Button variant="secondary" isDisabled={selection.isPending} onPress={loadSelection}>
+          <Button
+            variant="secondary"
+            isDisabled={pulling}
+            onPress={() => void pullSelection(token, 1)}
+          >
             <View className="flex-row items-center gap-2">
               <RefreshCw size={15} color={BRAND.navy} />
               <Typography type="body-sm" className="text-navy">
-                {selection.isPending ? '讀取中…' : '讀取門市'}
+                {pulling ? '讀取中…' : '讀取門市'}
               </Typography>
             </View>
           </Button>
@@ -157,7 +177,9 @@ export function CvsStorePicker({ availableSubTypes, value, onChange, orderId }: 
       ) : null}
 
       <Typography type="body-xs" color="muted">
-        選店頁會在瀏覽器開啟；關閉瀏覽器後會自動帶回門市，若沒帶回請按「讀取門市」。
+        {subType
+          ? '選店頁會在瀏覽器開啟；關閉瀏覽器後會自動帶回門市，若沒帶回請按「讀取門市」。'
+          : '請先選擇要取貨的超商，才能開啟門市電子地圖。'}
       </Typography>
     </View>
   );
