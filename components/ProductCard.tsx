@@ -66,16 +66,14 @@ export function ProductCard({ product, isFavorite = false, onToggleFavorite, cla
           ) : null}
         </View>
 
-        <View className="mt-0.5 flex-row items-center justify-between">
-          <View className="flex-1 flex-row items-center gap-2">
-            <StarRating rating={product.rating} count={product.rating_count} />
-            <Typography type="body-xs" color="muted" numberOfLines={1}>
-              已售 {formatCompact(product.sold_count)}
-            </Typography>
-          </View>
+        <View className="mt-0.5 flex-row items-center gap-1.5">
+          <StarRating rating={product.rating} count={product.rating_count} size={11} />
+          <Typography type="body-xs" color="muted" numberOfLines={1} className="flex-1">
+            已售 {formatCompact(product.sold_count)}
+          </Typography>
           {onToggleFavorite ? (
             <Pressable
-              className="h-7 w-7 items-center justify-center"
+              className="h-7 w-7 shrink-0 items-center justify-center"
               hitSlop={6}
               onPress={() => onToggleFavorite(product.id)}
               accessibilityLabel={isFavorite ? '取消收藏' : '收藏商品'}

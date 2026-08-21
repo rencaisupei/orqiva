@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { Button, SearchField, Typography } from 'heroui-native';
 import { router } from 'expo-router';
-import { Bell, ChevronRight, LayoutGrid, Menu, ShoppingCart } from 'lucide-react-native';
+import { Bell, ChevronRight, LayoutGrid, ShoppingCart } from 'lucide-react-native';
 
 import { CategoryIcon } from '@/components/CategoryIcon';
-import { HomeQuickMenu } from '@/components/HomeQuickMenu';
+import { HomeQuickLinks } from '@/components/HomeQuickLinks';
 import { JihuoLogo, JihuoMark } from '@/components/brand/JihuoLogo';
 import { ProductCard } from '@/components/ProductCard';
 import { LinearGradient } from '@/components/ui/primitives/LinearGradient';
@@ -52,7 +52,6 @@ function SectionHeader({ title, onMore }: { title: string; onMore?: () => void }
 
 export default function HomeScreen() {
   const [query, setQuery] = useState('');
-  const [menuOpen, setMenuOpen] = useState(false);
   const userId = useUserId();
   const { data: categories } = useCategories();
   const { data: popular } = useProducts({ sort: 'popular', limit: 4 });
@@ -70,15 +69,7 @@ export default function HomeScreen() {
     <View className="bg-background flex-1">
       <View className="bg-surface pt-safe">
         <View className="flex-row items-center px-2 pt-2 pb-1">
-          <Pressable
-            className="h-10 w-10 items-center justify-center"
-            onPress={() => setMenuOpen(true)}
-            accessibilityLabel="快速前往"
-          >
-            <Menu size={22} color={BRAND.navy} />
-          </Pressable>
-
-          <View className="flex-1 items-center">
+          <View className="flex-1 pl-2">
             <JihuoLogo size={34} showEn={false} />
           </View>
 
@@ -106,7 +97,7 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        <View className="px-4 pt-1 pb-3">
+        <View className="px-4 pt-1 pb-2">
           <SearchField value={query} onChange={setQuery}>
             <SearchField.Group className="rounded-full">
               <SearchField.SearchIcon />
@@ -119,6 +110,8 @@ export default function HomeScreen() {
             </SearchField.Group>
           </SearchField>
         </View>
+
+        <HomeQuickLinks />
       </View>
 
       <ScrollView contentContainerClassName="pb-10" showsVerticalScrollIndicator={false}>
@@ -305,8 +298,6 @@ export default function HomeScreen() {
           </Typography>
         </View>
       </ScrollView>
-
-      <HomeQuickMenu isOpen={menuOpen} onOpenChange={setMenuOpen} />
     </View>
   );
 }
