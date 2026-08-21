@@ -31,9 +31,11 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     android: {
       package: process.env.BILT_ANDROID_PACKAGE ?? 'com.yourcompany.yourapp',
+      // The icon artwork already carries the white brand background, so the
+      // adaptive-icon backdrop matches it instead of the navy from the old mark.
       adaptiveIcon: {
         foregroundImage: './assets/icon.png',
-        backgroundColor: '#08266B',
+        backgroundColor: '#FFFFFF',
       },
     },
     web: {
@@ -41,7 +43,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       // 'single' = SPA export: one index.html + client routing, so edge serving
       // needs only a single 404→index.html fallback rule.
       output: 'single',
-      favicon: './public/icons/icon-192.png',
+      favicon: './assets/icon.png',
     },
     extra: {
       appStoreAppId: process.env.BILT_APP_STORE_APP_ID,

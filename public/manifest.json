@@ -1,12 +1,12 @@
 {
-  "name": "Your App Name",
-  "short_name": "Your App",
-  "description": "An app built with Bilt",
+  "name": "ORQIVA 歐奇瓦",
+  "short_name": "ORQIVA",
+  "description": "買賣，一站式完成。買家與賣家都在同一個平台。",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "theme_color": "#6366f1",
+  "theme_color": "#08266B",
   "background_color": "#ffffff",
   "icons": [
     {
