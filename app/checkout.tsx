@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import {
   Button,
   Chip,
@@ -159,17 +159,17 @@ export default function CheckoutScreen() {
                   { key: 'cvs', label: '超商取貨付款' },
                 ] satisfies { key: DeliveryMode; label: string }[]
               ).map((option) => (
-                <Pressable
+                <Chip
                   key={option.key}
+                  size="sm"
+                  variant={mode === option.key ? 'primary' : 'tertiary'}
                   onPress={() => {
                     setMode(option.key);
                     setError(null);
                   }}
                 >
-                  <Chip size="sm" variant={mode === option.key ? 'primary' : 'tertiary'}>
-                    {option.label}
-                  </Chip>
-                </Pressable>
+                  {option.label}
+                </Chip>
               ))}
             </View>
 

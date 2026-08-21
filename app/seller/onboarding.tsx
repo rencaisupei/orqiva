@@ -153,11 +153,14 @@ export default function SellerOnboardingScreen() {
             <Label>店舖所在地</Label>
             <View className="flex-row flex-wrap gap-2">
               {LOCATIONS.map((item) => (
-                <Pressable key={item} onPress={() => setLocation(item)}>
-                  <Chip size="sm" variant={location === item ? 'primary' : 'tertiary'}>
-                    {item}
-                  </Chip>
-                </Pressable>
+                <Chip
+                  key={item}
+                  size="sm"
+                  variant={location === item ? 'primary' : 'tertiary'}
+                  onPress={() => setLocation(item)}
+                >
+                  {item}
+                </Chip>
               ))}
             </View>
           </View>

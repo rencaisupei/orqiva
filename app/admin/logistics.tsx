@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
 import {
   Button,
@@ -108,12 +108,19 @@ export default function AdminLogisticsScreen() {
   const verify = useVerifyLogistics();
 
   const [draft, setDraft] = useState<Partial<LogisticsSettings>>({});
+  const [isDirty, setIsDirty] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hydrated = useRef(false);
 
   const settings = query.data?.settings;
 
   useEffect(() => {
-    if (settings) setDraft(settings);
+    // Seed the form once. React Query refetches whenever the browser window
+    // regains focus, and re-seeding on every refetch silently threw away
+    // everything the admin had just typed — including the enable switch.
+    if (!settings || hydrated.current) return;
+    hydrated.current = true;
+    setDraft(settings);
   }, [settings]);
 
   const environment: LogisticsEnvironment = draft.environment ?? 'stage';
@@ -183,7 +190,11 @@ export default function AdminLogisticsScreen() {
     );
   }
 
-  const patch = (next: Partial<LogisticsSettings>) => setDraft((prev) => ({ ...prev, ...next }));
+  const patch = (next: Partial<LogisticsSettings>) => {
+    setDraft((prev) => ({ ...prev, ...next }));
+    setIsDirty(true);
+    setError(null);
+  };
 
   const toggleSubType = (subType: LogisticsSubType) => {
     const next = enabledSubTypes.includes(subType)
@@ -226,7 +237,11 @@ export default function AdminLogisticsScreen() {
         platform_id: draft.platform_id ?? null,
       },
       {
-        onSuccess: () => toast.show({ variant: 'success', label: '物流設定已儲存' }),
+        onSuccess: (result) => {
+          if (result.settings) setDraft(result.settings);
+          setIsDirty(false);
+          toast.show({ variant: 'success', label: '物流設定已儲存' });
+        },
         onError: (err: Error) => setError(err.message),
       },
     );
@@ -380,14 +395,14 @@ export default function AdminLogisticsScreen() {
           <Label>開放的超商（可多選）</Label>
           <View className="flex-row flex-wrap gap-2">
             {SUB_TYPES.map((subType) => (
-              <Pressable key={subType} onPress={() => toggleSubType(subType)}>
-                <Chip
-                  size="sm"
-                  variant={enabledSubTypes.includes(subType) ? 'primary' : 'tertiary'}
-                >
-                  {LOGISTICS_SUB_TYPE_LABEL[subType]}
-                </Chip>
-              </Pressable>
+              <Chip
+                key={subType}
+                size="sm"
+                variant={enabledSubTypes.includes(subType) ? 'primary' : 'tertiary'}
+                onPress={() => toggleSubType(subType)}
+              >
+                {LOGISTICS_SUB_TYPE_LABEL[subType]}
+              </Chip>
             ))}
           </View>
           <Description>綠界申請的物流模式需為 C2C（店到店）才能使用這些子類型。</Description>
@@ -485,11 +500,15 @@ export default function AdminLogisticsScreen() {
             />
           </View>
         </SectionCard>
-
-        {error ? <FieldError>{error}</FieldError> : null}
       </ScrollView>
 
-      <View className="border-border bg-surface pb-safe-offset-3 border-t px-4 py-3">
+      <View className="border-border bg-surface pb-safe-offset-3 gap-2 border-t px-4 py-3">
+        {error ? <FieldError>{error}</FieldError> : null}
+        {!error && isDirty ? (
+          <Typography type="body-xs" className="text-brand-orange">
+            有未儲存的變更，請按下方按鈕儲存。
+          </Typography>
+        ) : null}
         <Button isDisabled={save.isPending} onPress={submit}>
           <Button.Label>{save.isPending ? '儲存中…' : '儲存物流設定'}</Button.Label>
         </Button>

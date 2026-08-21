@@ -1,17 +1,19 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import {
   Avatar,
   Button,
   Chip,
+  Input,
   Separator,
   Spinner,
+  Switch,
   TextArea,
   Typography,
   useToast,
 } from 'heroui-native';
 import { router } from 'expo-router';
-import { ChevronRight, ShieldAlert, ShieldCheck, Truck } from 'lucide-react-native';
+import { ChevronRight, ShieldAlert, ShieldCheck, Truck, Wrench } from 'lucide-react-native';
 
 import { AppImage } from '@/components/AppImage';
 import { EmptyState } from '@/components/EmptyState';
@@ -43,6 +45,7 @@ import {
   useAdminReplyTicket,
   useAdminSupportTickets,
 } from '@/lib/api/support';
+import { useAppSettings, useSaveAppSettings } from '@/lib/api/system';
 import { BRAND } from '@/lib/brand';
 import { formatDate, formatPrice, relativeTime } from '@/lib/format';
 import { WebOnlyNotice } from '@/components/WebOnlyNotice';
@@ -53,6 +56,7 @@ import {
   REPORT_SEVERITY_LABEL,
   SUPPORT_CATEGORY_LABEL,
   SUPPORT_STATUS_LABEL,
+  type AppSettings,
   type SupportTicket,
   type SupportTicketStatus,
 } from '@/lib/types';
@@ -114,7 +118,10 @@ function QueueCard({ product }: { product: QueueProduct }) {
             {relativeTime(product.created_at)}
           </Typography>
         </View>
+        {/* `disabled` keeps this status chip decorative — Chip is a Pressable, so
+            without it the chip would swallow taps meant for the row. */}
         <Chip
+          disabled
           size="sm"
           variant="soft"
           color={product.moderation_status === 'rejected' ? 'danger' : 'warning'}
@@ -286,6 +293,125 @@ function TicketCard({ ticket }: { ticket: SupportTicket }) {
   );
 }
 
+/** 系統維護與全站公告（維護模式開啟時，只有管理員還能使用 App）。 */
+function SystemPanel() {
+  const { toast } = useToast();
+  const { data: settings } = useAppSettings();
+  const save = useSaveAppSettings();
+  const [draft, setDraft] = useState<Partial<AppSettings>>({});
+  const hydrated = useRef(false);
+
+  useEffect(() => {
+    // Seed once: this query refetches on window focus and would otherwise wipe
+    // whatever the admin is typing.
+    if (!settings || hydrated.current) return;
+    hydrated.current = true;
+    setDraft(settings);
+  }, [settings]);
+
+  const patch = (next: Partial<AppSettings>) => setDraft((prev) => ({ ...prev, ...next }));
+
+  const submit = () => {
+    const enabled = draft.maintenance_enabled ?? false;
+    save.mutate(
+      {
+        maintenance_enabled: enabled,
+        maintenance_title: draft.maintenance_title?.trim() || '系統維護中',
+        maintenance_message:
+          draft.maintenance_message?.trim() || '極貨網正在進行系統維護與資料更新，請稍後再回來。',
+        maintenance_started_at: enabled
+          ? (settings?.maintenance_started_at ?? new Date().toISOString())
+          : null,
+        announcement_enabled: draft.announcement_enabled ?? false,
+        announcement_message: draft.announcement_message?.trim() ?? '',
+      },
+      {
+        onSuccess: (data) => {
+          setDraft(data);
+          toast.show({ variant: 'success', label: '系統設定已儲存' });
+        },
+        onError: (error: Error) => toast.show({ variant: 'danger', label: error.message }),
+      },
+    );
+  };
+
+  return (
+    <View className="bg-surface gap-3 rounded-2xl p-4">
+      <View className="flex-row items-center gap-3">
+        <View className="bg-brand-blue-soft h-11 w-11 shrink-0 items-center justify-center rounded-xl">
+          <Wrench size={20} color={BRAND.blue} />
+        </View>
+        <View className="flex-1">
+          <Typography type="body" className="text-navy" style={{ fontWeight: '600' }}>
+            系統維護與公告
+          </Typography>
+          <Typography type="body-xs" color="muted">
+            維護模式開啟後，一般使用者會看到維護畫面，管理員仍可正常操作。
+          </Typography>
+        </View>
+      </View>
+
+      <Separator />
+
+      <View className="flex-row items-center gap-3">
+        <View className="flex-1">
+          <Typography type="body-sm" className="text-navy" style={{ fontWeight: '600' }}>
+            維護模式
+          </Typography>
+          <Typography type="body-xs" color="muted">
+            {settings?.maintenance_enabled
+              ? `已於 ${settings.maintenance_started_at ? formatDate(settings.maintenance_started_at) : '—'} 開啟`
+              : '目前關閉，所有人都能正常使用。'}
+          </Typography>
+        </View>
+        <Switch
+          isSelected={draft.maintenance_enabled ?? false}
+          onSelectedChange={(value) => patch({ maintenance_enabled: value })}
+        />
+      </View>
+
+      <Input
+        placeholder="維護畫面標題"
+        value={draft.maintenance_title ?? ''}
+        onChangeText={(value) => patch({ maintenance_title: value })}
+      />
+      <TextArea
+        placeholder="維護說明（例如：預計 22:00 完成，期間無法下單）"
+        numberOfLines={3}
+        value={draft.maintenance_message ?? ''}
+        onChangeText={(value) => patch({ maintenance_message: value })}
+      />
+
+      <Separator />
+
+      <View className="flex-row items-center gap-3">
+        <View className="flex-1">
+          <Typography type="body-sm" className="text-navy" style={{ fontWeight: '600' }}>
+            全站公告橫幅
+          </Typography>
+          <Typography type="body-xs" color="muted">
+            顯示在畫面下方，使用者可按「知道了」關閉。
+          </Typography>
+        </View>
+        <Switch
+          isSelected={draft.announcement_enabled ?? false}
+          onSelectedChange={(value) => patch({ announcement_enabled: value })}
+        />
+      </View>
+      <TextArea
+        placeholder="公告內容（例如：中秋節出貨作業調整說明）"
+        numberOfLines={2}
+        value={draft.announcement_message ?? ''}
+        onChangeText={(value) => patch({ announcement_message: value })}
+      />
+
+      <Button isDisabled={save.isPending} onPress={submit}>
+        <Button.Label>{save.isPending ? '儲存中…' : '儲存系統設定'}</Button.Label>
+      </Button>
+    </View>
+  );
+}
+
 export default function AdminScreen() {
   const userId = useUserId();
   const isAdmin = useIsAdminConsole();
@@ -351,25 +477,83 @@ export default function AdminScreen() {
     reports.isLoading ||
     tickets.isLoading;
 
+  // A failed read used to leave the tab completely blank, which reads as
+  // "the tab is not clickable". Surface the reason instead.
+  const activeQueryError =
+    tab === 'overview'
+      ? overview.error
+      : tab === 'moderation'
+        ? (queue.error ?? flags.error)
+        : tab === 'users'
+          ? users.error
+          : tab === 'products'
+            ? products.error
+            : tab === 'stores'
+              ? stores.error
+              : tab === 'orders'
+                ? orders.error
+                : tab === 'reports'
+                  ? reports.error
+                  : tickets.error;
+
+  const emptyLabel: Partial<Record<TabKey, string>> = {
+    users: '目前沒有會員資料',
+    products: '目前沒有商品',
+    stores: '目前沒有商店',
+    orders: '目前沒有訂單',
+  };
+
+  const activeIsEmpty =
+    tab === 'users'
+      ? users.isSuccess && (users.data ?? []).length === 0
+      : tab === 'products'
+        ? products.isSuccess && (products.data ?? []).length === 0
+        : tab === 'stores'
+          ? stores.isSuccess && (stores.data ?? []).length === 0
+          : tab === 'orders'
+            ? orders.isSuccess && (orders.data ?? []).length === 0
+            : false;
+
   return (
     <View className="bg-background flex-1">
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} className="bg-surface">
-        <View className="flex-row gap-2 px-4 py-3">
-          {TABS.map((item) => (
-            <Pressable key={item.key} onPress={() => setTab(item.key)}>
-              <Chip size="sm" variant={tab === item.key ? 'primary' : 'tertiary'}>
-                {item.label}
-              </Chip>
-            </Pressable>
-          ))}
-        </View>
-      </ScrollView>
+      {/* Wraps instead of scrolling horizontally: a desktop mouse cannot swipe a
+          horizontal ScrollView, which left the last tabs unreachable. */}
+      <View className="bg-surface flex-row flex-wrap gap-2 px-4 py-3">
+        {TABS.map((item) => (
+          <Chip
+            key={item.key}
+            size="sm"
+            variant={tab === item.key ? 'primary' : 'tertiary'}
+            onPress={() => setTab(item.key)}
+          >
+            {item.label}
+          </Chip>
+        ))}
+      </View>
 
       <ScrollView contentContainerClassName="p-4 gap-3 pb-10">
         {loading ? (
           <View className="py-10">
             <Spinner />
           </View>
+        ) : null}
+
+        {activeQueryError ? (
+          <View className="bg-surface gap-1 rounded-2xl p-4">
+            <Typography type="body-sm" className="text-danger" style={{ fontWeight: '600' }}>
+              這個分頁讀取失敗
+            </Typography>
+            <Typography type="body-xs" color="muted">
+              {activeQueryError instanceof Error ? activeQueryError.message : '請稍後再試'}
+            </Typography>
+          </View>
+        ) : null}
+
+        {activeIsEmpty ? (
+          <EmptyState
+            title={emptyLabel[tab] ?? '目前沒有資料'}
+            description="有新資料時會出現在這裡。"
+          />
         ) : null}
 
         {tab === 'overview' && overview.data ? (
@@ -425,6 +609,8 @@ export default function AdminScreen() {
               </View>
               <ChevronRight size={18} color={BRAND.muted} />
             </Pressable>
+
+            <SystemPanel />
           </>
         ) : null}
 
@@ -513,6 +699,8 @@ export default function AdminScreen() {
                           {
                             onSuccess: () =>
                               toast.show({ variant: 'success', label: '已標記為已處理' }),
+                            onError: (error: Error) =>
+                              toast.show({ variant: 'danger', label: error.message }),
                           },
                         )
                       }
@@ -527,6 +715,8 @@ export default function AdminScreen() {
                           { flagId: flag.id, status: 'dismissed' },
                           {
                             onSuccess: () => toast.show({ variant: 'success', label: '已忽略' }),
+                            onError: (error: Error) =>
+                              toast.show({ variant: 'danger', label: error.message }),
                           },
                         )
                       }
@@ -621,6 +811,8 @@ export default function AdminScreen() {
                                 variant: 'success',
                                 label: user.is_suspended ? '帳號已恢復' : '帳號已停用',
                               }),
+                            onError: (error: Error) =>
+                              toast.show({ variant: 'danger', label: error.message }),
                           },
                         )
                       }
@@ -659,6 +851,7 @@ export default function AdminScreen() {
                   </View>
                   <View className="items-end gap-1">
                     <Chip
+                      disabled
                       size="sm"
                       variant="soft"
                       color={product.status === 'suspended' ? 'danger' : 'success'}
@@ -670,7 +863,7 @@ export default function AdminScreen() {
                           : '已停用'}
                     </Chip>
                     {product.moderation_status !== 'approved' ? (
-                      <Chip size="sm" variant="tertiary">
+                      <Chip disabled size="sm" variant="tertiary">
                         {MODERATION_STATUS_LABEL[product.moderation_status]}
                       </Chip>
                     ) : null}
@@ -691,6 +884,8 @@ export default function AdminScreen() {
                             variant: 'success',
                             label: product.status === 'suspended' ? '商品已恢復' : '商品已停用',
                           }),
+                        onError: (error: Error) =>
+                          toast.show({ variant: 'danger', label: error.message }),
                       },
                     )
                   }
@@ -747,7 +942,7 @@ export default function AdminScreen() {
                   >
                     {order.order_no}
                   </Typography>
-                  <Chip size="sm" variant="tertiary">
+                  <Chip disabled size="sm" variant="tertiary">
                     {ORDER_STATUS_LABEL[order.status]}
                   </Chip>
                 </View>
@@ -839,6 +1034,8 @@ export default function AdminScreen() {
                         resolveReport.mutate(report.id, {
                           onSuccess: () =>
                             toast.show({ variant: 'success', label: '已標記為處理完成' }),
+                          onError: (error: Error) =>
+                            toast.show({ variant: 'danger', label: error.message }),
                         })
                       }
                     >

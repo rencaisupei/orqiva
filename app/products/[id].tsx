@@ -231,11 +231,14 @@ export default function ProductDetailScreen() {
           </Typography>
           <View className="flex-row flex-wrap gap-2">
             {product.shipping_methods.map((method) => (
-              <Pressable key={method} onPress={() => setShippingMethod(method)}>
-                <Chip size="sm" variant={selectedShipping === method ? 'primary' : 'tertiary'}>
-                  {method}
-                </Chip>
-              </Pressable>
+              <Chip
+                key={method}
+                size="sm"
+                variant={selectedShipping === method ? 'primary' : 'tertiary'}
+                onPress={() => setShippingMethod(method)}
+              >
+                {method}
+              </Chip>
             ))}
           </View>
           <View className="flex-row items-center gap-2">
@@ -367,33 +370,41 @@ export default function ProductDetailScreen() {
 
       <View className="border-border bg-surface pb-safe-offset-2 flex-row items-center gap-2 border-t px-3 py-2.5">
         <Pressable
-          className="h-11 w-11 items-center justify-center"
+          className="h-10 w-10 items-center justify-center"
           onPress={() => onToggleFavorite(product.id)}
           accessibilityLabel="收藏"
         >
           <Heart
-            size={22}
+            size={20}
             color={isFavorite(product.id) ? BRAND.orange : BRAND.muted}
             fill={isFavorite(product.id) ? BRAND.orange : 'transparent'}
           />
         </Pressable>
         <Pressable
-          className="h-11 w-11 items-center justify-center"
+          className="h-10 w-10 items-center justify-center"
           onPress={onContactSeller}
           accessibilityLabel="聯絡賣家"
         >
-          <MessageCircle size={22} color={BRAND.navy} />
+          <MessageCircle size={20} color={BRAND.navy} />
         </Pressable>
+        {/* Two five-character labels share ~220px on a 360px phone. `sm` plus the
+            tighter padding keeps each label centred inside its button instead of
+            being squeezed against the edge. */}
         <Button
+          size="sm"
           variant="secondary"
-          className="flex-1"
+          className="flex-1 px-2"
           isDisabled={outOfStock || addToCart.isPending}
           onPress={onAddToCart}
         >
-          <Button.Label>加入購物車</Button.Label>
+          <Button.Label numberOfLines={1} className="text-center">
+            加入購物車
+          </Button.Label>
         </Button>
-        <Button className="flex-1" isDisabled={outOfStock} onPress={onBuyNow}>
-          <Button.Label>{outOfStock ? '已售完' : '立即購買'}</Button.Label>
+        <Button size="sm" className="flex-1 px-2" isDisabled={outOfStock} onPress={onBuyNow}>
+          <Button.Label numberOfLines={1} className="text-center">
+            {outOfStock ? '已售完' : '立即購買'}
+          </Button.Label>
         </Button>
       </View>
     </View>

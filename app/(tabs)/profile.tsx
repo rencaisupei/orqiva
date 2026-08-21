@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
-import { Avatar, Button, Chip, Typography } from 'heroui-native';
+import { Platform, Pressable, ScrollView, View } from 'react-native';
+import { Avatar, Button, Chip, Typography, useToast } from 'heroui-native';
+import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import {
   Bell,
@@ -11,6 +12,7 @@ import {
   LifeBuoy,
   LogOut,
   Receipt,
+  RefreshCw,
   ScrollText,
   Settings,
   ShieldCheck,
@@ -24,6 +26,7 @@ import { useMyStoreQuery } from '@/lib/api/seller';
 import { BRAND, BRAND_COPY } from '@/lib/brand';
 import { formatDate } from '@/lib/format';
 import { useIsAdminConsole, useSessionStore, useUserId } from '@/lib/session';
+import { useOtaUpdates } from '@/lib/updates';
 
 function MenuRow({
   icon,
@@ -56,6 +59,21 @@ export default function ProfileScreen() {
   const signOut = useSessionStore((s) => s.signOut);
   const showAdmin = useIsAdminConsole();
   const { data: store } = useMyStoreQuery(userId);
+  const { toast } = useToast();
+  const ota = useOtaUpdates();
+
+  const checkForUpdate = () => {
+    if (ota.status === 'unsupported') {
+      toast.show({ variant: 'default', label: '這個版本不支援線上更新（開發版／網頁版）' });
+      return;
+    }
+    if (ota.isReady) {
+      ota.restart();
+      return;
+    }
+    toast.show({ variant: 'default', label: '正在檢查更新…' });
+    ota.check();
+  };
 
   if (!userId) {
     return (
@@ -186,6 +204,19 @@ export default function ProfileScreen() {
             title="隱私權政策"
             onPress={() => router.push('/legal/privacy')}
           />
+          {Platform.OS === 'web' ? null : (
+            <MenuRow
+              icon={<RefreshCw size={18} color={BRAND.blue} />}
+              title={
+                ota.isReady
+                  ? '有新版本，點此重新啟動'
+                  : ota.status === 'checking' || ota.status === 'downloading'
+                    ? '正在檢查更新…'
+                    : '檢查 App 更新'
+              }
+              onPress={checkForUpdate}
+            />
+          )}
         </View>
 
         <View className="bg-surface mx-4 mt-3 overflow-hidden rounded-2xl">
@@ -203,9 +234,12 @@ export default function ProfileScreen() {
           />
         </View>
 
-        <View className="mt-6 items-center">
+        <View className="mt-6 items-center gap-1">
           <Typography type="body-xs" color="muted">
             {BRAND_COPY.nameZh} {BRAND_COPY.name} · {BRAND_COPY.slogan}
+          </Typography>
+          <Typography type="body-xs" color="muted">
+            版本 {Constants.expoConfig?.version ?? '1.0.0'}
           </Typography>
         </View>
       </ScrollView>

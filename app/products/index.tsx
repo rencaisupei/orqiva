@@ -112,15 +112,15 @@ export default function ProductListScreen() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-3">
           <View className="flex-row gap-2">
             {SORT_OPTIONS.map((option) => (
-              <Pressable key={option.key} onPress={() => setSort(option.key)}>
-                <Chip
-                  size="sm"
-                  variant={sort === option.key ? 'primary' : 'tertiary'}
-                  color={sort === option.key ? 'accent' : 'default'}
-                >
-                  {option.label}
-                </Chip>
-              </Pressable>
+              <Chip
+                key={option.key}
+                size="sm"
+                variant={sort === option.key ? 'primary' : 'tertiary'}
+                color={sort === option.key ? 'accent' : 'default'}
+                onPress={() => setSort(option.key)}
+              >
+                {option.label}
+              </Chip>
             ))}
           </View>
         </ScrollView>
@@ -174,16 +174,16 @@ export default function ProductListScreen() {
             </Typography>
             <View className="flex-row gap-2">
               {(['new', 'used'] as ProductCondition[]).map((value) => (
-                <Pressable
+                <Chip
                   key={value}
+                  size="sm"
+                  variant={draft.condition === value ? 'primary' : 'tertiary'}
                   onPress={() =>
                     setDraft((d) => ({ ...d, condition: d.condition === value ? null : value }))
                   }
                 >
-                  <Chip size="sm" variant={draft.condition === value ? 'primary' : 'tertiary'}>
-                    {value === 'new' ? '全新' : '二手'}
-                  </Chip>
-                </Pressable>
+                  {value === 'new' ? '全新' : '二手'}
+                </Chip>
               ))}
             </View>
           </View>
@@ -194,16 +194,16 @@ export default function ProductListScreen() {
             </Typography>
             <View className="flex-row flex-wrap gap-2">
               {LOCATIONS.map((value) => (
-                <Pressable
+                <Chip
                   key={value}
+                  size="sm"
+                  variant={draft.location === value ? 'primary' : 'tertiary'}
                   onPress={() =>
                     setDraft((d) => ({ ...d, location: d.location === value ? null : value }))
                   }
                 >
-                  <Chip size="sm" variant={draft.location === value ? 'primary' : 'tertiary'}>
-                    {value}
-                  </Chip>
-                </Pressable>
+                  {value}
+                </Chip>
               ))}
             </View>
           </View>
@@ -214,16 +214,16 @@ export default function ProductListScreen() {
             </Typography>
             <View className="flex-row gap-2">
               {RATING_OPTIONS.map((value) => (
-                <Pressable
+                <Chip
                   key={value}
+                  size="sm"
+                  variant={draft.minRating === value ? 'primary' : 'tertiary'}
                   onPress={() =>
                     setDraft((d) => ({ ...d, minRating: d.minRating === value ? null : value }))
                   }
                 >
-                  <Chip size="sm" variant={draft.minRating === value ? 'primary' : 'tertiary'}>
-                    {value} 星以上
-                  </Chip>
-                </Pressable>
+                  {value} 星以上
+                </Chip>
               ))}
             </View>
           </View>
@@ -234,16 +234,16 @@ export default function ProductListScreen() {
             </Typography>
             <View className="flex-row flex-wrap gap-2">
               {SHIPPING_METHODS.map((value) => (
-                <Pressable
+                <Chip
                   key={value}
+                  size="sm"
+                  variant={draft.shipping === value ? 'primary' : 'tertiary'}
                   onPress={() =>
                     setDraft((d) => ({ ...d, shipping: d.shipping === value ? null : value }))
                   }
                 >
-                  <Chip size="sm" variant={draft.shipping === value ? 'primary' : 'tertiary'}>
-                    {value}
-                  </Chip>
-                </Pressable>
+                  {value}
+                </Chip>
               ))}
             </View>
           </View>

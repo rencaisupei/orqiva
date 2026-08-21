@@ -23,6 +23,15 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     runtimeVersion: {
       policy: 'appVersion',
     },
+    // In-app (OTA) updates: the app checks on launch and when it returns to the
+    // foreground (lib/updates.ts), then offers a restart. ON_LOAD is disabled so
+    // startup never blocks on the network; expo-updates stays inert on web,
+    // in Expo Go and in dev builds.
+    updates: {
+      enabled: true,
+      checkAutomatically: 'ON_ERROR_RECOVERY',
+      fallbackToCacheTimeout: 0,
+    },
     assetBundlePatterns: ['**/*'],
     ios: {
       infoPlist: {
@@ -130,6 +139,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
           },
         },
       ],
+      'expo-updates',
       ...nativePlugins,
     ],
     experiments: {

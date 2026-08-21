@@ -418,6 +418,20 @@ export const LOGISTICS_STATUS_LABEL: Record<LogisticsStatus, string> = {
   failed: '建立失敗',
 };
 
+/** 平台系統設定：維護模式與全站公告，所有人都讀得到，只有管理員能改。 */
+export type AppSettings = {
+  id: string;
+  maintenance_enabled: boolean;
+  maintenance_title: string;
+  maintenance_message: string;
+  maintenance_started_at: string | null;
+  announcement_enabled: boolean;
+  announcement_message: string;
+  min_supported_version: string | null;
+  updated_at: string;
+  updated_by: string | null;
+};
+
 export type LogisticsSettings = {
   id: string;
   provider: string;

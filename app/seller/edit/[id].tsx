@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import { Button, Chip, FieldError, Input, Label, Spinner, TextArea, useToast } from 'heroui-native';
 import { router, useLocalSearchParams } from 'expo-router';
 
@@ -188,11 +188,14 @@ export default function EditProductScreen() {
             <Label>商品狀態</Label>
             <View className="flex-row gap-2">
               {(['new', 'used'] as ProductCondition[]).map((value) => (
-                <Pressable key={value} onPress={() => setCondition(value)}>
-                  <Chip size="sm" variant={condition === value ? 'primary' : 'tertiary'}>
-                    {value === 'new' ? '全新' : '二手'}
-                  </Chip>
-                </Pressable>
+                <Chip
+                  key={value}
+                  size="sm"
+                  variant={condition === value ? 'primary' : 'tertiary'}
+                  onPress={() => setCondition(value)}
+                >
+                  {value === 'new' ? '全新' : '二手'}
+                </Chip>
               ))}
             </View>
           </View>
@@ -201,18 +204,18 @@ export default function EditProductScreen() {
             <Label>配送方式</Label>
             <View className="flex-row flex-wrap gap-2">
               {SHIPPING_METHODS.map((method) => (
-                <Pressable
+                <Chip
                   key={method}
+                  size="sm"
+                  variant={shipping.includes(method) ? 'primary' : 'tertiary'}
                   onPress={() =>
                     setShipping((prev) =>
                       prev.includes(method) ? prev.filter((m) => m !== method) : [...prev, method],
                     )
                   }
                 >
-                  <Chip size="sm" variant={shipping.includes(method) ? 'primary' : 'tertiary'}>
-                    {method}
-                  </Chip>
-                </Pressable>
+                  {method}
+                </Chip>
               ))}
             </View>
           </View>
@@ -221,11 +224,14 @@ export default function EditProductScreen() {
             <Label>所在地</Label>
             <View className="flex-row flex-wrap gap-2">
               {LOCATIONS.map((item) => (
-                <Pressable key={item} onPress={() => setLocation(item)}>
-                  <Chip size="sm" variant={location === item ? 'primary' : 'tertiary'}>
-                    {item}
-                  </Chip>
-                </Pressable>
+                <Chip
+                  key={item}
+                  size="sm"
+                  variant={location === item ? 'primary' : 'tertiary'}
+                  onPress={() => setLocation(item)}
+                >
+                  {item}
+                </Chip>
               ))}
             </View>
           </View>

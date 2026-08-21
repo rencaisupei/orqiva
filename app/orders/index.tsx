@@ -40,11 +40,14 @@ export default function OrdersScreen() {
       <ScrollView horizontal showsHorizontalScrollIndicator={false} className="bg-surface">
         <View className="flex-row gap-2 px-4 py-3">
           {FILTERS.map((item) => (
-            <Pressable key={item.key} onPress={() => setFilter(item.key)}>
-              <Chip size="sm" variant={filter === item.key ? 'primary' : 'tertiary'}>
-                {item.label}
-              </Chip>
-            </Pressable>
+            <Chip
+              key={item.key}
+              size="sm"
+              variant={filter === item.key ? 'primary' : 'tertiary'}
+              onPress={() => setFilter(item.key)}
+            >
+              {item.label}
+            </Chip>
           ))}
         </View>
       </ScrollView>
@@ -93,6 +96,7 @@ export default function OrdersScreen() {
                   {item.store?.name ?? '極貨網賣家'}
                 </Typography>
                 <Chip
+                  disabled
                   size="sm"
                   variant="soft"
                   color={

@@ -29,6 +29,7 @@ import { initPostHog } from '@/lib/posthog';
 import { registerServiceWorker } from '@/lib/registerServiceWorker';
 import { reportErrorToParent } from '@/lib/reportPreviewError';
 import { InstallPrompt } from '@/components/InstallPrompt';
+import { SystemGate } from '@/components/SystemGate';
 import { BackButton } from '@/components/BackButton';
 import { BRAND } from '@/lib/brand';
 import { usePushNotifications } from '@/lib/push';
@@ -176,45 +177,47 @@ export default function RootLayout() {
       <StatusBar style="dark" translucent />
       <QueryClientProvider client={queryClient}>
         <HeroUINativeProvider>
-          <Stack
-            screenOptions={{
-              headerStyle: { backgroundColor: BRAND.white },
-              headerTitleStyle: { color: BRAND.navy, fontWeight: '600' },
-              headerTintColor: BRAND.navy,
-              headerShadowVisible: false,
-              headerLeft: () => <BackButton />,
-              contentStyle: { backgroundColor: BRAND.background },
-            }}
-          >
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="auth/sign-in" options={{ title: '登入 / 註冊' }} />
-            <Stack.Screen name="products/index" options={{ title: '商品列表' }} />
-            <Stack.Screen name="products/[id]" options={{ title: '商品詳情' }} />
-            <Stack.Screen name="store/[id]" options={{ title: '店舖' }} />
-            <Stack.Screen name="cart" options={{ title: '購物車' }} />
-            <Stack.Screen name="checkout" options={{ title: '結帳' }} />
-            <Stack.Screen name="favorites" options={{ title: '我的收藏' }} />
-            <Stack.Screen name="orders/index" options={{ title: '我的訂單' }} />
-            <Stack.Screen name="orders/[id]" options={{ title: '訂單詳情' }} />
-            <Stack.Screen name="review/[productId]" options={{ title: '評價商品' }} />
-            <Stack.Screen name="notifications" options={{ title: '通知中心' }} />
-            <Stack.Screen name="messages/[id]" options={{ title: '聊天' }} />
-            <Stack.Screen name="profile/edit" options={{ title: '編輯個人資料' }} />
-            <Stack.Screen name="profile/delete" options={{ title: '刪除帳號' }} />
-            <Stack.Screen name="seller/index" options={{ headerShown: false }} />
-            <Stack.Screen name="seller/onboarding" options={{ title: '成為極貨網賣家' }} />
-            <Stack.Screen name="seller/products" options={{ title: '商品管理' }} />
-            <Stack.Screen name="seller/analytics" options={{ title: '銷售分析' }} />
-            <Stack.Screen name="seller/new-product" options={{ title: '新增商品' }} />
-            <Stack.Screen name="seller/edit/[id]" options={{ title: '編輯商品' }} />
-            <Stack.Screen name="seller/orders" options={{ title: '訂單管理' }} />
-            <Stack.Screen name="seller/store" options={{ title: '店舖設定' }} />
-            <Stack.Screen name="admin/index" options={{ title: '平台管理' }} />
-            <Stack.Screen name="admin/logistics" options={{ title: '物流串接設定' }} />
-            <Stack.Screen name="legal/privacy" options={{ title: '隱私權政策' }} />
-            <Stack.Screen name="legal/terms" options={{ title: '服務條款' }} />
-            <Stack.Screen name="support/contact" options={{ title: '聯絡我們' }} />
-          </Stack>
+          <SystemGate>
+            <Stack
+              screenOptions={{
+                headerStyle: { backgroundColor: BRAND.white },
+                headerTitleStyle: { color: BRAND.navy, fontWeight: '600' },
+                headerTintColor: BRAND.navy,
+                headerShadowVisible: false,
+                headerLeft: () => <BackButton />,
+                contentStyle: { backgroundColor: BRAND.background },
+              }}
+            >
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="auth/sign-in" options={{ title: '登入 / 註冊' }} />
+              <Stack.Screen name="products/index" options={{ title: '商品列表' }} />
+              <Stack.Screen name="products/[id]" options={{ title: '商品詳情' }} />
+              <Stack.Screen name="store/[id]" options={{ title: '店舖' }} />
+              <Stack.Screen name="cart" options={{ title: '購物車' }} />
+              <Stack.Screen name="checkout" options={{ title: '結帳' }} />
+              <Stack.Screen name="favorites" options={{ title: '我的收藏' }} />
+              <Stack.Screen name="orders/index" options={{ title: '我的訂單' }} />
+              <Stack.Screen name="orders/[id]" options={{ title: '訂單詳情' }} />
+              <Stack.Screen name="review/[productId]" options={{ title: '評價商品' }} />
+              <Stack.Screen name="notifications" options={{ title: '通知中心' }} />
+              <Stack.Screen name="messages/[id]" options={{ title: '聊天' }} />
+              <Stack.Screen name="profile/edit" options={{ title: '編輯個人資料' }} />
+              <Stack.Screen name="profile/delete" options={{ title: '刪除帳號' }} />
+              <Stack.Screen name="seller/index" options={{ headerShown: false }} />
+              <Stack.Screen name="seller/onboarding" options={{ title: '成為極貨網賣家' }} />
+              <Stack.Screen name="seller/products" options={{ title: '商品管理' }} />
+              <Stack.Screen name="seller/analytics" options={{ title: '銷售分析' }} />
+              <Stack.Screen name="seller/new-product" options={{ title: '新增商品' }} />
+              <Stack.Screen name="seller/edit/[id]" options={{ title: '編輯商品' }} />
+              <Stack.Screen name="seller/orders" options={{ title: '訂單管理' }} />
+              <Stack.Screen name="seller/store" options={{ title: '店舖設定' }} />
+              <Stack.Screen name="admin/index" options={{ title: '平台管理' }} />
+              <Stack.Screen name="admin/logistics" options={{ title: '物流串接設定' }} />
+              <Stack.Screen name="legal/privacy" options={{ title: '隱私權政策' }} />
+              <Stack.Screen name="legal/terms" options={{ title: '服務條款' }} />
+              <Stack.Screen name="support/contact" options={{ title: '聯絡我們' }} />
+            </Stack>
+          </SystemGate>
           <InstallPrompt />
         </HeroUINativeProvider>
       </QueryClientProvider>
