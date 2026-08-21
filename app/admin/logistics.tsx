@@ -215,6 +215,7 @@ export default function AdminLogisticsScreen() {
         is_enabled: draft.is_enabled,
         enabled_sub_types: enabledSubTypes,
         is_collection_enabled: draft.is_collection_enabled,
+        use_test_credentials: draft.use_test_credentials ?? true,
         sender_name: draft.sender_name ?? null,
         sender_phone: draft.sender_phone ?? null,
         sender_cell_phone: draft.sender_cell_phone ?? null,
@@ -278,6 +279,15 @@ export default function AdminLogisticsScreen() {
             onChange={(value) => patch({ environment: value as LogisticsEnvironment })}
           />
 
+          {environment === 'stage' ? (
+            <ToggleRow
+              label="使用綠界公用測試特店"
+              hint={`測試主機只認得綠界的測試特店（${query.data?.testAccountMerchantId ?? '2000933'}），自己的正式特店編號在測試環境會被拒絕。`}
+              value={draft.use_test_credentials ?? true}
+              onChange={(value) => patch({ use_test_credentials: value })}
+            />
+          ) : null}
+
           <View className="bg-background gap-2 rounded-xl p-3">
             <View className="flex-row items-center gap-2">
               {activeCredentials?.ready ? (
@@ -291,9 +301,12 @@ export default function AdminLogisticsScreen() {
             </View>
             <Typography type="body-xs" color="muted">
               MerchantID：{activeCredentials?.merchantId ?? '未設定'}
+              {activeCredentials?.source === 'ecpay_test' ? '（綠界公用測試特店）' : ''}
             </Typography>
             <Typography type="body-xs" color="muted">
-              金鑰放在後端環境變數，前端讀不到：{envVarNames.join('、')}
+              {activeCredentials?.source === 'ecpay_test'
+                ? '目前用的是綠界文件公開的測試金鑰，正式環境會自動改用專案環境變數。'
+                : `金鑰放在後端環境變數，前端讀不到：${envVarNames.join('、')}`}
             </Typography>
             <Typography type="body-xs" color="muted">
               檢查碼演算法：{query.data?.checkMacAlgorithm ?? 'MD5'}

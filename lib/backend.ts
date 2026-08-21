@@ -102,6 +102,25 @@ export async function callNotify<T>(
   return data as T;
 }
 
+export type AccountAction = 'deletion_summary' | 'delete_account';
+
+/**
+ * Calls the `account` edge function: in-app account deletion needs the service
+ * key to remove the auth user, which the client can never do itself.
+ */
+export async function callAccount<T>(
+  action: AccountAction,
+  payload: Record<string, unknown> = {},
+): Promise<T> {
+  const { data, error } = await bilt.functions.invoke('account', {
+    body: { action, ...payload },
+  });
+
+  if (error) throw await invokeError(error, '帳號服務暫時無法使用，請稍後再試');
+
+  return data as T;
+}
+
 export type ModerationAction =
   | 'moderate_product'
   | 'admin_decide'

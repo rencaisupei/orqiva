@@ -423,6 +423,8 @@ export type LogisticsSettings = {
   is_enabled: boolean;
   enabled_sub_types: LogisticsSubType[];
   is_collection_enabled: boolean;
+  /** 測試環境改用綠界公開的 C2C 測試特店（2000933）；正式環境永遠用自己的金鑰。 */
+  use_test_credentials: boolean;
   sender_name: string | null;
   sender_phone: string | null;
   sender_cell_phone: string | null;
@@ -447,6 +449,8 @@ export type LogisticsVerifyResult = {
   message?: string;
   apiHost?: string;
   merchantId?: string;
+  /** 'env' = 專案環境變數的金鑰；'ecpay_test' = 綠界公用測試特店。 */
+  credentialSource?: 'env' | 'ecpay_test';
   raw?: string;
 };
 

@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   ShoppingCart,
   Store as StoreIcon,
+  UserX,
 } from 'lucide-react-native';
 
 import { SignInRequired } from '@/components/SignInRequired';
@@ -187,6 +188,12 @@ export default function ProfileScreen() {
             title="登出"
             danger
             onPress={() => void signOut()}
+          />
+          <MenuRow
+            icon={<UserX size={18} color={BRAND.blue} />}
+            title="刪除帳號"
+            danger
+            onPress={() => router.push('/profile/delete')}
           />
         </View>
 

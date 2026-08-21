@@ -17,9 +17,11 @@ export type AdminLogisticsPayload = {
   supportedSubTypes: LogisticsSubType[];
   /** 物流 API 的檢查碼演算法（綠界規定 MD5；SHA256 只用於金流 AIO API）。 */
   checkMacAlgorithm: string;
+  /** 綠界文件公開的 C2C 測試特店代號。 */
+  testAccountMerchantId: string;
   credentials: {
-    stage: { ready: boolean; merchantId: string | null };
-    production: { ready: boolean; merchantId: string | null };
+    stage: { ready: boolean; merchantId: string | null; source: 'env' | 'ecpay_test' };
+    production: { ready: boolean; merchantId: string | null; source: 'env' | 'ecpay_test' };
   };
 };
 

@@ -260,3 +260,52 @@ export function useSendTestPush() {
     mutationFn: () => callNotify<{ ok: boolean; sent: number }>('push_test'),
   });
 }
+
+/* ── 封鎖使用者（App Store 1.2 UGC 要求） ─────────────────────── */
+
+/** 我封鎖了誰：回傳被封鎖的使用者 id 清單。 */
+export function useBlockedUserIds(userId: string | null) {
+  return useQuery({
+    enabled: !!userId,
+    queryKey: ['blocked-users', userId],
+    queryFn: async (): Promise<string[]> => {
+      const { data, error } = await bilt.from('blocked_users').select('blocked_id');
+      if (error) throw new Error(error.message);
+      return (data ?? []).map((row: { blocked_id: string }) => row.blocked_id);
+    },
+  });
+}
+
+export function useBlockUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { blockerId: string; blockedId: string; reason?: string }) => {
+      const { error } = await bilt.from('blocked_users').insert({
+        blocker_id: input.blockerId,
+        blocked_id: input.blockedId,
+        reason: input.reason ?? null,
+      });
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['blocked-users'] });
+    },
+  });
+}
+
+export function useUnblockUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { blockerId: string; blockedId: string }) => {
+      const { error } = await bilt
+        .from('blocked_users')
+        .delete()
+        .eq('blocker_id', input.blockerId)
+        .eq('blocked_id', input.blockedId);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['blocked-users'] });
+    },
+  });
+}
