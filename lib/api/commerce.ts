@@ -227,6 +227,14 @@ export function useOrder(id: string | undefined) {
 
 export type CheckoutLine = { product_id: string; quantity: number; shipping_method: string };
 
+export type CvsPickup = {
+  logisticsSubType: string;
+  storeId: string;
+  storeName: string | null;
+  storeAddress: string | null;
+  storePhone: string | null;
+};
+
 export function usePlaceOrder() {
   const qc = useQueryClient();
   return useMutation({
@@ -236,6 +244,7 @@ export function usePlaceOrder() {
       recipientPhone: string;
       shippingAddress: string;
       note: string;
+      cvsPickup?: CvsPickup | null;
     }) => {
       return await callMarket<{ order_ids: string[] }>('place_order', {
         items: input.items,
@@ -244,6 +253,11 @@ export function usePlaceOrder() {
         shipping_address: input.shippingAddress,
         note: input.note,
         shipping_fee: SHIPPING_FEE,
+        logistics_sub_type: input.cvsPickup?.logisticsSubType ?? null,
+        cvs_store_id: input.cvsPickup?.storeId ?? null,
+        cvs_store_name: input.cvsPickup?.storeName ?? null,
+        cvs_store_address: input.cvsPickup?.storeAddress ?? null,
+        cvs_store_phone: input.cvsPickup?.storePhone ?? null,
       });
     },
     onSuccess: () => {

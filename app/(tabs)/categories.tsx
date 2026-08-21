@@ -1,5 +1,6 @@
+import { useMemo, useState } from 'react';
 import { FlatList, Pressable, View } from 'react-native';
-import { Spinner, Typography } from 'heroui-native';
+import { SearchField, Spinner, Typography } from 'heroui-native';
 import { router } from 'expo-router';
 import { ChevronRight } from 'lucide-react-native';
 
@@ -11,6 +12,18 @@ import { formatNumber } from '@/lib/format';
 
 export default function CategoriesScreen() {
   const { data: categories, isLoading } = useCategories();
+  const [query, setQuery] = useState('');
+
+  const visible = useMemo(() => {
+    const term = query.trim().toLowerCase();
+    const all = categories ?? [];
+    if (!term) return all;
+    return all.filter(
+      (category) =>
+        category.name.toLowerCase().includes(term) ||
+        (category.name_en ?? '').toLowerCase().includes(term),
+    );
+  }, [categories, query]);
 
   return (
     <View className="bg-background flex-1">
@@ -20,8 +33,17 @@ export default function CategoriesScreen() {
             商品分類
           </Typography>
           <Typography type="body-sm" color="muted">
-            從需求出發，快速找到對的商品
+            共 {formatNumber((categories ?? []).length)} 個分類，從需求出發快速找到商品
           </Typography>
+        </View>
+        <View className="mt-3">
+          <SearchField value={query} onChange={setQuery}>
+            <SearchField.Group className="rounded-full">
+              <SearchField.SearchIcon />
+              <SearchField.Input placeholder="搜尋分類" returnKeyType="search" />
+              <SearchField.ClearButton />
+            </SearchField.Group>
+          </SearchField>
         </View>
       </View>
 
@@ -31,10 +53,16 @@ export default function CategoriesScreen() {
         </View>
       ) : (
         <FlatList
-          data={categories ?? []}
+          data={visible}
           keyExtractor={(item) => item.id}
           contentContainerClassName="p-4 gap-2.5 pb-10"
-          ListEmptyComponent={<EmptyState title="尚無分類" />}
+          keyboardShouldPersistTaps="handled"
+          ListEmptyComponent={
+            <EmptyState
+              title={query ? '找不到符合的分類' : '尚無分類'}
+              description={query ? '換個關鍵字再試試看。' : undefined}
+            />
+          }
           renderItem={({ item }) => (
             <Pressable
               className="bg-surface flex-row items-center gap-3 rounded-2xl p-3.5"
@@ -45,15 +73,21 @@ export default function CategoriesScreen() {
                 })
               }
             >
-              <View className="bg-brand-blue-soft h-11 w-11 items-center justify-center rounded-xl">
+              <View className="bg-brand-blue-soft h-11 w-11 shrink-0 items-center justify-center rounded-xl">
                 <CategoryIcon name={item.icon} />
               </View>
               <View className="flex-1">
-                <Typography type="body" className="text-navy" style={{ fontWeight: '600' }}>
+                <Typography
+                  type="body"
+                  numberOfLines={1}
+                  className="text-navy"
+                  style={{ fontWeight: '600' }}
+                >
                   {item.name}
                 </Typography>
-                <Typography type="body-xs" color="muted">
-                  {item.name_en ?? ''} · {formatNumber(item.product_count)} 件商品
+                <Typography type="body-xs" color="muted" numberOfLines={1}>
+                  {item.name_en ? `${item.name_en} · ` : ''}
+                  {formatNumber(item.product_count)} 件商品
                 </Typography>
               </View>
               <ChevronRight size={18} color={BRAND.muted} />

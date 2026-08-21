@@ -107,7 +107,7 @@ export default function SellerAnalyticsScreen() {
                     backgroundColor: point.revenue > 0 ? BRAND.blue : BRAND.border,
                   }}
                 />
-                <Typography type="body-xs" color="muted" style={{ fontSize: 9 }}>
+                <Typography type="body-xs" color="muted" numberOfLines={1}>
                   {point.date}
                 </Typography>
               </View>

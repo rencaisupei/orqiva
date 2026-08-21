@@ -49,7 +49,7 @@ export default function CartScreen() {
 
   const selectedItems = (items ?? []).filter((item) => item.selected && item.product);
   const subtotal = selectedItems.reduce(
-    (sum, item) => sum + Number(item.product?.price ?? 0) * item.quantity,
+    (sum, item) => sum + (item.product?.price ?? 0) * item.quantity,
     0,
   );
   const storeCount = new Set(selectedItems.map((item) => item.product?.store_id)).size;
@@ -139,7 +139,7 @@ export default function CartScreen() {
                       className="text-brand-orange"
                       style={{ fontWeight: '700' }}
                     >
-                      {formatPrice(Number(item.product?.price ?? 0) * item.quantity)}
+                      {formatPrice((item.product?.price ?? 0) * item.quantity)}
                     </Typography>
                     <View className="flex-row items-center gap-2">
                       <QuantityStepper

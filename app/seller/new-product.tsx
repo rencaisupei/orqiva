@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
 import {
   Button,
@@ -16,6 +16,7 @@ import { CheckCircle2, ImagePlus, Plus, Trash2, X } from 'lucide-react-native';
 
 import { AppImage } from '@/components/AppImage';
 import { EmptyState } from '@/components/EmptyState';
+import { OptionSelect, type SelectOption } from '@/components/OptionSelect';
 import { SignInRequired } from '@/components/SignInRequired';
 import { useCategories } from '@/lib/api/catalog';
 import { useCreateProduct, useMyStoreQuery, type ProductDraft } from '@/lib/api/seller';
@@ -64,6 +65,16 @@ export default function NewProductScreen() {
   const [location, setLocation] = useState<string>(LOCATIONS[0]);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+
+  const categoryOptions = useMemo<SelectOption[]>(
+    () =>
+      (categories ?? []).map((category) => ({
+        value: category.id,
+        label: category.name,
+        hint: category.name_en ?? undefined,
+      })),
+    [categories],
+  );
 
   if (!userId) {
     return <SignInRequired title="登入後才能上架商品" />;
@@ -220,11 +231,16 @@ export default function NewProductScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <View className="bg-surface px-4 py-3">
-        <View className="flex-row items-center justify-between">
-          <Typography type="body-sm" className="text-navy" style={{ fontWeight: '600' }}>
+        <View className="flex-row items-center justify-between gap-3">
+          <Typography
+            type="body-sm"
+            numberOfLines={1}
+            className="text-navy flex-1"
+            style={{ fontWeight: '600' }}
+          >
             步驟 {step + 1} / {STEPS.length} · {STEPS[step]}
           </Typography>
-          <Typography type="body-xs" color="muted">
+          <Typography type="body-xs" color="muted" numberOfLines={1} className="max-w-[38%]">
             {store.name}
           </Typography>
         </View>
@@ -297,18 +313,17 @@ export default function NewProductScreen() {
           ) : null}
 
           {step === 2 ? (
-            <>
-              <Label isRequired>商品分類</Label>
-              <View className="flex-row flex-wrap gap-2">
-                {(categories ?? []).map((category) => (
-                  <Pressable key={category.id} onPress={() => setCategoryId(category.id)}>
-                    <Chip size="sm" variant={categoryId === category.id ? 'primary' : 'tertiary'}>
-                      {category.name}
-                    </Chip>
-                  </Pressable>
-                ))}
-              </View>
-            </>
+            <OptionSelect
+              label="商品分類"
+              isRequired
+              searchable
+              searchPlaceholder="搜尋分類，例如：手機、寵物"
+              placeholder="請選擇商品分類"
+              description="選對分類，買家從分類頁就找得到你的商品。"
+              options={categoryOptions}
+              value={categoryId}
+              onChange={setCategoryId}
+            />
           ) : null}
 
           {step === 3 ? (

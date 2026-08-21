@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { Avatar, Button, Chip, Separator, Spinner, Typography, useToast } from 'heroui-native';
 import { router } from 'expo-router';
-import { ShieldAlert } from 'lucide-react-native';
+import { ChevronRight, ShieldAlert, Truck } from 'lucide-react-native';
 
 import { AppImage } from '@/components/AppImage';
 import { EmptyState } from '@/components/EmptyState';
@@ -37,10 +37,10 @@ const TABS: { key: TabKey; label: string }[] = [
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <View className="bg-surface min-w-[46%] flex-1 gap-1 rounded-2xl p-4">
-      <Typography type="body-xs" color="muted">
+      <Typography type="body-xs" color="muted" numberOfLines={1}>
         {label}
       </Typography>
-      <Typography type="h5" className="text-navy" style={{ fontWeight: '700' }}>
+      <Typography type="h5" numberOfLines={1} className="text-navy" style={{ fontWeight: '700' }}>
         {value}
       </Typography>
     </View>
@@ -129,6 +129,23 @@ export default function AdminScreen() {
                 極貨網平台統計即時來自資料庫，包含所有買家與賣家的交易紀錄。
               </Typography>
             </View>
+            <Pressable
+              className="bg-surface flex-row items-center gap-3 rounded-2xl p-4"
+              onPress={() => router.push('/admin/logistics')}
+            >
+              <View className="bg-brand-blue-soft h-11 w-11 shrink-0 items-center justify-center rounded-xl">
+                <Truck size={20} color={BRAND.blue} />
+              </View>
+              <View className="flex-1">
+                <Typography type="body" className="text-navy" style={{ fontWeight: '600' }}>
+                  物流串接設定
+                </Typography>
+                <Typography type="body-xs" color="muted">
+                  綠界 C2C 超商取貨付款：環境、金鑰狀態、寄件人與回拋網址
+                </Typography>
+              </View>
+              <ChevronRight size={18} color={BRAND.muted} />
+            </Pressable>
           </>
         ) : null}
 
@@ -259,8 +276,7 @@ export default function AdminScreen() {
                     {store.name}
                   </Typography>
                   <Typography type="body-xs" color="muted">
-                    {store.location} · 評價 {Number(store.rating).toFixed(1)}（{store.rating_count}
-                    ）
+                    {store.location} · 評價 {store.rating.toFixed(1)}（{store.rating_count}）
                   </Typography>
                 </View>
               </Pressable>

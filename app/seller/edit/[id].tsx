@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
 import { Button, Chip, FieldError, Input, Label, Spinner, TextArea, useToast } from 'heroui-native';
 import { router, useLocalSearchParams } from 'expo-router';
 
 import { AppImage } from '@/components/AppImage';
 import { EmptyState } from '@/components/EmptyState';
+import { OptionSelect, type SelectOption } from '@/components/OptionSelect';
 import { SignInRequired } from '@/components/SignInRequired';
 import { useCategories, useProduct } from '@/lib/api/catalog';
 import { useDeleteProduct, useUpdateProduct } from '@/lib/api/seller';
@@ -32,14 +33,22 @@ export default function EditProductScreen() {
   const [shipping, setShipping] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
 
+  const categoryOptions = useMemo<SelectOption[]>(
+    () =>
+      (categories ?? []).map((category) => ({
+        value: category.id,
+        label: category.name,
+        hint: category.name_en ?? undefined,
+      })),
+    [categories],
+  );
+
   useEffect(() => {
     if (!product) return;
     setTitle(product.title);
     setDescription(product.description);
-    setPrice(String(Math.round(Number(product.price))));
-    setOriginalPrice(
-      product.original_price ? String(Math.round(Number(product.original_price))) : '',
-    );
+    setPrice(String(Math.round(product.price)));
+    setOriginalPrice(product.original_price ? String(Math.round(product.original_price)) : '');
     setStock(String(product.stock));
     setCategoryId(product.category_id);
     setCondition(product.condition);
@@ -165,18 +174,15 @@ export default function EditProductScreen() {
             </View>
           </View>
 
-          <View className="gap-2">
-            <Label>分類</Label>
-            <View className="flex-row flex-wrap gap-2">
-              {(categories ?? []).map((category) => (
-                <Pressable key={category.id} onPress={() => setCategoryId(category.id)}>
-                  <Chip size="sm" variant={categoryId === category.id ? 'primary' : 'tertiary'}>
-                    {category.name}
-                  </Chip>
-                </Pressable>
-              ))}
-            </View>
-          </View>
+          <OptionSelect
+            label="商品分類"
+            searchable
+            searchPlaceholder="搜尋分類"
+            placeholder="請選擇商品分類"
+            options={categoryOptions}
+            value={categoryId}
+            onChange={setCategoryId}
+          />
 
           <View className="gap-2">
             <Label>商品狀態</Label>

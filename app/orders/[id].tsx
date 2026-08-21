@@ -5,6 +5,7 @@ import { MapPin, Package, Truck } from 'lucide-react-native';
 
 import { AppImage } from '@/components/AppImage';
 import { EmptyState } from '@/components/EmptyState';
+import { LogisticsPanel } from '@/components/LogisticsPanel';
 import { useOrder, useSetOrderStatus } from '@/lib/api/commerce';
 import { BRAND } from '@/lib/brand';
 import { deliveryEstimate, formatDateTime, formatPrice } from '@/lib/format';
@@ -111,6 +112,8 @@ export default function OrderDetailScreen() {
               備註：{order.note}
             </Typography>
           ) : null}
+
+          <LogisticsPanel order={order} role={isBuyer ? 'buyer' : 'seller'} />
         </View>
 
         <View className="bg-surface gap-3 rounded-2xl p-4">

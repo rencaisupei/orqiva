@@ -13,7 +13,7 @@ type Props = {
 };
 
 export function StarRating({ rating, count, size = 12, showCount = true }: Props) {
-  const value = Number(rating ?? 0);
+  const value = rating ?? 0;
   return (
     <View className="flex-row items-center gap-1">
       <Star size={size} color={BRAND.yellow} fill={BRAND.yellow} />

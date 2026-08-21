@@ -181,6 +181,7 @@ export default function RootLayout() {
             <Stack.Screen name="seller/orders" options={{ title: '訂單管理' }} />
             <Stack.Screen name="seller/store" options={{ title: '店舖設定' }} />
             <Stack.Screen name="admin/index" options={{ title: '平台管理' }} />
+            <Stack.Screen name="admin/logistics" options={{ title: '物流串接設定' }} />
           </Stack>
           <InstallPrompt />
         </HeroUINativeProvider>

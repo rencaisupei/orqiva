@@ -38,7 +38,7 @@ export function SellerTabBar() {
             onPress={() => router.replace(item.href)}
           >
             <item.icon size={22} color={color} />
-            <Typography type="body-xs" style={{ color, fontSize: 11, fontWeight: '600' }}>
+            <Typography type="body-xs" numberOfLines={1} style={{ color, fontWeight: '600' }}>
               {item.label}
             </Typography>
           </Pressable>

@@ -18,8 +18,12 @@ import LOGO_SOURCE from '@/assets/jihuowang-logo.png';
 
 /** Artwork aspect only — the crop below is expressed in fractions, so real pixel size does not matter. */
 const ART = { w: 353, h: 481 };
-/** Region of the artwork that holds only the shield mark (no wordmark). */
-const MARK_CROP = { x: 0.15, y: 0.012, w: 0.82, h: 0.47 };
+/**
+ * Region of the artwork that holds only the shield mark (no wordmark).
+ * Kept generous on every edge so the shield outline and the arrow tip that breaks
+ * out of the top-right corner are never clipped.
+ */
+const MARK_CROP = { x: 0.075, y: 0.008, w: 0.905, h: 0.492 };
 const MARK_IMAGE_RATIO = (MARK_CROP.w * ART.w) / (MARK_CROP.h * ART.h);
 
 /**
@@ -135,10 +139,11 @@ export function JihuoLogo({ size = 30, showEn = true, className, onLight = true 
           arrowColor="rgba(255,255,255,0.92)"
         />
       )}
-      <View>
+      <View className="shrink">
         <Typography
           type="h5"
-          className={cn('tracking-[2px]', onLight ? 'text-navy' : 'text-white')}
+          numberOfLines={1}
+          className={cn(onLight ? 'text-navy' : 'text-white')}
           style={{ fontWeight: '700' }}
         >
           {BRAND_COPY.nameZh}
@@ -146,7 +151,8 @@ export function JihuoLogo({ size = 30, showEn = true, className, onLight = true 
         {showEn ? (
           <Typography
             type="body-xs"
-            className={cn('tracking-[3px]', onLight ? 'text-muted' : 'text-white/70')}
+            numberOfLines={1}
+            className={cn('tracking-[1px]', onLight ? 'text-muted' : 'text-white/70')}
           >
             {BRAND_COPY.name}
           </Typography>

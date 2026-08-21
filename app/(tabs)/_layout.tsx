@@ -38,6 +38,7 @@ function PublishTabButton({ onPress }: TabButtonProps) {
 export default function TabLayout() {
   return (
     <>
+      {/* eslint-disable-next-line react/style-prop-object -- expo-status-bar's `style` is a string enum ('dark'/'light'), not a RN style object */}
       <StatusBar style="dark" />
       <Tabs
         screenOptions={{

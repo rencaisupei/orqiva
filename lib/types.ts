@@ -122,6 +122,17 @@ export type Order = {
   recipient_phone: string | null;
   shipping_address: string | null;
   note: string | null;
+  /* 綠界超商取貨付款 */
+  shipping_provider: 'manual' | 'ecpay';
+  logistics_sub_type: string | null;
+  cvs_store_id: string | null;
+  cvs_store_name: string | null;
+  cvs_store_address: string | null;
+  cvs_store_phone: string | null;
+  logistics_status: string | null;
+  logistics_shipment_no: string | null;
+  logistics_validation_no: string | null;
+  logistics_id: string | null;
   created_at: string;
   updated_at: string;
   store: Pick<Store, 'id' | 'name' | 'logo_url'> | null;
@@ -224,6 +235,137 @@ export const SORT_OPTIONS: { key: SortKey; label: string }[] = [
 ];
 
 export const SHIPPING_METHODS = ['宅配', '超商取貨', '面交'] as const;
+
+/* ── 綠界 (ECPay) C2C 超商取貨付款 ─────────────────────────────── */
+
+export type LogisticsSubType = 'UNIMARTC2C' | 'FAMIC2C' | 'HILIFEC2C' | 'OKMARTC2C';
+
+export const LOGISTICS_SUB_TYPE_LABEL: Record<LogisticsSubType, string> = {
+  UNIMARTC2C: '7-ELEVEN 交貨便',
+  FAMIC2C: '全家店到店',
+  HILIFEC2C: '萊爾富店到店',
+  OKMARTC2C: 'OK 店到店',
+};
+
+/** 綠界測試環境的固定門市代號，方便在 stage 直接測完整流程。 */
+export const LOGISTICS_TEST_STORE_ID: Record<LogisticsSubType, string> = {
+  UNIMARTC2C: '131386',
+  FAMIC2C: '006598',
+  HILIFEC2C: '007564',
+  OKMARTC2C: '1328',
+};
+
+export type LogisticsEnvironment = 'stage' | 'production';
+
+export type LogisticsStatus =
+  | 'draft'
+  | 'requested'
+  | 'created'
+  | 'in_transit'
+  | 'arrived'
+  | 'picked_up'
+  | 'returned'
+  | 'cancelled'
+  | 'failed';
+
+export const LOGISTICS_STATUS_LABEL: Record<LogisticsStatus, string> = {
+  draft: '尚未送出',
+  requested: '已送出綠界',
+  created: '物流單已建立',
+  in_transit: '運送中',
+  arrived: '已到店，可取貨',
+  picked_up: '買家已取貨',
+  returned: '已退回',
+  cancelled: '已取消',
+  failed: '建立失敗',
+};
+
+export type LogisticsSettings = {
+  id: string;
+  provider: string;
+  environment: LogisticsEnvironment;
+  is_enabled: boolean;
+  enabled_sub_types: LogisticsSubType[];
+  is_collection_enabled: boolean;
+  sender_name: string | null;
+  sender_phone: string | null;
+  sender_cell_phone: string | null;
+  sender_zip_code: string | null;
+  sender_address: string | null;
+  return_store_ids: Partial<Record<LogisticsSubType, string>>;
+  default_goods_name: string;
+  temperature: string;
+  specification: string;
+  scheduled_pickup_time: string;
+  platform_id: string | null;
+  last_verified_at: string | null;
+  last_verify_result: LogisticsVerifyResult | Record<string, never>;
+  created_at: string;
+  updated_at: string;
+};
+
+export type LogisticsVerifyResult = {
+  ok: boolean;
+  environment: LogisticsEnvironment;
+  reason?: string;
+  message?: string;
+  apiHost?: string;
+  merchantId?: string;
+  raw?: string;
+};
+
+export type LogisticsPublicConfig = {
+  provider: string;
+  environment: LogisticsEnvironment;
+  is_enabled: boolean;
+  enabled_sub_types: LogisticsSubType[];
+  is_collection_enabled: boolean;
+};
+
+export type LogisticsOrder = {
+  id: string;
+  order_id: string;
+  provider: string;
+  environment: LogisticsEnvironment;
+  merchant_trade_no: string;
+  merchant_trade_date: string | null;
+  logistics_type: string;
+  logistics_sub_type: LogisticsSubType;
+  is_collection: boolean;
+  goods_amount: number;
+  collection_amount: number;
+  goods_name: string;
+  status: LogisticsStatus;
+  receiver_store_id: string | null;
+  receiver_store_name: string | null;
+  receiver_store_address: string | null;
+  receiver_store_phone: string | null;
+  return_store_id: string | null;
+  receiver_name: string | null;
+  receiver_cell_phone: string | null;
+  receiver_email: string | null;
+  sender_name: string | null;
+  ecpay_logistics_id: string | null;
+  shipment_no: string | null;
+  validation_no: string | null;
+  booking_note: string | null;
+  rtn_code: string | null;
+  rtn_msg: string | null;
+  logistics_status_code: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type LogisticsEvent = {
+  id: string;
+  logistics_order_id: string | null;
+  merchant_trade_no: string | null;
+  source: string;
+  rtn_code: string | null;
+  rtn_msg: string | null;
+  logistics_status: string | null;
+  created_at: string;
+};
 
 export const LOCATIONS = [
   '台北市',

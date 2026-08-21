@@ -71,7 +71,7 @@ export default function ProductDetailScreen() {
     );
   }
 
-  const discount = discountPercent(Number(product.price), product.original_price);
+  const discount = discountPercent(product.price, product.original_price);
   const outOfStock = product.stock <= 0;
   const specEntries = Object.entries(product.specs ?? {});
 
@@ -202,7 +202,7 @@ export default function ProductDetailScreen() {
           </Typography>
 
           <View className="flex-row items-center gap-3">
-            <StarRating rating={Number(product.rating)} count={product.rating_count} />
+            <StarRating rating={product.rating} count={product.rating_count} />
             <Typography type="body-xs" color="muted">
               已售 {formatCompact(product.sold_count)}
             </Typography>
@@ -275,7 +275,7 @@ export default function ProductDetailScreen() {
             </View>
             <View className="flex-row items-center gap-2">
               <StarRating
-                rating={Number(product.store?.rating ?? 0)}
+                rating={product.store?.rating ?? 0}
                 count={product.store?.rating_count ?? 0}
               />
               <Typography type="body-xs" color="muted">
@@ -304,11 +304,16 @@ export default function ProductDetailScreen() {
             </Typography>
             <View className="gap-2">
               {specEntries.map(([key, value]) => (
-                <View key={key} className="flex-row justify-between">
-                  <Typography type="body-sm" color="muted">
+                <View key={key} className="flex-row justify-between gap-4">
+                  <Typography
+                    type="body-sm"
+                    color="muted"
+                    numberOfLines={1}
+                    className="max-w-[45%]"
+                  >
                     {key}
                   </Typography>
-                  <Typography type="body-sm" className="text-navy">
+                  <Typography type="body-sm" className="text-navy flex-1 text-right">
                     {value}
                   </Typography>
                 </View>
@@ -322,7 +327,7 @@ export default function ProductDetailScreen() {
             <Typography type="body" className="text-navy" style={{ fontWeight: '600' }}>
               商品評價
             </Typography>
-            <StarRating rating={Number(product.rating)} count={product.rating_count} />
+            <StarRating rating={product.rating} count={product.rating_count} />
           </View>
           {(reviews ?? []).length === 0 ? (
             <Typography type="body-sm" color="muted">

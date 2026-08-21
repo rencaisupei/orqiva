@@ -70,11 +70,16 @@ export default function MessagesScreen() {
                   className="h-12 w-12 rounded-xl"
                 />
                 <View className="flex-1">
-                  <View className="flex-row items-center justify-between">
-                    <Typography type="body-sm" className="text-navy" style={{ fontWeight: '600' }}>
+                  <View className="flex-row items-center justify-between gap-2">
+                    <Typography
+                      type="body-sm"
+                      numberOfLines={1}
+                      className="text-navy flex-1"
+                      style={{ fontWeight: '600' }}
+                    >
                       {title}
                     </Typography>
-                    <Typography type="body-xs" color="muted">
+                    <Typography type="body-xs" color="muted" numberOfLines={1}>
                       {relativeTime(item.last_message_at)}
                     </Typography>
                   </View>

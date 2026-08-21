@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
 import {
   Button,
+  Chip,
   FieldError,
   Input,
   Label,
@@ -13,11 +14,21 @@ import {
 import { router, useLocalSearchParams } from 'expo-router';
 
 import { AppImage } from '@/components/AppImage';
+import { CvsStorePicker } from '@/components/CvsStorePicker';
 import { EmptyState } from '@/components/EmptyState';
 import { SignInRequired } from '@/components/SignInRequired';
-import { SHIPPING_FEE, useCart, usePlaceOrder, type CheckoutLine } from '@/lib/api/commerce';
+import {
+  SHIPPING_FEE,
+  useCart,
+  usePlaceOrder,
+  type CheckoutLine,
+  type CvsPickup,
+} from '@/lib/api/commerce';
+import { useLogisticsConfig } from '@/lib/api/logistics';
 import { formatPrice } from '@/lib/format';
 import { useSessionStore, useUserId } from '@/lib/session';
+
+type DeliveryMode = 'home' | 'cvs';
 
 export default function CheckoutScreen() {
   const { productId } = useLocalSearchParams<{ productId?: string }>();
@@ -27,13 +38,18 @@ export default function CheckoutScreen() {
   const { toast } = useToast();
 
   const { data: cartItems, isLoading } = useCart(userId);
+  const { data: logistics } = useLogisticsConfig();
   const placeOrder = usePlaceOrder();
 
   const [name, setName] = useState(profile?.display_name ?? '');
   const [phone, setPhone] = useState(account?.phone ?? '');
   const [address, setAddress] = useState('');
   const [note, setNote] = useState('');
+  const [mode, setMode] = useState<DeliveryMode>('home');
+  const [pickup, setPickup] = useState<CvsPickup | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const cvsAvailable = !!logistics?.is_enabled && (logistics?.enabled_sub_types.length ?? 0) > 0;
 
   const lines = useMemo(() => {
     const source = (cartItems ?? []).filter((item) => item.product);
@@ -41,10 +57,7 @@ export default function CheckoutScreen() {
     return source.filter((item) => item.selected);
   }, [cartItems, productId]);
 
-  const subtotal = lines.reduce(
-    (sum, item) => sum + Number(item.product?.price ?? 0) * item.quantity,
-    0,
-  );
+  const subtotal = lines.reduce((sum, item) => sum + (item.product?.price ?? 0) * item.quantity, 0);
   const storeCount = new Set(lines.map((item) => item.product?.store_id)).size;
   const shipping = storeCount * SHIPPING_FEE;
   const total = subtotal + shipping;
@@ -78,8 +91,24 @@ export default function CheckoutScreen() {
   }
 
   const submit = () => {
-    if (!name.trim() || !phone.trim() || !address.trim()) {
-      setError('請完整填寫收件人、電話與地址');
+    if (!name.trim() || !phone.trim()) {
+      setError('請完整填寫收件人與電話');
+      return;
+    }
+    if (mode === 'home' && !address.trim()) {
+      setError('請填寫收件地址');
+      return;
+    }
+    if (mode === 'cvs' && !pickup) {
+      setError('請先選擇超商取貨門市');
+      return;
+    }
+    if (mode === 'cvs' && !/^09\d{8}$/.test(phone.trim())) {
+      setError('超商取貨的收件人手機需為 09 開頭的 10 碼數字');
+      return;
+    }
+    if (mode === 'cvs' && (total < 1 || total > 20000)) {
+      setError('綠界超商取貨付款金額限制為 1 ~ 20,000 元，請調整購物車');
       return;
     }
     setError(null);
@@ -87,7 +116,7 @@ export default function CheckoutScreen() {
     const payload: CheckoutLine[] = lines.map((item) => ({
       product_id: item.product_id,
       quantity: item.quantity,
-      shipping_method: item.shipping_method,
+      shipping_method: mode === 'cvs' ? '超商取貨' : item.shipping_method,
     }));
 
     placeOrder.mutate(
@@ -95,8 +124,12 @@ export default function CheckoutScreen() {
         items: payload,
         recipientName: name.trim(),
         recipientPhone: phone.trim(),
-        shippingAddress: address.trim(),
+        shippingAddress:
+          mode === 'cvs'
+            ? [pickup?.storeName, pickup?.storeAddress].filter(Boolean).join(' ')
+            : address.trim(),
         note: note.trim(),
+        cvsPickup: mode === 'cvs' ? pickup : null,
       },
       {
         onSuccess: () => {
@@ -114,6 +147,48 @@ export default function CheckoutScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerClassName="p-4 gap-3 pb-6" keyboardShouldPersistTaps="handled">
+        {cvsAvailable ? (
+          <View className="bg-surface gap-3 rounded-2xl p-4">
+            <Typography type="body" className="text-navy" style={{ fontWeight: '600' }}>
+              取貨方式
+            </Typography>
+            <View className="flex-row gap-2">
+              {(
+                [
+                  { key: 'home', label: '宅配到府' },
+                  { key: 'cvs', label: '超商取貨付款' },
+                ] satisfies { key: DeliveryMode; label: string }[]
+              ).map((option) => (
+                <Pressable
+                  key={option.key}
+                  onPress={() => {
+                    setMode(option.key);
+                    setError(null);
+                  }}
+                >
+                  <Chip size="sm" variant={mode === option.key ? 'primary' : 'tertiary'}>
+                    {option.label}
+                  </Chip>
+                </Pressable>
+              ))}
+            </View>
+
+            {mode === 'cvs' ? (
+              <>
+                <Separator />
+                <CvsStorePicker
+                  availableSubTypes={logistics?.enabled_sub_types ?? []}
+                  value={pickup}
+                  onChange={setPickup}
+                />
+                <Typography type="body-xs" color="muted">
+                  超商取貨付款由綠界物流處理，到店後付款取貨（單筆 1 ~ 20,000 元）。
+                </Typography>
+              </>
+            ) : null}
+          </View>
+        ) : null}
+
         <View className="bg-surface gap-3 rounded-2xl p-4">
           <Typography type="body" className="text-navy" style={{ fontWeight: '600' }}>
             收件資訊
@@ -131,10 +206,12 @@ export default function CheckoutScreen() {
               onChangeText={setPhone}
             />
           </View>
-          <View>
-            <Label>收件地址</Label>
-            <Input placeholder="縣市 / 區 / 路名門牌" value={address} onChangeText={setAddress} />
-          </View>
+          {mode === 'home' ? (
+            <View>
+              <Label>收件地址</Label>
+              <Input placeholder="縣市 / 區 / 路名門牌" value={address} onChangeText={setAddress} />
+            </View>
+          ) : null}
           <View>
             <Label>訂單備註（選填）</Label>
             <Input placeholder="給賣家的備註" value={note} onChangeText={setNote} />
@@ -157,7 +234,7 @@ export default function CheckoutScreen() {
                 </Typography>
               </View>
               <Typography type="body-sm" className="text-navy" style={{ fontWeight: '600' }}>
-                {formatPrice(Number(item.product?.price ?? 0) * item.quantity)}
+                {formatPrice((item.product?.price ?? 0) * item.quantity)}
               </Typography>
             </View>
           ))}
@@ -190,7 +267,9 @@ export default function CheckoutScreen() {
             </Typography>
           </View>
           <Typography type="body-xs" color="muted">
-            第一階段為貨到付款流程，線上金流將在下一階段開放。
+            {mode === 'cvs'
+              ? '超商取貨付款：到店取貨時付款，賣家出貨後會收到寄貨編號。'
+              : '宅配目前為貨到付款流程，線上金流將在下一階段開放。'}
           </Typography>
         </View>
 

@@ -73,8 +73,13 @@ export default function OrdersScreen() {
               className="bg-surface gap-3 rounded-2xl p-4"
               onPress={() => router.push({ pathname: '/orders/[id]', params: { id: item.id } })}
             >
-              <View className="flex-row items-center justify-between">
-                <Typography type="body-sm" className="text-navy" style={{ fontWeight: '600' }}>
+              <View className="flex-row items-center justify-between gap-3">
+                <Typography
+                  type="body-sm"
+                  numberOfLines={1}
+                  className="text-navy flex-1"
+                  style={{ fontWeight: '600' }}
+                >
                   {item.store?.name ?? '極貨網賣家'}
                 </Typography>
                 <Chip
@@ -111,11 +116,16 @@ export default function OrdersScreen() {
                 </Typography>
               ) : null}
 
-              <View className="flex-row items-center justify-between">
-                <Typography type="body-xs" color="muted">
+              <View className="flex-row items-center justify-between gap-3">
+                <Typography type="body-xs" color="muted" numberOfLines={1} className="flex-1">
                   {item.order_no} · {formatDateTime(item.created_at)}
                 </Typography>
-                <Typography type="body" className="text-brand-orange" style={{ fontWeight: '700' }}>
+                <Typography
+                  type="body"
+                  numberOfLines={1}
+                  className="text-brand-orange"
+                  style={{ fontWeight: '700' }}
+                >
                   {formatPrice(item.total)}
                 </Typography>
               </View>

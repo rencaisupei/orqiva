@@ -73,7 +73,7 @@ export default function StoreScreen() {
                   {store.name}
                 </Typography>
                 <View className="flex-row items-center gap-2">
-                  <StarRating rating={Number(store.rating)} count={store.rating_count} />
+                  <StarRating rating={store.rating} count={store.rating_count} />
                   <View className="flex-row items-center gap-1">
                     <MapPin size={11} color={BRAND.muted} />
                     <Typography type="body-xs" color="muted">

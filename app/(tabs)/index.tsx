@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { Button, SearchField, Typography } from 'heroui-native';
 import { router } from 'expo-router';
-import { Bell, ChevronRight, Menu, ShoppingCart } from 'lucide-react-native';
+import { Bell, ChevronRight, LayoutGrid, Menu, ShoppingCart } from 'lucide-react-native';
 
 import { CategoryIcon } from '@/components/CategoryIcon';
 import { HomeQuickMenu } from '@/components/HomeQuickMenu';
@@ -20,7 +20,7 @@ function Badge({ count }: { count: number }) {
   if (count <= 0) return null;
   return (
     <View className="bg-brand-orange absolute -top-1 -right-1 min-w-4 items-center justify-center rounded-full px-1">
-      <Typography type="body-xs" className="text-white" style={{ fontSize: 10, fontWeight: '700' }}>
+      <Typography type="body-xs" className="text-white" style={{ fontWeight: '700' }}>
         {count > 99 ? '99+' : count}
       </Typography>
     </View>
@@ -29,12 +29,17 @@ function Badge({ count }: { count: number }) {
 
 function SectionHeader({ title, onMore }: { title: string; onMore?: () => void }) {
   return (
-    <View className="mb-3 flex-row items-center justify-between">
-      <Typography type="h6" className="text-navy" style={{ fontWeight: '700' }}>
+    <View className="mb-3 flex-row items-center justify-between gap-3">
+      <Typography
+        type="h6"
+        numberOfLines={1}
+        className="text-navy flex-1"
+        style={{ fontWeight: '700' }}
+      >
         {title}
       </Typography>
       {onMore ? (
-        <Pressable className="flex-row items-center" onPress={onMore}>
+        <Pressable className="shrink-0 flex-row items-center" onPress={onMore}>
           <Typography type="body-sm" className="text-brand-blue">
             查看全部
           </Typography>
@@ -176,7 +181,7 @@ export default function HomeScreen() {
 
         <View className="mt-4 px-3">
           <View className="flex-row flex-wrap">
-            {(categories ?? []).slice(0, 8).map((category) => (
+            {(categories ?? []).slice(0, 7).map((category) => (
               <Pressable
                 key={category.id}
                 className="mb-2 w-1/4 items-center px-1"
@@ -209,6 +214,32 @@ export default function HomeScreen() {
                 </Typography>
               </Pressable>
             ))}
+
+            <Pressable
+              className="mb-2 w-1/4 items-center px-1"
+              onPress={() => router.push('/(tabs)/categories')}
+            >
+              <View
+                className="bg-surface h-16 w-full items-center justify-center rounded-2xl"
+                style={{
+                  shadowColor: 'rgba(8, 38, 107, 0.08)',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 1,
+                  shadowRadius: 6,
+                  elevation: 1,
+                }}
+              >
+                <LayoutGrid size={26} color={BRAND.orange} />
+              </View>
+              <Typography
+                type="body-xs"
+                className="text-navy mt-1.5"
+                numberOfLines={1}
+                style={{ fontWeight: '600' }}
+              >
+                全部分類
+              </Typography>
+            </Pressable>
           </View>
         </View>
 

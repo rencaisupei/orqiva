@@ -20,17 +20,11 @@ export function SellerStatTile({ label, value, delta = null }: Props) {
       <Typography type="body-xs" color="muted" numberOfLines={1}>
         {label}
       </Typography>
-      <Typography
-        type="h6"
-        className="text-navy"
-        numberOfLines={1}
-        adjustsFontSizeToFit
-        style={{ fontWeight: '700' }}
-      >
+      <Typography type="h6" className="text-navy" numberOfLines={1} style={{ fontWeight: '700' }}>
         {value}
       </Typography>
       {delta === null ? (
-        <Typography type="body-xs" color="muted" style={{ fontSize: 10 }}>
+        <Typography type="body-xs" color="muted" numberOfLines={1}>
           與昨日持平
         </Typography>
       ) : (
@@ -38,7 +32,8 @@ export function SellerStatTile({ label, value, delta = null }: Props) {
           {isUp ? <TrendingUp size={11} color={UP} /> : <TrendingDown size={11} color={DOWN} />}
           <Typography
             type="body-xs"
-            style={{ color: isUp ? UP : DOWN, fontSize: 10, fontWeight: '700' }}
+            numberOfLines={1}
+            style={{ color: isUp ? UP : DOWN, fontWeight: '700' }}
           >
             {isUp ? '+' : ''}
             {delta}%

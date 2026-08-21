@@ -31,7 +31,7 @@ export function useAdminOverview(enabled: boolean) {
         storeCount: stores.count ?? 0,
         productCount: products.count ?? 0,
         orderCount: orderRows.length,
-        gmv: orderRows.reduce((sum, o) => sum + Number(o.total), 0),
+        gmv: orderRows.reduce((sum, o) => sum + o.total, 0),
         openReports: reports.count ?? 0,
       };
     },

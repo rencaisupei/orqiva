@@ -1,0 +1,164 @@
+import { Button, Chip, Spinner, Typography, useToast } from 'heroui-native';
+import { Pressable, View } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
+import { Copy, RefreshCw, Store, Truck } from 'lucide-react-native';
+
+import {
+  useCreateLogisticsOrder,
+  useLogisticsOrder,
+  useSyncLogisticsOrder,
+} from '@/lib/api/logistics';
+import { BRAND } from '@/lib/brand';
+import {
+  LOGISTICS_STATUS_LABEL,
+  LOGISTICS_SUB_TYPE_LABEL,
+  type LogisticsStatus,
+  type LogisticsSubType,
+  type Order,
+} from '@/lib/types';
+
+type Props = {
+  order: Order;
+  role: 'seller' | 'buyer';
+};
+
+function statusColor(status: LogisticsStatus) {
+  if (status === 'failed' || status === 'returned' || status === 'cancelled') return 'danger';
+  if (status === 'picked_up') return 'success';
+  return 'accent';
+}
+
+/** 綠界超商取貨付款的門市、寄貨編號與貨態。宅配訂單不會渲染。 */
+export function LogisticsPanel({ order, role }: Props) {
+  const { toast } = useToast();
+  const { data: shipment, isLoading } = useLogisticsOrder(order.id);
+  const create = useCreateLogisticsOrder();
+  const sync = useSyncLogisticsOrder();
+
+  if (order.shipping_provider !== 'ecpay' && !order.cvs_store_id) return null;
+
+  const subType = (order.logistics_sub_type ?? shipment?.logistics_sub_type) as
+    | LogisticsSubType
+    | undefined;
+
+  const copy = (value: string, label: string) => {
+    void Clipboard.setStringAsync(value);
+    toast.show({ variant: 'success', label: `${label}已複製` });
+  };
+
+  return (
+    <View className="border-border gap-3 rounded-2xl border border-dashed p-3">
+      <View className="flex-row items-center gap-2">
+        <Truck size={16} color={BRAND.blue} />
+        <Typography type="body-sm" className="text-navy flex-1" style={{ fontWeight: '600' }}>
+          超商取貨付款{subType ? ` · ${LOGISTICS_SUB_TYPE_LABEL[subType]}` : ''}
+        </Typography>
+        {shipment ? (
+          <Chip size="sm" variant="soft" color={statusColor(shipment.status)}>
+            {LOGISTICS_STATUS_LABEL[shipment.status]}
+          </Chip>
+        ) : null}
+      </View>
+
+      {order.cvs_store_id ? (
+        <View className="bg-background gap-1 rounded-xl p-3">
+          <View className="flex-row items-center gap-2">
+            <Store size={14} color={BRAND.muted} />
+            <Typography type="body-sm" numberOfLines={1} className="text-navy flex-1">
+              {order.cvs_store_name ?? '取貨門市'}（{order.cvs_store_id}）
+            </Typography>
+          </View>
+          {order.cvs_store_address ? (
+            <Typography type="body-xs" color="muted">
+              {order.cvs_store_address}
+            </Typography>
+          ) : null}
+        </View>
+      ) : null}
+
+      {isLoading ? <Spinner size="sm" /> : null}
+
+      {shipment?.shipment_no ? (
+        <Pressable
+          className="bg-background flex-row items-center gap-2 rounded-xl p-3"
+          onPress={() => copy(shipment.shipment_no!, '寄貨編號')}
+        >
+          <View className="flex-1">
+            <Typography type="body-xs" color="muted">
+              寄貨編號
+            </Typography>
+            <Typography type="body-sm" className="text-navy" style={{ fontWeight: '600' }}>
+              {shipment.shipment_no}
+              {shipment.validation_no ? ` / ${shipment.validation_no}` : ''}
+            </Typography>
+          </View>
+          <Copy size={15} color={BRAND.muted} />
+        </Pressable>
+      ) : null}
+
+      {shipment?.rtn_msg ? (
+        <Typography type="body-xs" color="muted">
+          綠界回報：{shipment.rtn_msg}
+          {shipment.rtn_code ? `（${shipment.rtn_code}）` : ''}
+        </Typography>
+      ) : null}
+
+      {role === 'seller' && !shipment ? (
+        <Button
+          size="sm"
+          isDisabled={create.isPending}
+          onPress={() =>
+            create.mutate(
+              { orderId: order.id, logisticsSubType: subType },
+              {
+                onSuccess: () => toast.show({ variant: 'success', label: '物流單已建立' }),
+                onError: (err: Error) => toast.show({ variant: 'danger', label: err.message }),
+              },
+            )
+          }
+        >
+          <Button.Label>{create.isPending ? '送出中…' : '建立綠界物流單'}</Button.Label>
+        </Button>
+      ) : null}
+
+      {role === 'seller' && shipment?.status === 'failed' ? (
+        <Button
+          size="sm"
+          variant="secondary"
+          isDisabled={create.isPending}
+          onPress={() =>
+            create.mutate(
+              { orderId: order.id, logisticsSubType: subType },
+              {
+                onSuccess: () => toast.show({ variant: 'success', label: '物流單已重新建立' }),
+                onError: (err: Error) => toast.show({ variant: 'danger', label: err.message }),
+              },
+            )
+          }
+        >
+          <Button.Label>重新建立物流單</Button.Label>
+        </Button>
+      ) : null}
+
+      {shipment ? (
+        <Button
+          size="sm"
+          variant="ghost"
+          isDisabled={sync.isPending}
+          onPress={() =>
+            sync.mutate(order.id, {
+              onError: (err: Error) => toast.show({ variant: 'danger', label: err.message }),
+            })
+          }
+        >
+          <View className="flex-row items-center gap-1.5">
+            <RefreshCw size={14} color={BRAND.blue} />
+            <Typography type="body-sm" className="text-brand-blue">
+              {sync.isPending ? '更新中…' : '更新貨態'}
+            </Typography>
+          </View>
+        </Button>
+      ) : null}
+    </View>
+  );
+}

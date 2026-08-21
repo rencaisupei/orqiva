@@ -6,6 +6,7 @@ import { ClipboardList } from 'lucide-react-native';
 
 import { AppImage } from '@/components/AppImage';
 import { EmptyState } from '@/components/EmptyState';
+import { LogisticsPanel } from '@/components/LogisticsPanel';
 import { SellerTabBar } from '@/components/SellerTabBar';
 import { SignInRequired } from '@/components/SignInRequired';
 import { useSetOrderStatus } from '@/lib/api/commerce';
@@ -84,8 +85,13 @@ export default function SellerOrdersScreen() {
                 className="gap-2"
                 onPress={() => router.push({ pathname: '/orders/[id]', params: { id: item.id } })}
               >
-                <View className="flex-row items-center justify-between">
-                  <Typography type="body-sm" className="text-navy" style={{ fontWeight: '600' }}>
+                <View className="flex-row items-center justify-between gap-3">
+                  <Typography
+                    type="body-sm"
+                    numberOfLines={1}
+                    className="text-navy flex-1"
+                    style={{ fontWeight: '600' }}
+                  >
                     {item.order_no}
                   </Typography>
                   <Chip
@@ -130,6 +136,8 @@ export default function SellerOrdersScreen() {
                   </Typography>
                 </View>
               </Pressable>
+
+              <LogisticsPanel order={item} role="seller" />
 
               {item.status === 'pending' ? (
                 <Button
