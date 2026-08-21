@@ -3,11 +3,12 @@ import { Platform, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, Typography } from 'heroui-native';
 import { router } from 'expo-router';
-import { Megaphone, RefreshCw, Wrench } from 'lucide-react-native';
+import { CalendarClock, Megaphone, RefreshCw, Wrench } from 'lucide-react-native';
 
 import { JihuoLogo } from '@/components/brand/JihuoLogo';
-import { useAppSettings } from '@/lib/api/system';
+import { useAppSettings, useMaintenanceState } from '@/lib/api/system';
 import { BRAND } from '@/lib/brand';
+import { durationUntil, formatDateTime } from '@/lib/format';
 import { useIsAdmin, useIsSignedIn } from '@/lib/session';
 import { useOtaUpdates } from '@/lib/updates';
 
@@ -15,12 +16,14 @@ import { useOtaUpdates } from '@/lib/updates';
 function MaintenanceScreen({
   title,
   message,
+  eta,
   isChecking,
   onRetry,
   onAdminSignIn,
 }: {
   title: string;
   message: string;
+  eta: string | null;
   isChecking: boolean;
   onRetry: () => void;
   onAdminSignIn: () => void;
@@ -38,6 +41,14 @@ function MaintenanceScreen({
         <Typography type="body-sm" color="muted" className="text-center">
           {message}
         </Typography>
+        {eta ? (
+          <View className="bg-surface mt-1 flex-row items-center justify-center gap-2 rounded-2xl px-3 py-2">
+            <CalendarClock size={16} color={BRAND.blue} />
+            <Typography type="body-xs" className="text-navy">
+              {eta}
+            </Typography>
+          </View>
+        ) : null}
       </View>
       <View className="w-full max-w-80 gap-2">
         <Button isDisabled={isChecking} onPress={onRetry}>
@@ -53,8 +64,9 @@ function MaintenanceScreen({
 
 /**
  * Wraps the whole navigation tree:
- * - blocks the app while an admin has maintenance mode on (admins keep access,
- *   with a reminder banner so nobody forgets it is on),
+ * - blocks the app while maintenance is on — either the manual switch or an
+ *   automatic scheduled window, which starts and lifts itself on time,
+ * - warns everyone shortly before a scheduled window begins,
  * - shows the platform announcement banner,
  * - offers a restart once a downloaded OTA update is waiting.
  *
@@ -64,18 +76,20 @@ function MaintenanceScreen({
 export function SystemGate({ children }: { children: React.ReactNode }) {
   const insets = useSafeAreaInsets();
   const { data: settings, refetch, isFetching } = useAppSettings();
+  const maintenance = useMaintenanceState();
   const isAdmin = useIsAdmin();
   const isSignedIn = useIsSignedIn();
   const ota = useOtaUpdates();
 
   const [signInEscape, setSignInEscape] = useState(false);
   const [dismissedAnnouncement, setDismissedAnnouncement] = useState<string | null>(null);
+  const [dismissedNotice, setDismissedNotice] = useState<string | null>(null);
 
-  const maintenance = settings?.maintenance_enabled === true;
+  const active = maintenance.active;
 
   useEffect(() => {
-    if (!maintenance) setSignInEscape(false);
-  }, [maintenance]);
+    if (!active) setSignInEscape(false);
+  }, [active]);
 
   // A non-admin who finished signing in gets the takeover back.
   useEffect(() => {
@@ -88,8 +102,19 @@ export function SystemGate({ children }: { children: React.ReactNode }) {
     announcement.length > 0 &&
     dismissedAnnouncement !== announcement;
 
-  const blocked = maintenance && !isAdmin && !signInEscape;
+  const showNotice = maintenance.upcoming && dismissedNotice !== maintenance.startsAt;
+
+  const blocked = active && !isAdmin && !signInEscape;
   const bannerBottom = insets.bottom + (Platform.OS === 'web' ? 72 : 64);
+
+  const eta = maintenance.endsAt
+    ? `預計 ${formatDateTime(maintenance.endsAt)} 恢復服務（約 ${durationUntil(maintenance.endsAt, maintenance.now)}後）`
+    : null;
+
+  const adminReminder =
+    maintenance.source === 'schedule'
+      ? `排程維護進行中${maintenance.endsAt ? `，${formatDateTime(maintenance.endsAt)} 自動解除` : ''}。`
+      : '維護模式已開啟，一般使用者目前無法使用 App。';
 
   return (
     <View className="flex-1">
@@ -101,17 +126,40 @@ export function SystemGate({ children }: { children: React.ReactNode }) {
           style={{ position: 'absolute', left: 12, right: 12, bottom: bannerBottom, zIndex: 40 }}
           className="gap-2"
         >
-          {maintenance && isAdmin ? (
+          {active && isAdmin ? (
             <View className="border-brand-orange bg-surface flex-row items-center gap-3 rounded-2xl border p-3 shadow-lg">
               <Wrench size={18} color={BRAND.orange} />
               <Typography type="body-xs" className="text-navy flex-1">
-                維護模式已開啟，一般使用者目前無法使用 App。
+                {adminReminder}
               </Typography>
               {Platform.OS === 'web' ? (
                 <Button size="sm" variant="tertiary" onPress={() => router.push('/admin')}>
-                  <Button.Label>前往關閉</Button.Label>
+                  <Button.Label>前往設定</Button.Label>
                 </Button>
               ) : null}
+            </View>
+          ) : null}
+
+          {showNotice ? (
+            <View className="border-border bg-surface flex-row items-center gap-3 rounded-2xl border p-3 shadow-lg">
+              <CalendarClock size={18} color={BRAND.orange} />
+              <View className="flex-1">
+                <Typography type="body-sm" className="text-navy" style={{ fontWeight: '600' }}>
+                  {durationUntil(maintenance.startsAt, maintenance.now)}後進行系統維護
+                </Typography>
+                <Typography type="body-xs" color="muted">
+                  {formatDateTime(maintenance.startsAt)}
+                  {maintenance.endsAt ? ` ~ ${formatDateTime(maintenance.endsAt)}` : ' 起'}
+                  ，期間將暫停下單，請先完成手上的操作。
+                </Typography>
+              </View>
+              <Button
+                size="sm"
+                variant="tertiary"
+                onPress={() => setDismissedNotice(maintenance.startsAt)}
+              >
+                <Button.Label>知道了</Button.Label>
+              </Button>
             </View>
           ) : null}
 
@@ -152,11 +200,9 @@ export function SystemGate({ children }: { children: React.ReactNode }) {
 
       {blocked ? (
         <MaintenanceScreen
-          title={settings?.maintenance_title?.trim() || '系統維護中'}
-          message={
-            settings?.maintenance_message?.trim() ||
-            '極貨網正在進行系統維護與資料更新，請稍後再回來。'
-          }
+          title={maintenance.title}
+          message={maintenance.message}
+          eta={eta}
           isChecking={isFetching}
           onRetry={() => void refetch()}
           onAdminSignIn={() => {

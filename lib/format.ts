@@ -45,6 +45,53 @@ export function formatDate(iso: string | null | undefined): string {
   return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())}`;
 }
 
+/** `YYYY-MM-DD HH:mm` in the device's own timezone — the format the admin console types. */
+export function toLocalInput(iso: string | null | undefined): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/**
+ * Parses `YYYY-MM-DD HH:mm` (also tolerates `YYYY/MM/DD` and a `T` separator) as
+ * LOCAL time and returns an ISO string, or null when the text is not a valid moment.
+ */
+export function parseLocalInput(value: string | null | undefined): string | null {
+  const text = (value ?? '').trim();
+  if (!text) return null;
+  const match = /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})(?:[T ](\d{1,2}):(\d{2}))?$/.exec(text);
+  if (!match) return null;
+  const [, y, mo, d, h, mi] = match;
+  const date = new Date(
+    Number(y),
+    Number(mo) - 1,
+    Number(d),
+    Number(h ?? '0'),
+    Number(mi ?? '0'),
+    0,
+    0,
+  );
+  if (Number.isNaN(date.getTime())) return null;
+  if (date.getMonth() !== Number(mo) - 1 || date.getDate() !== Number(d)) return null;
+  return date.toISOString();
+}
+
+/** "3 天 2 小時" / "45 分鐘" — used for maintenance countdowns. */
+export function durationUntil(iso: string | null | undefined, from = Date.now()): string {
+  if (!iso) return '';
+  const diff = new Date(iso).getTime() - from;
+  if (!Number.isFinite(diff) || diff <= 0) return '即將';
+  const minutes = Math.round(diff / 60000);
+  if (minutes < 60) return `${minutes} 分鐘`;
+  const hours = Math.floor(minutes / 60);
+  const restMinutes = minutes % 60;
+  if (hours < 24) return restMinutes ? `${hours} 小時 ${restMinutes} 分鐘` : `${hours} 小時`;
+  const days = Math.floor(hours / 24);
+  const restHours = hours % 24;
+  return restHours ? `${days} 天 ${restHours} 小時` : `${days} 天`;
+}
+
 export function relativeTime(iso: string | null | undefined): string {
   if (!iso) return '';
   const diff = Date.now() - new Date(iso).getTime();

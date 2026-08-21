@@ -1,27 +1,11 @@
-import { Image, View } from 'react-native';
+import { useId } from 'react';
+import { View } from 'react-native';
 import { Typography } from 'heroui-native';
 import Svg, { Defs, LinearGradient as SvgGradient, Path, Polygon, Stop } from 'react-native-svg';
 
 import { LinearGradient } from '@/components/ui/primitives/LinearGradient';
 import { BRAND, BRAND_COPY } from '@/lib/brand';
 import { cn } from '@/lib/utils';
-
-/* The supplied brand artwork: full lockup (shield mark + 極貨網 + JIHUOWANG + slogan). */
-import LOGO_SOURCE from '@/assets/jihuowang-logo.png';
-
-/** Aspect of the supplied lockup artwork, used to size it without distortion. */
-const ART = { w: 353, h: 481 };
-
-/** The complete brand lockup artwork, for large light surfaces. */
-export function JihuoArtwork({ width = 220 }: { width?: number }) {
-  return (
-    <Image
-      source={LOGO_SOURCE}
-      resizeMode="contain"
-      style={{ width, height: width * (ART.h / ART.w) }}
-    />
-  );
-}
 
 type MarkProps = {
   size?: number;
@@ -38,6 +22,10 @@ const SHIELD_INNER = 'M32 13 L48.5 18.5 V31 C48.5 41 41 47 32 50.5 C23 47 15.5 4
  * Vector version of the 極貨網 mark — a navy shield holding the orange "J" core with
  * a rising arrow breaking out of the top-right corner: 收貨入庫 → 成長向上.
  * Pass flat colours for dark surfaces; omit them for the brand gradients.
+ *
+ * Gradient ids are made unique per instance: several marks can live on the same
+ * screen (header + hero artwork) and shared `<Defs>` ids collide on native, which
+ * leaves one of them unpainted until something forces a re-render.
  */
 export function JihuoMark({
   size = 32,
@@ -46,27 +34,38 @@ export function JihuoMark({
   arrowColor,
   letterColor = BRAND.white,
 }: MarkProps) {
-  const shield = shieldColor ?? 'url(#jihuoNavy)';
-  const accent = accentColor ?? 'url(#jihuoOrange)';
-  const arrow = arrowColor ?? 'url(#jihuoArrow)';
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
+  const navyId = `jihuoNavy${uid}`;
+  const orangeId = `jihuoOrange${uid}`;
+  const arrowId = `jihuoArrow${uid}`;
+
+  const shield = shieldColor ?? `url(#${navyId})`;
+  const accent = accentColor ?? `url(#${orangeId})`;
+  const arrow = arrowColor ?? `url(#${arrowId})`;
 
   return (
     <Svg width={size} height={size} viewBox="0 0 64 64">
       <Defs>
-        <SvgGradient id="jihuoNavy" x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor={BRAND.navySoft} />
-          <Stop offset="0.55" stopColor="#0B2E7D" />
-          <Stop offset="1" stopColor={BRAND.navy} />
-        </SvgGradient>
-        <SvgGradient id="jihuoOrange" x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor={BRAND.yellow} />
-          <Stop offset="0.55" stopColor={BRAND.orange} />
-          <Stop offset="1" stopColor="#E0620A" />
-        </SvgGradient>
-        <SvgGradient id="jihuoArrow" x1="0" y1="1" x2="1" y2="0">
-          <Stop offset="0" stopColor="#7FBEFF" />
-          <Stop offset="1" stopColor={BRAND.blue} />
-        </SvgGradient>
+        {shieldColor ? null : (
+          <SvgGradient id={navyId} x1="0" y1="0" x2="1" y2="1">
+            <Stop offset="0" stopColor={BRAND.navySoft} />
+            <Stop offset="0.55" stopColor="#0B2E7D" />
+            <Stop offset="1" stopColor={BRAND.navy} />
+          </SvgGradient>
+        )}
+        {accentColor ? null : (
+          <SvgGradient id={orangeId} x1="0" y1="0" x2="1" y2="1">
+            <Stop offset="0" stopColor={BRAND.yellow} />
+            <Stop offset="0.55" stopColor={BRAND.orange} />
+            <Stop offset="1" stopColor="#E0620A" />
+          </SvgGradient>
+        )}
+        {arrowColor ? null : (
+          <SvgGradient id={arrowId} x1="0" y1="1" x2="1" y2="0">
+            <Stop offset="0" stopColor="#7FBEFF" />
+            <Stop offset="1" stopColor={BRAND.blue} />
+          </SvgGradient>
+        )}
       </Defs>
 
       <Path d={SHIELD_OUTER} fill={shield} />
@@ -83,6 +82,48 @@ export function JihuoMark({
       <Path d="M39 47 L55 19" stroke={arrow} strokeWidth={5.6} strokeLinecap="round" fill="none" />
       <Polygon points="59,12 57.6,21.4 50,17" fill={arrow} />
     </Svg>
+  );
+}
+
+/**
+ * The stacked brand lockup (mark over 極貨網 / JIHUOWANG) for large light surfaces
+ * such as the sign-in screen. Drawn as vector + text so it paints on the very
+ * first frame — a bitmap lockup has to be decoded first and shows up a beat late.
+ */
+export function JihuoArtwork({
+  width = 220,
+  showTagline = false,
+}: {
+  width?: number;
+  showTagline?: boolean;
+}) {
+  return (
+    <View className="items-center" style={{ width }}>
+      <View style={{ width: width * 0.52, height: width * 0.52, flexShrink: 0 }}>
+        <JihuoMark size={width * 0.52} />
+      </View>
+      <Typography
+        className="text-navy"
+        style={{ fontSize: width * 0.2, lineHeight: width * 0.28, fontWeight: '700' }}
+      >
+        {BRAND_COPY.nameZh}
+      </Typography>
+      <Typography
+        className="text-brand-blue"
+        style={{
+          fontSize: width * 0.085,
+          letterSpacing: width * 0.028,
+          fontWeight: '600',
+        }}
+      >
+        {BRAND_COPY.name}
+      </Typography>
+      {showTagline ? (
+        <Typography color="muted" align="center" style={{ fontSize: width * 0.075 }}>
+          {BRAND_COPY.tagline}
+        </Typography>
+      ) : null}
+    </View>
   );
 }
 

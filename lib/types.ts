@@ -425,6 +425,12 @@ export type AppSettings = {
   maintenance_title: string;
   maintenance_message: string;
   maintenance_started_at: string | null;
+  /** 排程維護：開啟後在 starts_at ~ ends_at 之間自動進入維護，時間到自動解除。 */
+  maintenance_schedule_enabled: boolean;
+  maintenance_starts_at: string | null;
+  maintenance_ends_at: string | null;
+  /** 排程開始前多少分鐘顯示預告橫幅。 */
+  maintenance_notice_minutes: number;
   announcement_enabled: boolean;
   announcement_message: string;
   min_supported_version: string | null;

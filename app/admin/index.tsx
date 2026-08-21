@@ -45,9 +45,17 @@ import {
   useAdminReplyTicket,
   useAdminSupportTickets,
 } from '@/lib/api/support';
-import { useAppSettings, useSaveAppSettings } from '@/lib/api/system';
+import { useAppSettings, useMaintenanceState, useSaveAppSettings } from '@/lib/api/system';
 import { BRAND } from '@/lib/brand';
-import { formatDate, formatPrice, relativeTime } from '@/lib/format';
+import {
+  durationUntil,
+  formatDate,
+  formatDateTime,
+  formatPrice,
+  parseLocalInput,
+  relativeTime,
+  toLocalInput,
+} from '@/lib/format';
 import { WebOnlyNotice } from '@/components/WebOnlyNotice';
 import { ADMIN_CONSOLE_IS_WEB, useIsAdminConsole, useUserId } from '@/lib/session';
 import {
@@ -293,12 +301,23 @@ function TicketCard({ ticket }: { ticket: SupportTicket }) {
   );
 }
 
+/** Local `YYYY-MM-DD HH:mm` for "in N hours, rounded to the hour", used by the quick-fill buttons. */
+function hoursFromNow(hours: number): string {
+  const d = new Date();
+  d.setMinutes(0, 0, 0);
+  d.setHours(d.getHours() + hours);
+  return toLocalInput(d.toISOString());
+}
+
 /** 系統維護與全站公告（維護模式開啟時，只有管理員還能使用 App）。 */
 function SystemPanel() {
   const { toast } = useToast();
   const { data: settings } = useAppSettings();
+  const maintenance = useMaintenanceState();
   const save = useSaveAppSettings();
   const [draft, setDraft] = useState<Partial<AppSettings>>({});
+  const [schedule, setSchedule] = useState({ start: '', end: '', notice: '60' });
+  const [formError, setFormError] = useState<string | null>(null);
   const hydrated = useRef(false);
 
   useEffect(() => {
@@ -307,12 +326,62 @@ function SystemPanel() {
     if (!settings || hydrated.current) return;
     hydrated.current = true;
     setDraft(settings);
+    setSchedule({
+      start: toLocalInput(settings.maintenance_starts_at),
+      end: toLocalInput(settings.maintenance_ends_at),
+      notice: String(settings.maintenance_notice_minutes ?? 60),
+    });
   }, [settings]);
 
-  const patch = (next: Partial<AppSettings>) => setDraft((prev) => ({ ...prev, ...next }));
+  const patch = (next: Partial<AppSettings>) => {
+    setFormError(null);
+    setDraft((prev) => ({ ...prev, ...next }));
+  };
+
+  const patchSchedule = (next: Partial<typeof schedule>) => {
+    setFormError(null);
+    setSchedule((prev) => ({ ...prev, ...next }));
+  };
+
+  const scheduleStatus = (() => {
+    if (maintenance.source === 'manual') return '手動維護模式進行中，一般使用者無法使用 App。';
+    if (maintenance.source === 'schedule')
+      return maintenance.endsAt
+        ? `排程維護進行中，${formatDateTime(maintenance.endsAt)} 自動解除。`
+        : '排程維護進行中（沒有設定結束時間，需手動關閉排程）。';
+    if (maintenance.finished) return '上一次排程已結束，目前服務正常。';
+    if (maintenance.scheduleEnabled && maintenance.startsAt)
+      return `將於 ${formatDateTime(maintenance.startsAt)} 自動開啟（約 ${durationUntil(maintenance.startsAt, maintenance.now)}後）。`;
+    return '目前沒有排程，服務正常。';
+  })();
 
   const submit = () => {
     const enabled = draft.maintenance_enabled ?? false;
+    const scheduleOn = draft.maintenance_schedule_enabled ?? false;
+    const startIso = parseLocalInput(schedule.start);
+    const endIso = parseLocalInput(schedule.end);
+
+    if (scheduleOn) {
+      if (!startIso) {
+        setFormError('請填寫維護開始時間，格式：2026-08-22 02:00');
+        return;
+      }
+      if (schedule.end.trim().length > 0 && !endIso) {
+        setFormError('維護結束時間格式不正確，格式：2026-08-22 04:00');
+        return;
+      }
+      if (endIso && new Date(endIso).getTime() <= new Date(startIso).getTime()) {
+        setFormError('維護結束時間必須晚於開始時間');
+        return;
+      }
+    }
+
+    const noticeValue = Number(schedule.notice);
+    const noticeMinutes = Number.isFinite(noticeValue)
+      ? Math.min(1440, Math.max(0, Math.round(noticeValue)))
+      : 60;
+
+    setFormError(null);
     save.mutate(
       {
         maintenance_enabled: enabled,
@@ -322,12 +391,21 @@ function SystemPanel() {
         maintenance_started_at: enabled
           ? (settings?.maintenance_started_at ?? new Date().toISOString())
           : null,
+        maintenance_schedule_enabled: scheduleOn,
+        maintenance_starts_at: startIso,
+        maintenance_ends_at: endIso,
+        maintenance_notice_minutes: noticeMinutes,
         announcement_enabled: draft.announcement_enabled ?? false,
         announcement_message: draft.announcement_message?.trim() ?? '',
       },
       {
         onSuccess: (data) => {
           setDraft(data);
+          setSchedule({
+            start: toLocalInput(data.maintenance_starts_at),
+            end: toLocalInput(data.maintenance_ends_at),
+            notice: String(data.maintenance_notice_minutes ?? 60),
+          });
           toast.show({ variant: 'success', label: '系統設定已儲存' });
         },
         onError: (error: Error) => toast.show({ variant: 'danger', label: error.message }),
@@ -356,12 +434,12 @@ function SystemPanel() {
       <View className="flex-row items-center gap-3">
         <View className="flex-1">
           <Typography type="body-sm" className="text-navy" style={{ fontWeight: '600' }}>
-            維護模式
+            維護模式（手動）
           </Typography>
           <Typography type="body-xs" color="muted">
             {settings?.maintenance_enabled
-              ? `已於 ${settings.maintenance_started_at ? formatDate(settings.maintenance_started_at) : '—'} 開啟`
-              : '目前關閉，所有人都能正常使用。'}
+              ? `已於 ${settings.maintenance_started_at ? formatDate(settings.maintenance_started_at) : '—'} 手動開啟`
+              : '手動開關目前關閉；下方排程時間到仍會自動進入維護。'}
           </Typography>
         </View>
         <Switch
@@ -387,6 +465,78 @@ function SystemPanel() {
       <View className="flex-row items-center gap-3">
         <View className="flex-1">
           <Typography type="body-sm" className="text-navy" style={{ fontWeight: '600' }}>
+            排程維護（自動開啟與解除）
+          </Typography>
+          <Typography type="body-xs" color="muted">
+            {scheduleStatus}
+          </Typography>
+        </View>
+        <Switch
+          isSelected={draft.maintenance_schedule_enabled ?? false}
+          onSelectedChange={(value) => patch({ maintenance_schedule_enabled: value })}
+        />
+      </View>
+
+      <View className="flex-row gap-2">
+        <View className="flex-1">
+          <Typography type="body-xs" color="muted" className="mb-1">
+            開始時間（你的時區）
+          </Typography>
+          <Input
+            placeholder="2026-08-22 02:00"
+            value={schedule.start}
+            onChangeText={(value) => patchSchedule({ start: value })}
+          />
+        </View>
+        <View className="flex-1">
+          <Typography type="body-xs" color="muted" className="mb-1">
+            結束時間（留空＝需手動關閉）
+          </Typography>
+          <Input
+            placeholder="2026-08-22 04:00"
+            value={schedule.end}
+            onChangeText={(value) => patchSchedule({ end: value })}
+          />
+        </View>
+      </View>
+
+      <View className="flex-row flex-wrap gap-2">
+        <Button
+          size="sm"
+          variant="tertiary"
+          onPress={() => patchSchedule({ start: hoursFromNow(1), end: hoursFromNow(2) })}
+        >
+          <Button.Label>1 小時後 · 維護 1 小時</Button.Label>
+        </Button>
+        <Button
+          size="sm"
+          variant="tertiary"
+          onPress={() => patchSchedule({ start: hoursFromNow(12), end: hoursFromNow(14) })}
+        >
+          <Button.Label>12 小時後 · 維護 2 小時</Button.Label>
+        </Button>
+        <Button size="sm" variant="tertiary" onPress={() => patchSchedule({ start: '', end: '' })}>
+          <Button.Label>清除時間</Button.Label>
+        </Button>
+      </View>
+
+      <View>
+        <Typography type="body-xs" color="muted" className="mb-1">
+          開始前多少分鐘顯示預告橫幅（0 = 不預告）
+        </Typography>
+        <Input
+          placeholder="60"
+          keyboardType="number-pad"
+          value={schedule.notice}
+          onChangeText={(value) => patchSchedule({ notice: value.replace(/[^0-9]/g, '') })}
+        />
+      </View>
+
+      <Separator />
+
+      <View className="flex-row items-center gap-3">
+        <View className="flex-1">
+          <Typography type="body-sm" className="text-navy" style={{ fontWeight: '600' }}>
             全站公告橫幅
           </Typography>
           <Typography type="body-xs" color="muted">
@@ -404,6 +554,12 @@ function SystemPanel() {
         value={draft.announcement_message ?? ''}
         onChangeText={(value) => patch({ announcement_message: value })}
       />
+
+      {formError ? (
+        <Typography type="body-xs" className="text-brand-orange">
+          {formError}
+        </Typography>
+      ) : null}
 
       <Button isDisabled={save.isPending} onPress={submit}>
         <Button.Label>{save.isPending ? '儲存中…' : '儲存系統設定'}</Button.Label>
