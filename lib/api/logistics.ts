@@ -19,6 +19,8 @@ export type AdminLogisticsPayload = {
   checkMacAlgorithm: string;
   /** 綠界文件公開的 C2C 測試特店代號。 */
   testAccountMerchantId: string;
+  /** 寄件人資料來源；固定為 seller_shipping_profiles（每個賣家自己填）。 */
+  senderSource: string;
   credentials: {
     stage: { ready: boolean; merchantId: string | null; source: 'env' | 'ecpay_test' };
     production: { ready: boolean; merchantId: string | null; source: 'env' | 'ecpay_test' };

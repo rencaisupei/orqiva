@@ -204,19 +204,9 @@ export default function AdminLogisticsScreen() {
   };
 
   const submit = () => {
-    if (draft.is_enabled) {
-      if (enabledSubTypes.length === 0) {
-        setError('啟用前請至少選擇一家超商');
-        return;
-      }
-      if (!draft.sender_name?.trim()) {
-        setError('請填寫寄件人姓名（綠界必填，2~5 個中文字）');
-        return;
-      }
-      if (!/^09\d{8}$/.test(draft.sender_cell_phone ?? '')) {
-        setError('寄件人手機需為 09 開頭的 10 碼數字（C2C 必填）');
-        return;
-      }
+    if (draft.is_enabled && enabledSubTypes.length === 0) {
+      setError('啟用前請至少選擇一家超商');
+      return;
     }
     setError(null);
 
@@ -227,11 +217,6 @@ export default function AdminLogisticsScreen() {
         enabled_sub_types: enabledSubTypes,
         is_collection_enabled: draft.is_collection_enabled,
         use_test_credentials: draft.use_test_credentials ?? true,
-        sender_name: draft.sender_name ?? null,
-        sender_phone: draft.sender_phone ?? null,
-        sender_cell_phone: draft.sender_cell_phone ?? null,
-        sender_zip_code: draft.sender_zip_code ?? null,
-        sender_address: draft.sender_address ?? null,
         return_store_ids: returnStoreIds,
         default_goods_name: draft.default_goods_name || '商品一批',
         platform_id: draft.platform_id ?? null,
@@ -408,56 +393,22 @@ export default function AdminLogisticsScreen() {
           <Description>綠界申請的物流模式需為 C2C（店到店）才能使用這些子類型。</Description>
         </SectionCard>
 
-        <SectionCard
-          title="寄件人資訊"
-          subtitle="會寫進每一張物流單，C2C 退貨需憑本人身分證領取，請勿填公司名稱。"
-        >
-          <View>
-            <Label isRequired>寄件人姓名</Label>
-            <Input
-              placeholder="2~5 個中文字"
-              value={draft.sender_name ?? ''}
-              onChangeText={(value) => patch({ sender_name: value })}
-            />
-          </View>
-          <View>
-            <Label isRequired>寄件人手機</Label>
-            <Input
-              placeholder="09xxxxxxxx"
-              keyboardType="number-pad"
-              value={draft.sender_cell_phone ?? ''}
-              onChangeText={(value) =>
-                patch({ sender_cell_phone: value.replace(/\D/g, '').slice(0, 10) })
-              }
-            />
-            <Description>只允許數字、10 碼、09 開頭</Description>
-          </View>
-          <View>
-            <Label>寄件人電話</Label>
-            <Input
-              placeholder="02-12345678"
-              value={draft.sender_phone ?? ''}
-              onChangeText={(value) => patch({ sender_phone: value })}
-            />
-          </View>
-          <View>
-            <Label>寄件人郵遞區號</Label>
-            <Input
-              placeholder="100"
-              keyboardType="number-pad"
-              value={draft.sender_zip_code ?? ''}
-              onChangeText={(value) =>
-                patch({ sender_zip_code: value.replace(/\D/g, '').slice(0, 6) })
-              }
-            />
-          </View>
-          <View>
-            <Label>寄件人地址</Label>
-            <Input
-              placeholder="縣市 / 區 / 路名門牌"
-              value={draft.sender_address ?? ''}
-              onChangeText={(value) => patch({ sender_address: value })}
-            />
+        <SectionCard title="寄件人資訊" subtitle="改由每位賣家自己填寫，平台後台不再統一設定。">
+          <View className="bg-background gap-1 rounded-xl p-3">
+            <Typography type="body-sm" className="text-navy" style={{ fontWeight: '600' }}>
+              取自賣家本人的資料
+            </Typography>
+            <Typography type="body-xs" color="muted">
+              建立物流單時，SenderName 與 SenderCellPhone 會即時查詢該筆訂單賣家在「賣家中心 →
+              店舖設定」填寫的寄件人姓名與手機，不再使用任何固定值。C2C
+              退件需憑本人身分證領取，寄件人必須是賣家自己。
+            </Typography>
+            <Typography type="body-xs" color="muted">
+              賣家未填寫或格式不符時，建立物流單會直接失敗並提示賣家補齊，不會用平台資料代寄。
+            </Typography>
+            <Typography type="body-xs" color="muted">
+              寄件人資料屬於個資，存放在 seller_shipping_profiles，只有賣家本人與管理員讀得到。
+            </Typography>
           </View>
         </SectionCard>
 

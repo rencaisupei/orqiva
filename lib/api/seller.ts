@@ -7,9 +7,44 @@ import type {
   Order,
   Product,
   ProductCondition,
+  SellerShippingProfile,
   SellerStatistic,
   Store,
 } from '@/lib/types';
+
+/**
+ * 賣家的寄件人資料（綠界 C2C 建單用）。
+ * 存在獨立的 seller_shipping_profiles，RLS 只讓本人與管理員讀得到，
+ * 因為 stores / profiles 是全站可讀的公開資料。
+ */
+export function useSellerShippingProfile(userId: string | null) {
+  return useQuery({
+    enabled: !!userId,
+    queryKey: ['seller-shipping-profile', userId],
+    queryFn: async (): Promise<SellerShippingProfile | null> => {
+      const { data, error } = await bilt
+        .from('seller_shipping_profiles')
+        .select('*')
+        .eq('user_id', userId!)
+        .maybeSingle();
+      if (error) throw new Error(error.message);
+      return (data as SellerShippingProfile | null) ?? null;
+    },
+  });
+}
+
+async function saveShippingProfile(userId: string, senderName: string, senderCellPhone: string) {
+  const { error } = await bilt.from('seller_shipping_profiles').upsert(
+    {
+      user_id: userId,
+      sender_name: senderName.trim(),
+      sender_cell_phone: senderCellPhone.trim(),
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'user_id' },
+  );
+  if (error) throw new Error(error.message);
+}
 
 export function useMyStoreQuery(userId: string | null) {
   return useQuery({
@@ -36,7 +71,12 @@ export function useCreateStore() {
       description: string;
       location: string;
       logoUrl: string | null;
+      senderName: string;
+      senderCellPhone: string;
     }): Promise<Store> => {
+      // 寄件人資料先寫，開店後每一張綠界物流單都直接取用這一筆。
+      await saveShippingProfile(input.userId, input.senderName, input.senderCellPhone);
+
       const { data, error } = await bilt
         .from('stores')
         .insert({
@@ -61,6 +101,7 @@ export function useCreateStore() {
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['my-store'] });
+      void qc.invalidateQueries({ queryKey: ['seller-shipping-profile'] });
       void qc.invalidateQueries({ queryKey: ['notifications'] });
     },
   });
@@ -70,11 +111,14 @@ export function useUpdateStore() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: {
+      userId: string;
       storeId: string;
       name: string;
       description: string;
       location: string;
       logoUrl: string | null;
+      senderName: string;
+      senderCellPhone: string;
     }) => {
       const { error } = await bilt
         .from('stores')
@@ -87,9 +131,12 @@ export function useUpdateStore() {
         })
         .eq('id', input.storeId);
       if (error) throw new Error(error.message);
+
+      await saveShippingProfile(input.userId, input.senderName, input.senderCellPhone);
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['my-store'] });
+      void qc.invalidateQueries({ queryKey: ['seller-shipping-profile'] });
       void qc.invalidateQueries({ queryKey: ['store'] });
     },
   });

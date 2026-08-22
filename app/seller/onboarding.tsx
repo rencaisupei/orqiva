@@ -4,6 +4,7 @@ import {
   Avatar,
   Button,
   Chip,
+  Description,
   FieldError,
   Input,
   Label,
@@ -13,14 +14,14 @@ import {
   useToast,
 } from 'heroui-native';
 import { router } from 'expo-router';
-import { Camera, ShieldCheck, Sparkles, TrendingUp } from 'lucide-react-native';
+import { Camera, ShieldCheck, Sparkles, TrendingUp, Truck } from 'lucide-react-native';
 
 import { SignInRequired } from '@/components/SignInRequired';
 import { useCreateStore, useMyStoreQuery } from '@/lib/api/seller';
 import { pickImages, uploadImage } from '@/lib/api/upload';
 import { BRAND } from '@/lib/brand';
 import { useUserId } from '@/lib/session';
-import { LOCATIONS } from '@/lib/types';
+import { LOCATIONS, validateSenderCellPhone, validateSenderName } from '@/lib/types';
 
 export default function SellerOnboardingScreen() {
   const userId = useUserId();
@@ -32,6 +33,8 @@ export default function SellerOnboardingScreen() {
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState<string>(LOCATIONS[0]);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [senderName, setSenderName] = useState('');
+  const [senderCellPhone, setSenderCellPhone] = useState('');
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,9 +78,27 @@ export default function SellerOnboardingScreen() {
       setError('請填寫店舖名稱');
       return;
     }
+    const nameError = validateSenderName(senderName);
+    if (nameError) {
+      setError(nameError);
+      return;
+    }
+    const phoneError = validateSenderCellPhone(senderCellPhone);
+    if (phoneError) {
+      setError(phoneError);
+      return;
+    }
     setError(null);
     createStore.mutate(
-      { userId, name: name.trim(), description: description.trim(), location, logoUrl },
+      {
+        userId,
+        name: name.trim(),
+        description: description.trim(),
+        location,
+        logoUrl,
+        senderName,
+        senderCellPhone,
+      },
       {
         onSuccess: () => {
           toast.show({ variant: 'success', label: '店舖建立成功' });
@@ -163,6 +184,39 @@ export default function SellerOnboardingScreen() {
                 </Chip>
               ))}
             </View>
+          </View>
+
+          <Separator className="my-1" />
+
+          <View className="flex-row items-center gap-2">
+            <Truck size={16} color={BRAND.blue} />
+            <Typography type="body" className="text-navy flex-1" style={{ fontWeight: '600' }}>
+              寄件人資訊（超商取貨必填）
+            </Typography>
+          </View>
+          <Typography type="body-xs" color="muted">
+            超商取貨的物流單會以這組資料當寄件人，退貨時需憑本人身分證領取，請填你本人的姓名與手機，不要填店舖名稱。只有你自己與平台管理員看得到。
+          </Typography>
+
+          <View>
+            <Label isRequired>寄件人姓名（本名）</Label>
+            <Input
+              placeholder="2~5 個字，例如：王小明"
+              value={senderName}
+              onChangeText={(value) => setSenderName(value.slice(0, 5))}
+            />
+            <Description>需與身分證相同，長度 2~5 個字。</Description>
+          </View>
+
+          <View>
+            <Label isRequired>寄件人手機</Label>
+            <Input
+              placeholder="09xxxxxxxx"
+              keyboardType="number-pad"
+              value={senderCellPhone}
+              onChangeText={(value) => setSenderCellPhone(value.replace(/\D/g, '').slice(0, 10))}
+            />
+            <Description>只允許數字、10 碼、09 開頭。</Description>
           </View>
 
           {error ? <FieldError>{error}</FieldError> : null}

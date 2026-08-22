@@ -447,6 +447,10 @@ export type LogisticsSettings = {
   is_collection_enabled: boolean;
   /** 測試環境改用綠界公開的 C2C 測試特店（2000933）；正式環境永遠用自己的金鑰。 */
   use_test_credentials: boolean;
+  /**
+   * 已停用的平台寄件人欄位。物流單的 SenderName / SenderCellPhone 一律取自
+   * seller_shipping_profiles（賣家自己填的本名與手機），這些欄位不再送給綠界。
+   */
   sender_name: string | null;
   sender_phone: string | null;
   sender_cell_phone: string | null;
@@ -463,6 +467,37 @@ export type LogisticsSettings = {
   created_at: string;
   updated_at: string;
 };
+
+/* ── 賣家寄件人資料（綠界 C2C SenderName / SenderCellPhone）──── */
+
+/**
+ * 每個賣家自己的寄件人身分。個資，只有本人與管理員讀得到
+ * （放在 seller_shipping_profiles，而不是全站可讀的 stores / profiles）。
+ */
+export type SellerShippingProfile = {
+  user_id: string;
+  sender_name: string;
+  sender_cell_phone: string;
+  created_at: string;
+  updated_at: string;
+};
+
+/** 綠界 C2C 寄件人姓名：本名 2~5 個字（退貨需憑本人身分證領取）。null = 通過。 */
+export function validateSenderName(value: string): string | null {
+  const name = value.trim();
+  if (!name) return '請填寫寄件人姓名（本名）';
+  if (name.length < 2 || name.length > 5)
+    return '寄件人姓名需為 2~5 個字的本名，請勿填公司或店舖名稱';
+  return null;
+}
+
+/** 綠界 C2C 寄件人手機：09 開頭 10 碼。null = 通過。 */
+export function validateSenderCellPhone(value: string): string | null {
+  const phone = value.trim();
+  if (!phone) return '請填寫寄件人手機';
+  if (!/^09\d{8}$/.test(phone)) return '寄件人手機需為 09 開頭的 10 碼數字';
+  return null;
+}
 
 export type LogisticsVerifyResult = {
   ok: boolean;

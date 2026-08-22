@@ -4,35 +4,40 @@ import {
   Avatar,
   Button,
   Chip,
+  Description,
   FieldError,
   Input,
   Label,
+  Separator,
   Spinner,
   TextArea,
   Typography,
   useToast,
 } from 'heroui-native';
 import { router } from 'expo-router';
-import { Camera } from 'lucide-react-native';
+import { Camera, Truck } from 'lucide-react-native';
 
 import { EmptyState } from '@/components/EmptyState';
 import { SignInRequired } from '@/components/SignInRequired';
-import { useMyStoreQuery, useUpdateStore } from '@/lib/api/seller';
+import { useMyStoreQuery, useSellerShippingProfile, useUpdateStore } from '@/lib/api/seller';
 import { pickImages, uploadImage } from '@/lib/api/upload';
 import { BRAND } from '@/lib/brand';
 import { useUserId } from '@/lib/session';
-import { LOCATIONS } from '@/lib/types';
+import { LOCATIONS, validateSenderCellPhone, validateSenderName } from '@/lib/types';
 
 export default function StoreSettingsScreen() {
   const userId = useUserId();
   const { toast } = useToast();
   const { data: store, isLoading } = useMyStoreQuery(userId);
+  const { data: shippingProfile, isLoading: profileLoading } = useSellerShippingProfile(userId);
   const updateStore = useUpdateStore();
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState<string>(LOCATIONS[0]);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [senderName, setSenderName] = useState('');
+  const [senderCellPhone, setSenderCellPhone] = useState('');
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,11 +50,18 @@ export default function StoreSettingsScreen() {
     }
   }, [store]);
 
+  useEffect(() => {
+    if (shippingProfile) {
+      setSenderName(shippingProfile.sender_name);
+      setSenderCellPhone(shippingProfile.sender_cell_phone);
+    }
+  }, [shippingProfile]);
+
   if (!userId) {
     return <SignInRequired title="登入後管理店舖" />;
   }
 
-  if (isLoading) {
+  if (isLoading || profileLoading) {
     return (
       <View className="bg-background flex-1 items-center justify-center">
         <Spinner />
@@ -92,9 +104,28 @@ export default function StoreSettingsScreen() {
       setError('請填寫店舖名稱');
       return;
     }
+    const nameError = validateSenderName(senderName);
+    if (nameError) {
+      setError(nameError);
+      return;
+    }
+    const phoneError = validateSenderCellPhone(senderCellPhone);
+    if (phoneError) {
+      setError(phoneError);
+      return;
+    }
     setError(null);
     updateStore.mutate(
-      { storeId: store.id, name: name.trim(), description: description.trim(), location, logoUrl },
+      {
+        userId,
+        storeId: store.id,
+        name: name.trim(),
+        description: description.trim(),
+        location,
+        logoUrl,
+        senderName,
+        senderCellPhone,
+      },
       {
         onSuccess: () => toast.show({ variant: 'success', label: '店舖資料已更新' }),
         onError: (err: Error) => setError(err.message),
@@ -151,9 +182,52 @@ export default function StoreSettingsScreen() {
               ))}
             </View>
           </View>
+        </View>
 
+        <View className="bg-surface gap-3 rounded-2xl p-4">
+          <View className="flex-row items-center gap-2">
+            <Truck size={16} color={BRAND.blue} />
+            <Typography type="body" className="text-navy flex-1" style={{ fontWeight: '600' }}>
+              寄件人資訊（超商取貨必填）
+            </Typography>
+          </View>
+          <Typography type="body-xs" color="muted">
+            建立超商取貨物流單時會用這組資料當寄件人。C2C
+            退貨需憑本人身分證領取，請填你本人的姓名與手機，不要填店舖名稱。這兩個欄位只有你自己與平台管理員看得到。
+          </Typography>
+
+          <Separator />
+
+          <View>
+            <Label isRequired>寄件人姓名（本名）</Label>
+            <Input
+              placeholder="2~5 個字，例如：王小明"
+              value={senderName}
+              onChangeText={(value) => setSenderName(value.slice(0, 5))}
+            />
+            <Description>需與身分證相同，長度 2~5 個字。</Description>
+          </View>
+
+          <View>
+            <Label isRequired>寄件人手機</Label>
+            <Input
+              placeholder="09xxxxxxxx"
+              keyboardType="number-pad"
+              value={senderCellPhone}
+              onChangeText={(value) => setSenderCellPhone(value.replace(/\D/g, '').slice(0, 10))}
+            />
+            <Description>只允許數字、10 碼、09 開頭；綠界會用這支手機發送物流通知。</Description>
+          </View>
+
+          {!shippingProfile ? (
+            <Typography type="body-xs" className="text-brand-orange">
+              尚未填寫寄件人資訊，填好並儲存後才能建立超商取貨物流單。
+            </Typography>
+          ) : null}
+        </View>
+
+        <View className="bg-surface gap-3 rounded-2xl p-4">
           {error ? <FieldError>{error}</FieldError> : null}
-
           <Button isDisabled={updateStore.isPending} onPress={save}>
             <Button.Label>{updateStore.isPending ? '儲存中…' : '儲存變更'}</Button.Label>
           </Button>
