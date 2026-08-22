@@ -1,5 +1,8 @@
 import { BRAND } from '@/lib/brand';
 
+/** Visual weight: `solid` = filled navy (tab bars, pickers), `soft` = chip-style filter. */
+export type SelectPillTone = 'solid' | 'soft';
+
 /**
  * Web build of `SelectPill`.
  *
@@ -12,16 +15,23 @@ export function SelectPill({
   selected = false,
   disabled = false,
   size = 'md',
+  tone = 'solid',
   onPress,
 }: {
   label: string;
   selected?: boolean;
   disabled?: boolean;
   size?: 'sm' | 'md';
+  tone?: SelectPillTone;
   onPress: () => void;
   className?: string;
 }) {
   const small = size === 'sm';
+  const soft = tone === 'soft';
+
+  const border = selected ? (soft ? BRAND.blue : BRAND.navy) : BRAND.border;
+  const background = selected ? (soft ? BRAND.blueSoft : BRAND.navy) : BRAND.background;
+  const color = selected ? (soft ? BRAND.blue : BRAND.white) : BRAND.navy;
 
   return (
     <button
@@ -39,9 +49,9 @@ export function SelectPill({
         borderRadius: 999,
         borderWidth: 1,
         borderStyle: 'solid',
-        borderColor: selected ? BRAND.navy : BRAND.border,
-        backgroundColor: selected ? BRAND.navy : BRAND.background,
-        color: selected ? BRAND.white : BRAND.navy,
+        borderColor: border,
+        backgroundColor: background,
+        color,
         padding: small ? '6px 12px' : '8px 16px',
         fontFamily: 'inherit',
         fontSize: small ? 13 : 14,

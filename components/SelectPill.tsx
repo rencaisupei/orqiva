@@ -1,6 +1,9 @@
 import { Platform, Pressable, type ViewStyle } from 'react-native';
 import { Typography } from 'heroui-native';
 
+/** Visual weight: `solid` = filled navy (tab bars, pickers), `soft` = chip-style filter. */
+export type SelectPillTone = 'solid' | 'soft';
+
 /**
  * Selectable pill used for tab bars, filters and single/multi choice rows.
  *
@@ -15,6 +18,7 @@ export function SelectPill({
   selected = false,
   disabled = false,
   size = 'md',
+  tone = 'solid',
   onPress,
   className,
 }: {
@@ -22,11 +26,21 @@ export function SelectPill({
   selected?: boolean;
   disabled?: boolean;
   size?: 'sm' | 'md';
+  tone?: SelectPillTone;
   onPress: () => void;
   className?: string;
 }) {
   const padding = size === 'sm' ? 'px-3 py-1.5' : 'px-4 py-2';
   const textType = size === 'sm' ? 'body-xs' : 'body-sm';
+  const soft = tone === 'soft';
+
+  const container = selected
+    ? soft
+      ? 'bg-brand-blue-soft border-brand-blue'
+      : 'bg-navy border-navy'
+    : 'bg-background border-border';
+  const text = selected ? (soft ? 'text-brand-blue' : 'text-white') : 'text-navy';
+
   // Plain object, never a `style={({ pressed }) => …}` callback: a function style
   // stops composing once Uniwind merges `className` into the same prop, which is
   // the one difference this component had from the sign-in switcher that works.
@@ -43,16 +57,11 @@ export function SelectPill({
       hitSlop={6}
       onPress={onPress}
       style={style}
-      className={`flex-row items-center justify-center rounded-full border ${padding} ${
-        selected ? 'bg-navy border-navy' : 'bg-background border-border'
-      } ${className ?? ''}`}
+      className={`flex-row items-center justify-center rounded-full border ${padding} ${container} ${
+        className ?? ''
+      }`}
     >
-      <Typography
-        type={textType}
-        numberOfLines={1}
-        className={selected ? 'text-white' : 'text-navy'}
-        style={{ fontWeight: '600' }}
-      >
+      <Typography type={textType} numberOfLines={1} className={text} style={{ fontWeight: '600' }}>
         {label}
       </Typography>
     </Pressable>

@@ -16,6 +16,7 @@ import {
 import { router } from 'expo-router';
 import { Camera, KeyRound, Truck } from 'lucide-react-native';
 
+import { EcpaySignupGuide } from '@/components/EcpaySignupGuide';
 import { EmptyState } from '@/components/EmptyState';
 import { SelectPill } from '@/components/SelectPill';
 import { SellerLogisticsStatusCard } from '@/components/SellerLogisticsStatusCard';
@@ -218,15 +219,17 @@ export default function StoreSettingsScreen() {
           </View>
         </View>
 
+        <EcpaySignupGuide />
+
         <View className="bg-surface gap-3 rounded-2xl p-4">
           <View className="flex-row items-center gap-2">
             <Truck size={16} color={BRAND.blue} />
             <Typography type="body" className="text-navy flex-1" style={{ fontWeight: '600' }}>
-              寄件人資訊（超商取貨必填）
+              第二步：填回五個欄位（超商取貨必填）
             </Typography>
           </View>
           <Typography type="body-xs" color="muted">
-            建立超商取貨物流單時會用這組資料當寄件人。C2C
+            前兩欄是物流單上的寄件人。C2C
             退貨需憑本人身分證領取，請填你本人的姓名與手機，不要填店舖名稱。這兩個欄位只有你自己與平台管理員看得到。
           </Typography>
 
@@ -253,23 +256,16 @@ export default function StoreSettingsScreen() {
             <Description>只允許數字、10 碼、09 開頭；綠界會用這支手機發送物流通知。</Description>
           </View>
 
-          <SellerLogisticsStatusCard profile={shippingProfile} showSettingsLink={false} />
-        </View>
-
-        <View className="bg-surface gap-3 rounded-2xl p-4">
-          <View className="flex-row items-center gap-2">
+          <View className="flex-row items-center gap-2 pt-1">
             <KeyRound size={16} color={BRAND.blue} />
-            <Typography type="body" className="text-navy flex-1" style={{ fontWeight: '600' }}>
-              綠界物流帳號（超商取貨必填）
+            <Typography type="body-sm" className="text-navy flex-1" style={{ fontWeight: '600' }}>
+              綠界特店資料（後台查到的三項）
             </Typography>
           </View>
           <Typography type="body-xs" color="muted">
             填入你自己的綠界特店資料，物流單就會建立在你的綠界帳號下（物流費用、代收貨款與退件都歸你）。
-            在綠界廠商後台的「系統開發管理 → 系統介面設定」可以查到這三項。金鑰只會存在伺服器端，
-            存好之後不會再回傳給任何裝置，連你自己也只看得到「已設定」。
+            金鑰只會存在伺服器端，存好之後不會再回傳給任何裝置，連你自己也只看得到「已設定」。
           </Typography>
-
-          <Separator />
 
           <View>
             <Label isRequired>綠界商店代號（MerchantID）</Label>
@@ -314,6 +310,8 @@ export default function StoreSettingsScreen() {
                 }。要更換就直接填新的，三欄全部清空則改用平台的綠界帳號。`
               : '還沒有綠界帳號可以先留空，開通狀態會顯示為審核中，商品仍可正常上架。'}
           </Typography>
+
+          <SellerLogisticsStatusCard profile={shippingProfile} showSettingsLink={false} />
         </View>
 
         <View className="bg-surface gap-3 rounded-2xl p-4">

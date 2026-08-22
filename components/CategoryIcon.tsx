@@ -38,6 +38,7 @@ import {
   Watch,
   Wrench,
 } from 'lucide-react-native';
+import type { LucideIcon } from 'lucide-react-native';
 
 import { BRAND } from '@/lib/brand';
 
@@ -45,7 +46,7 @@ import { BRAND } from '@/lib/brand';
  * Maps the `categories.icon` column to a lucide icon component.
  * Add an entry here whenever a new category row is created in the database.
  */
-const ICONS = {
+const ICONS: Record<string, LucideIcon> = {
   Cpu,
   Smartphone,
   Laptop,
@@ -93,6 +94,6 @@ type Props = {
 };
 
 export function CategoryIcon({ name, size = 22, color = BRAND.blue }: Props) {
-  const Icon = ICONS[name as keyof typeof ICONS] ?? Package;
+  const Icon = ICONS[name] ?? Package;
   return <Icon size={size} color={color} />;
 }

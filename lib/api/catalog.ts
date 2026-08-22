@@ -14,23 +14,14 @@ import type {
 
 const LIST_SELECT = '*, store:stores(id, name, logo_url, rating, rating_count, location)';
 
-function applySort<T>(query: T, sort: SortKey | undefined): T {
-  const q = query as unknown as {
-    order: (col: string, opts?: { ascending?: boolean }) => T;
-  };
-  switch (sort) {
-    case 'popular':
-      return q.order('sold_count', { ascending: false });
-    case 'price_asc':
-      return q.order('price', { ascending: true });
-    case 'price_desc':
-      return q.order('price', { ascending: false });
-    case 'rating':
-      return q.order('rating', { ascending: false });
-    default:
-      return q.order('created_at', { ascending: false });
-  }
-}
+/** Sort key → the column and direction PostgREST should order by. */
+const SORT_COLUMN: Record<SortKey, { column: string; ascending: boolean }> = {
+  newest: { column: 'created_at', ascending: false },
+  popular: { column: 'sold_count', ascending: false },
+  price_asc: { column: 'price', ascending: true },
+  price_desc: { column: 'price', ascending: false },
+  rating: { column: 'rating', ascending: false },
+};
 
 export function useCategories() {
   return useQuery({
@@ -39,18 +30,27 @@ export function useCategories() {
       // is_listable = false categories are retired (digital/virtual goods) and stay out of
       // both browsing and the seller listing flow.
       const [{ data: categories, error }, { data: productRows }] = await Promise.all([
-        bilt.from('categories').select('*').eq('is_listable', true).order('sort_order'),
-        bilt.from('products').select('category_id').eq('status', 'active'),
+        bilt
+          .from('categories')
+          .select('*')
+          .eq('is_listable', true)
+          .order('sort_order')
+          .returns<Category[]>(),
+        bilt
+          .from('products')
+          .select('category_id')
+          .eq('status', 'active')
+          .returns<{ category_id: string | null }[]>(),
       ]);
       if (error) throw new Error(error.message);
 
       const counts = new Map<string, number>();
-      for (const row of (productRows ?? []) as { category_id: string | null }[]) {
+      for (const row of productRows ?? []) {
         if (!row.category_id) continue;
         counts.set(row.category_id, (counts.get(row.category_id) ?? 0) + 1);
       }
 
-      return ((categories ?? []) as Category[]).map((c) => ({
+      return (categories ?? []).map((c) => ({
         ...c,
         product_count: counts.get(c.id) ?? 0,
       }));
@@ -79,7 +79,8 @@ export function useProducts(filters: ProductFilters) {
         query = query.or(`title.ilike.%${term}%,description.ilike.%${term}%`);
       }
 
-      query = applySort(query, filters.sort);
+      const sort = SORT_COLUMN[filters.sort ?? 'newest'];
+      query = query.order(sort.column, { ascending: sort.ascending });
       if (filters.limit) query = query.limit(filters.limit);
 
       const { data, error } = await query;
@@ -112,9 +113,14 @@ export function useStore(id: string | undefined) {
     enabled: !!id,
     queryKey: ['store', id],
     queryFn: async (): Promise<Store | null> => {
-      const { data, error } = await bilt.from('stores').select('*').eq('id', id!).maybeSingle();
+      const { data, error } = await bilt
+        .from('stores')
+        .select('*')
+        .eq('id', id!)
+        .returns<Store[]>()
+        .maybeSingle();
       if (error) throw new Error(error.message);
-      return (data as Store | null) ?? null;
+      return data ?? null;
     },
   });
 }
@@ -171,8 +177,9 @@ export function useCreateReview() {
       const { data: rows } = await bilt
         .from('reviews')
         .select('rating')
-        .eq('product_id', input.productId);
-      const ratings = ((rows ?? []) as { rating: number }[]).map((r) => r.rating);
+        .eq('product_id', input.productId)
+        .returns<{ rating: number }[]>();
+      const ratings = (rows ?? []).map((r) => r.rating);
       if (ratings.length > 0) {
         const avg = ratings.reduce((a, b) => a + b, 0) / ratings.length;
         await bilt

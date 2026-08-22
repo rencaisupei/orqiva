@@ -21,11 +21,11 @@ export function useAdminOverview(enabled: boolean) {
         bilt.from('users').select('id', { count: 'exact', head: true }),
         bilt.from('stores').select('id', { count: 'exact', head: true }),
         bilt.from('products').select('id', { count: 'exact', head: true }),
-        bilt.from('orders').select('total'),
+        bilt.from('orders').select('total').returns<{ total: number }[]>(),
         bilt.from('reports').select('id', { count: 'exact', head: true }).eq('status', 'open'),
       ]);
 
-      const orderRows = (orders.data ?? []) as { total: number }[];
+      const orderRows = orders.data ?? [];
       return {
         userCount: users.count ?? 0,
         storeCount: stores.count ?? 0,
@@ -66,9 +66,10 @@ export function useAdminStores(enabled: boolean) {
       const { data, error } = await bilt
         .from('stores')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .returns<Store[]>();
       if (error) throw new Error(error.message);
-      return (data ?? []) as Store[];
+      return data ?? [];
     },
   });
 }
@@ -82,9 +83,10 @@ export function useAdminProducts(enabled: boolean) {
         .from('products')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(200);
+        .limit(200)
+        .returns<Product[]>();
       if (error) throw new Error(error.message);
-      return (data ?? []) as Product[];
+      return data ?? [];
     },
   });
 }
@@ -113,9 +115,10 @@ export function useAdminReports(enabled: boolean) {
       const { data, error } = await bilt
         .from('reports')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .returns<Report[]>();
       if (error) throw new Error(error.message);
-      return (data ?? []) as Report[];
+      return data ?? [];
     },
   });
 }

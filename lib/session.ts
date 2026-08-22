@@ -38,12 +38,12 @@ async function ensureRows(session: Session, displayName?: string) {
 
 async function fetchRows(userId: string) {
   const [{ data: account }, { data: profile }] = await Promise.all([
-    bilt.from('users').select('*').eq('id', userId).maybeSingle(),
-    bilt.from('profiles').select('*').eq('id', userId).maybeSingle(),
+    bilt.from('users').select('*').eq('id', userId).returns<UserAccount[]>().maybeSingle(),
+    bilt.from('profiles').select('*').eq('id', userId).returns<Profile[]>().maybeSingle(),
   ]);
   return {
-    account: (account as UserAccount | null) ?? null,
-    profile: (profile as Profile | null) ?? null,
+    account: account ?? null,
+    profile: profile ?? null,
   };
 }
 

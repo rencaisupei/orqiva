@@ -19,11 +19,18 @@ import { useCreateSupportTicket, useMySupportTickets } from '@/lib/api/support';
 import { BRAND, BRAND_COPY } from '@/lib/brand';
 import { formatDate } from '@/lib/format';
 import { useSessionStore, useUserId } from '@/lib/session';
-import { SUPPORT_CATEGORY_LABEL, SUPPORT_STATUS_LABEL, type SupportCategory } from '@/lib/types';
+import {
+  SUPPORT_CATEGORIES,
+  SUPPORT_CATEGORY_LABEL,
+  SUPPORT_STATUS_LABEL,
+  toSupportCategory,
+  type SupportCategory,
+} from '@/lib/types';
 
-const CATEGORY_OPTIONS: SelectOption[] = (
-  Object.keys(SUPPORT_CATEGORY_LABEL) as SupportCategory[]
-).map((key) => ({ value: key, label: SUPPORT_CATEGORY_LABEL[key] }));
+const CATEGORY_OPTIONS: SelectOption[] = SUPPORT_CATEGORIES.map((key) => ({
+  value: key,
+  label: SUPPORT_CATEGORY_LABEL[key],
+}));
 
 export default function ContactScreen() {
   const userId = useUserId();
@@ -138,7 +145,10 @@ export default function ContactScreen() {
             isRequired
             options={CATEGORY_OPTIONS}
             value={category}
-            onChange={(value) => setCategory(value as SupportCategory)}
+            onChange={(value) => {
+              const next = toSupportCategory(value);
+              if (next) setCategory(next);
+            }}
           />
           <View>
             <Label isRequired>主旨</Label>

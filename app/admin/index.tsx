@@ -16,6 +16,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { ChevronRight, ShieldAlert, ShieldCheck, Truck, Wrench } from 'lucide-react-native';
 
 import { AppImage } from '@/components/AppImage';
+import { CleanupPanel } from '@/components/CleanupPanel';
 import { EmptyState } from '@/components/EmptyState';
 import { NativeSelect } from '@/components/NativeSelect';
 import { SelectPill } from '@/components/SelectPill';
@@ -93,7 +94,7 @@ const TABS: { key: TabKey; label: string }[] = [
 ];
 
 /** Bumped whenever this screen changes, so a stale cached bundle is obvious. */
-const CONSOLE_BUILD = '後台 build 0822-d';
+const CONSOLE_BUILD = '後台 build 0822-e';
 
 function isTabKey(value: unknown): value is TabKey {
   return typeof value === 'string' && TABS.some((item) => item.key === value);
@@ -817,6 +818,8 @@ export default function AdminScreen() {
             </Pressable>
 
             <SystemPanel />
+
+            <CleanupPanel />
           </>
         ) : null}
 

@@ -7,54 +7,25 @@ import type {
   LogisticsPublicConfig,
   LogisticsSettings,
   LogisticsSubType,
-  LogisticsVerifyResult,
   SellerLogisticsStatus,
-  SellerVerificationStatus,
 } from '@/lib/types';
 
-export type SellerVerifyResult = {
-  ok: boolean;
-  userId: string;
-  isActive: boolean;
-  status: SellerVerificationStatus;
-  reason: string;
-  message: string;
-  senderReady: boolean;
-  /** true = 用賣家自己的綠界特店金鑰驗證，false = 退回平台金鑰。 */
-  hasOwnCredentials: boolean;
-  credentialSource: 'env' | 'ecpay_test' | 'seller' | null;
-  merchantId: string | null;
-  checkedAt: string;
-};
-
-/** 賣家的寄件人 + 綠界特店設定。HashKey / HashIV 只回「有沒有設定」，不回內容。 */
-export type SellerEcpaySettings = {
-  sender: { name: string; cellPhone: string };
-  ecpay: {
-    merchantId: string;
-    hasHashKey: boolean;
-    hasHashIv: boolean;
-    updatedAt: string | null;
-  };
-  status: {
-    isActive: boolean;
-    verificationStatus: SellerVerificationStatus;
-    message: string | null;
-    lastCheckedAt: string | null;
-  };
-  platform: {
-    isEnabled: boolean;
-    environment: 'stage' | 'production';
-    apiHost: string;
-    fallbackReady: boolean;
-  };
-};
+/*
+ * The response shapes live in lib/api/contracts.ts next to every other edge
+ * function contract; re-exported here so existing imports keep working.
+ */
+export type {
+  AdminLogisticsPayload,
+  MapSelection,
+  SellerEcpaySettings,
+  SellerVerifyResult,
+} from '@/lib/api/contracts';
 
 export function useSellerEcpaySettings(userId: string | null) {
   return useQuery({
     enabled: !!userId,
     queryKey: ['seller-ecpay-settings', userId],
-    queryFn: () => callLogistics<SellerEcpaySettings>('seller_settings', {}),
+    queryFn: () => callLogistics('seller_settings', {}),
   });
 }
 
@@ -66,8 +37,7 @@ export function useSellerEcpaySettings(userId: string | null) {
 export function useVerifySellerLogistics() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input?: { userId?: string }) =>
-      callLogistics<SellerVerifyResult>('seller_verify', input ?? {}),
+    mutationFn: (input?: { userId?: string }) => callLogistics('seller_verify', input ?? {}),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['seller-shipping-profile'] });
       void qc.invalidateQueries({ queryKey: ['seller-logistics-status'] });
@@ -102,39 +72,19 @@ export function useSellerLogisticsStatuses(sellerIds: (string | null | undefined
   });
 }
 
-export type AdminLogisticsPayload = {
-  settings: LogisticsSettings;
-  callbackUrl: string;
-  apiHost: string;
-  supportedSubTypes: LogisticsSubType[];
-  /** 物流 API 的檢查碼演算法（綠界規定 MD5；SHA256 只用於金流 AIO API）。 */
-  checkMacAlgorithm: string;
-  /** 綠界文件公開的 C2C 測試特店代號。 */
-  testAccountMerchantId: string;
-  /** 寄件人資料來源；固定為 seller_shipping_profiles（每個賣家自己填）。 */
-  senderSource: string;
-  /** 有填自己綠界特店金鑰的賣家數（那些訂單會用賣家自己的帳號建單）。 */
-  sellerCredentialCount: number;
-  credentials: {
-    stage: { ready: boolean; merchantId: string | null; source: 'env' | 'ecpay_test' };
-    production: { ready: boolean; merchantId: string | null; source: 'env' | 'ecpay_test' };
-  };
-};
-
 /** Admin only: full logistics settings plus which environments have keys installed. */
 export function useAdminLogistics(enabled: boolean) {
   return useQuery({
     enabled,
     queryKey: ['logistics', 'admin-settings'],
-    queryFn: () => callLogistics<AdminLogisticsPayload>('get_settings'),
+    queryFn: () => callLogistics('get_settings'),
   });
 }
 
 export function useSaveLogisticsSettings() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (patch: Partial<LogisticsSettings>) =>
-      callLogistics<{ settings: LogisticsSettings }>('save_settings', { patch }),
+    mutationFn: (patch: Partial<LogisticsSettings>) => callLogistics('save_settings', { patch }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['logistics'] });
     },
@@ -144,7 +94,7 @@ export function useSaveLogisticsSettings() {
 export function useVerifyLogistics() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () => callLogistics<LogisticsVerifyResult>('verify'),
+    mutationFn: () => callLogistics('verify'),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['logistics', 'admin-settings'] });
     },
@@ -179,25 +129,14 @@ export function useLogisticsConfig() {
 export function useStoreMapUrl() {
   return useMutation({
     mutationFn: (input: { logisticsSubType: LogisticsSubType; orderId?: string }) =>
-      callLogistics<{ token: string; url: string }>('map_url', input),
+      callLogistics('map_url', input),
   });
 }
-
-export type MapSelection = {
-  token: string;
-  status: 'pending' | 'selected' | 'expired';
-  store_id: string | null;
-  store_name: string | null;
-  store_address: string | null;
-  store_phone: string | null;
-  logistics_sub_type: LogisticsSubType;
-};
 
 /** Reads back the store the buyer picked in the browser (pull-only, call on focus). */
 export function useMapSelection() {
   return useMutation({
-    mutationFn: (token: string) =>
-      callLogistics<{ result: MapSelection }>('map_result', { token }).then((r) => r.result),
+    mutationFn: (token: string) => callLogistics('map_result', { token }).then((r) => r.result),
   });
 }
 
@@ -242,14 +181,7 @@ export function useCreateLogisticsOrder() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: { orderId: string; logisticsSubType?: LogisticsSubType }) =>
-      callLogistics<{
-        ok: boolean;
-        status: string;
-        merchantTradeNo: string;
-        shipmentNo: string | null;
-        validationNo: string | null;
-        rtnMsg: string | null;
-      }>('create', input),
+      callLogistics('create', input),
     onSuccess: (_data, input) => {
       void qc.invalidateQueries({ queryKey: ['logistics', 'order', input.orderId] });
       void qc.invalidateQueries({ queryKey: ['orders'] });
@@ -262,7 +194,7 @@ export function useCreateLogisticsOrder() {
 export function useSyncLogisticsOrder() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (orderId: string) => callLogistics<{ status: string }>('sync', { orderId }),
+    mutationFn: (orderId: string) => callLogistics('sync', { orderId }),
     onSuccess: (_data, orderId) => {
       void qc.invalidateQueries({ queryKey: ['logistics', 'order', orderId] });
       void qc.invalidateQueries({ queryKey: ['orders'] });

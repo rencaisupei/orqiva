@@ -323,6 +323,21 @@ export const SUPPORT_CATEGORY_LABEL: Record<SupportCategory, string> = {
   other: '其他',
 };
 
+export const SUPPORT_CATEGORIES: SupportCategory[] = [
+  'order',
+  'payment',
+  'logistics',
+  'account',
+  'product',
+  'report',
+  'other',
+];
+
+/** Narrows a picker value onto the union; unknown values become null. */
+export function toSupportCategory(value: string): SupportCategory | null {
+  return SUPPORT_CATEGORIES.find((item) => item === value) ?? null;
+}
+
 export type SupportTicketStatus = 'open' | 'in_progress' | 'closed';
 
 export const SUPPORT_STATUS_LABEL: Record<SupportTicketStatus, string> = {
@@ -372,6 +387,11 @@ export const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: 'rating', label: '評價最高' },
 ];
 
+/** Narrows a `?sort=` query param onto the union; anything else falls back to 最新. */
+export function toSortKey(value: string | undefined): SortKey {
+  return SORT_OPTIONS.find((option) => option.key === value)?.key ?? 'newest';
+}
+
 export const SHIPPING_METHODS = ['宅配', '超商取貨', '面交'] as const;
 
 /* ── 綠界 (ECPay) C2C 超商取貨付款 ─────────────────────────────── */
@@ -384,6 +404,21 @@ export const LOGISTICS_SUB_TYPE_LABEL: Record<LogisticsSubType, string> = {
   HILIFEC2C: '萊爾富店到店',
   OKMARTC2C: 'OK 店到店',
 };
+
+export const LOGISTICS_SUB_TYPES: LogisticsSubType[] = [
+  'UNIMARTC2C',
+  'FAMIC2C',
+  'HILIFEC2C',
+  'OKMARTC2C',
+];
+
+/**
+ * Narrows a stored text column (`orders.logistics_sub_type` and friends) onto the
+ * union at runtime; anything unrecognised becomes null instead of being asserted.
+ */
+export function toLogisticsSubType(value: string | null | undefined): LogisticsSubType | null {
+  return LOGISTICS_SUB_TYPES.find((item) => item === value) ?? null;
+}
 
 /** 綠界測試環境的固定門市代號，方便在 stage 直接測完整流程。 */
 export const LOGISTICS_TEST_STORE_ID: Record<LogisticsSubType, string> = {
@@ -434,6 +469,18 @@ export type AppSettings = {
   announcement_enabled: boolean;
   announcement_message: string;
   min_supported_version: string | null;
+  /** 自動清理：關閉後就不會再有任何背景清理，資料會一直累積。 */
+  cleanup_enabled: boolean;
+  /** 兩次清理最短間隔（小時，1~168）。 */
+  cleanup_interval_hours: number;
+  /** 已讀通知與失效推播裝置保留天數。 */
+  cleanup_notification_days: number;
+  /** 歷史紀錄（貨態、審核、已結案檢舉、久放購物車）保留天數。 */
+  cleanup_history_days: number;
+  cleanup_last_run_at: string | null;
+  /** 有值代表某一次清理正在進行（5 分鐘後視為逾時可接手）。 */
+  cleanup_running_since: string | null;
+  cleanup_last_total: number;
   updated_at: string;
   updated_by: string | null;
 };

@@ -13,8 +13,8 @@ import { formatPrice } from '@/lib/format';
 import {
   LOGISTICS_STATUS_LABEL,
   LOGISTICS_SUB_TYPE_LABEL,
+  toLogisticsSubType,
   type LogisticsStatus,
-  type LogisticsSubType,
   type Order,
 } from '@/lib/types';
 
@@ -38,9 +38,7 @@ export function LogisticsPanel({ order, role }: Props) {
 
   if (order.shipping_provider !== 'ecpay' && !order.cvs_store_id) return null;
 
-  const subType = (order.logistics_sub_type ?? shipment?.logistics_sub_type) as
-    | LogisticsSubType
-    | undefined;
+  const subType = toLogisticsSubType(order.logistics_sub_type ?? shipment?.logistics_sub_type);
 
   const copy = (value: string, label: string) => {
     void Clipboard.setStringAsync(value);
@@ -124,7 +122,7 @@ export function LogisticsPanel({ order, role }: Props) {
           isDisabled={create.isPending}
           onPress={() =>
             create.mutate(
-              { orderId: order.id, logisticsSubType: subType },
+              { orderId: order.id, logisticsSubType: subType ?? undefined },
               {
                 onSuccess: () => toast.show({ variant: 'success', label: '物流單已建立' }),
                 onError: (err: Error) => toast.show({ variant: 'danger', label: err.message }),
@@ -143,7 +141,7 @@ export function LogisticsPanel({ order, role }: Props) {
           isDisabled={create.isPending}
           onPress={() =>
             create.mutate(
-              { orderId: order.id, logisticsSubType: subType },
+              { orderId: order.id, logisticsSubType: subType ?? undefined },
               {
                 onSuccess: () => toast.show({ variant: 'success', label: '物流單已重新建立' }),
                 onError: (err: Error) => toast.show({ variant: 'danger', label: err.message }),

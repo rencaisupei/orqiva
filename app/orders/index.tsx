@@ -44,6 +44,7 @@ export default function OrdersScreen() {
             <SelectPill
               key={item.key}
               size="sm"
+              tone="soft"
               label={item.label}
               selected={filter === item.key}
               onPress={() => setFilter(item.key)}

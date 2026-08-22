@@ -267,7 +267,7 @@ export function useCreateProduct() {
       // AI 驗證審核：通過才會對買家公開，結果與通知都由審核函式寫入。
       let moderation: ModerationResult | null = null;
       try {
-        moderation = await callModeration<ModerationResult>('moderate_product', { productId });
+        moderation = await callModeration('moderate_product', { productId });
       } catch {
         // 審核服務暫時無法使用時商品留在「審核中」，管理員可在後台重新送審。
       }
@@ -462,8 +462,12 @@ export function useStoreReviews(storeId: string | null) {
     enabled: !!storeId,
     queryKey: ['store-reviews', storeId],
     queryFn: async () => {
-      const { data: products } = await bilt.from('products').select('id').eq('store_id', storeId!);
-      const ids = ((products ?? []) as { id: string }[]).map((p) => p.id);
+      const { data: products } = await bilt
+        .from('products')
+        .select('id')
+        .eq('store_id', storeId!)
+        .returns<{ id: string }[]>();
+      const ids = (products ?? []).map((p) => p.id);
       if (ids.length === 0) return [];
       const { data, error } = await bilt
         .from('reviews')

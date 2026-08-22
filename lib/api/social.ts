@@ -5,7 +5,6 @@ import type {
   AppNotification,
   Conversation,
   Message,
-  MessageScanResult,
   NotificationPrefs,
   Profile,
 } from '@/lib/types';
@@ -59,9 +58,10 @@ export function useMessages(conversationId: string | undefined) {
         .from('messages')
         .select('*')
         .eq('conversation_id', conversationId!)
-        .order('created_at');
+        .order('created_at')
+        .returns<Message[]>();
       if (error) throw new Error(error.message);
-      return (data ?? []) as Message[];
+      return data ?? [];
     },
     refetchInterval: 6_000,
   });
@@ -116,11 +116,10 @@ export function useSendMessage() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: { conversationId: string; body: string }) => {
-      const result = await callNotify<{
-        ok: boolean;
-        messageId: string;
-        moderation: MessageScanResult | null;
-      }>('send_message', { conversationId: input.conversationId, body: input.body });
+      const result = await callNotify('send_message', {
+        conversationId: input.conversationId,
+        body: input.body,
+      });
       return result;
     },
     onSuccess: (_data, input) => {
@@ -140,9 +139,10 @@ export function useNotifications(userId: string | null) {
         .select('*')
         .eq('user_id', userId!)
         .order('created_at', { ascending: false })
-        .limit(100);
+        .limit(100)
+        .returns<AppNotification[]>();
       if (error) throw new Error(error.message);
-      return (data ?? []) as AppNotification[];
+      return data ?? [];
     },
   });
 }
@@ -257,7 +257,7 @@ export function useUpdateNotificationPrefs() {
 /** 送一則測試推播給自己，用來確認權限、token 與頻道設定是否正確。 */
 export function useSendTestPush() {
   return useMutation({
-    mutationFn: () => callNotify<{ ok: boolean; sent: number }>('push_test'),
+    mutationFn: () => callNotify('push_test'),
   });
 }
 

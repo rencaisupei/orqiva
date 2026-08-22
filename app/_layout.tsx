@@ -60,8 +60,9 @@ const queryClient = new QueryClient({
   defaultOptions: {
     // Reads are pull-only, so a refetch when the app/tab regains focus is what
     // keeps carts, orders and chats from going stale on a phone that never
-    // unmounts its screens. staleTime throttles the burst.
-    queries: { retry: 1, staleTime: 15_000, refetchOnWindowFocus: true },
+    // unmounts its screens. staleTime throttles the burst, gcTime drops caches
+    // no screen is watching so a long session stops growing in memory.
+    queries: { retry: 1, staleTime: 15_000, gcTime: 5 * 60_000, refetchOnWindowFocus: true },
   },
 });
 

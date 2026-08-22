@@ -15,6 +15,7 @@ import {
   LOCATIONS,
   SHIPPING_METHODS,
   SORT_OPTIONS,
+  toSortKey,
   type ProductCondition,
   type SortKey,
 } from '@/lib/types';
@@ -49,7 +50,7 @@ export default function ProductListScreen() {
   }>();
 
   const [search, setSearch] = useState(params.q ?? '');
-  const [sort, setSort] = useState<SortKey>((params.sort as SortKey) ?? 'newest');
+  const [sort, setSort] = useState<SortKey>(toSortKey(params.sort));
   const [showFilters, setShowFilters] = useState(false);
   const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
   const [applied, setApplied] = useState<Draft>(EMPTY_DRAFT);

@@ -49,9 +49,10 @@ export function useMySupportTickets(userId: string | null) {
         .from('support_tickets')
         .select('*')
         .eq('user_id', userId!)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .returns<SupportTicket[]>();
       if (error) throw new Error(error.message);
-      return (data ?? []) as SupportTicket[];
+      return data ?? [];
     },
   });
 }
@@ -65,9 +66,10 @@ export function useAdminSupportTickets(enabled: boolean) {
         .from('support_tickets')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(200);
+        .limit(200)
+        .returns<SupportTicket[]>();
       if (error) throw new Error(error.message);
-      return (data ?? []) as SupportTicket[];
+      return data ?? [];
     },
   });
 }
@@ -95,7 +97,7 @@ export function useAdminReplyTicket() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: { ticketId: string; reply: string; status: SupportTicketStatus }) =>
-      callNotify<{ ok: boolean }>('support_reply', input),
+      callNotify('support_reply', input),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['support'] });
       void qc.invalidateQueries({ queryKey: ['notifications'] });

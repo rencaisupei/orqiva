@@ -15,6 +15,7 @@ import {
 import { router } from 'expo-router';
 import { Camera, ShieldCheck, Sparkles, TrendingUp, Truck } from 'lucide-react-native';
 
+import { EcpaySignupGuide } from '@/components/EcpaySignupGuide';
 import { SelectPill } from '@/components/SelectPill';
 import { SignInRequired } from '@/components/SignInRequired';
 import { useCreateStore, useMyStoreQuery } from '@/lib/api/seller';
@@ -136,6 +137,8 @@ export default function SellerOnboardingScreen() {
             </Typography>
           </View>
         </View>
+
+        <EcpaySignupGuide showBackfillGuide={false} />
 
         <View className="bg-surface gap-3 rounded-2xl p-4">
           <View className="items-center gap-2">

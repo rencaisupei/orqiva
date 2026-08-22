@@ -29,11 +29,13 @@ type PushPayload = { link?: string; type?: string; conversationId?: string };
 
 function readPayload(data: unknown): PushPayload {
   if (!data || typeof data !== 'object') return {};
-  const record = data as Record<string, unknown>;
+  const link: unknown = 'link' in data ? data.link : undefined;
+  const type: unknown = 'type' in data ? data.type : undefined;
+  const conversationId: unknown = 'conversationId' in data ? data.conversationId : undefined;
   return {
-    link: typeof record.link === 'string' ? record.link : undefined,
-    type: typeof record.type === 'string' ? record.type : undefined,
-    conversationId: typeof record.conversationId === 'string' ? record.conversationId : undefined,
+    link: typeof link === 'string' ? link : undefined,
+    type: typeof type === 'string' ? type : undefined,
+    conversationId: typeof conversationId === 'string' ? conversationId : undefined,
   };
 }
 
@@ -106,11 +108,9 @@ async function ensureAndroidChannel() {
 }
 
 function expoProjectId(): string | null {
-  return (
-    (Constants.expoConfig?.extra?.eas?.projectId as string | undefined) ??
-    Constants.easConfig?.projectId ??
-    null
-  );
+  const fromExtra: unknown = Constants.expoConfig?.extra?.eas?.projectId;
+  if (typeof fromExtra === 'string' && fromExtra.length > 0) return fromExtra;
+  return Constants.easConfig?.projectId ?? null;
 }
 
 /** Asks for permission and returns the Expo push token, or null when unavailable. */

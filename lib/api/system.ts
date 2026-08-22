@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { bilt } from '@/lib/backend';
+import { bilt, callMaintenance } from '@/lib/backend';
 import type { AppSettings } from '@/lib/types';
 
 const DEFAULTS: AppSettings = {
@@ -17,6 +17,13 @@ const DEFAULTS: AppSettings = {
   announcement_enabled: false,
   announcement_message: '',
   min_supported_version: null,
+  cleanup_enabled: true,
+  cleanup_interval_hours: 12,
+  cleanup_notification_days: 30,
+  cleanup_history_days: 180,
+  cleanup_last_run_at: null,
+  cleanup_running_since: null,
+  cleanup_last_total: 0,
   updated_at: new Date(0).toISOString(),
   updated_by: null,
 };
@@ -44,9 +51,10 @@ export function useAppSettings() {
         .from('app_settings')
         .select('*')
         .eq('id', 'default')
+        .returns<AppSettings[]>()
         .maybeSingle();
       if (error) return DEFAULTS;
-      return (data as AppSettings | null) ?? DEFAULTS;
+      return data ?? DEFAULTS;
     },
   });
 }
@@ -60,10 +68,11 @@ export function useSaveAppSettings() {
         .update({ ...patch, updated_at: new Date().toISOString() })
         .eq('id', 'default')
         .select('*')
+        .returns<AppSettings[]>()
         .maybeSingle();
       if (error) throw new Error(error.message);
       if (!data) throw new Error('沒有權限更新系統設定');
-      return data as AppSettings;
+      return data;
     },
     onSuccess: (data) => {
       qc.setQueryData(['system', 'app-settings'], data);
@@ -146,4 +155,67 @@ export function useMaintenanceState(): MaintenanceState {
     noticeMinutes,
     now,
   };
+}
+
+/* ── 自動清理（減少伺服器與 App 負擔） ───────────────────────── */
+
+/** 下一次清理到期的時間；沒跑過就是「現在」。 */
+function cleanupDueAt(settings: AppSettings): number {
+  if (!settings.cleanup_last_run_at) return 0;
+  const last = Date.parse(settings.cleanup_last_run_at);
+  if (Number.isNaN(last)) return 0;
+  return last + Math.max(1, settings.cleanup_interval_hours) * 3_600_000;
+}
+
+export function isCleanupDue(settings: AppSettings, now = Date.now()): boolean {
+  return settings.cleanup_enabled && now >= cleanupDueAt(settings);
+}
+
+/**
+ * 定期清理的觸發器。
+ *
+ * bilt-cloud 沒有資料庫排程，所以到期判斷放在公開可讀的 app_settings 上：
+ * App 只有在「真的到期」時才會呼叫一次維護函式，其他時候一次請求都不會發出。
+ * 函式本身還有一道到期檢查與併發鎖，所以多台裝置同時到期也只會執行一次。
+ */
+export function useAutoCleanup() {
+  const { data } = useAppSettings();
+  const qc = useQueryClient();
+  const fired = useRef(false);
+
+  useEffect(() => {
+    if (!data || fired.current) return;
+    if (!isCleanupDue(data)) return;
+    fired.current = true;
+    callMaintenance('run_cleanup')
+      .then((result) => {
+        if (result.ran) void qc.invalidateQueries({ queryKey: ['system'] });
+      })
+      .catch(() => {
+        // 清理失敗不影響使用者；下一次啟動或管理員手動執行時會再試。
+      });
+  }, [data, qc]);
+}
+
+/** Admin only: 目前設定、上次執行結果與可清理筆數。 */
+export function useMaintenanceStatus(enabled: boolean) {
+  return useQuery({
+    enabled,
+    queryKey: ['system', 'maintenance-status'],
+    staleTime: 30_000,
+    queryFn: () => callMaintenance('status'),
+  });
+}
+
+/** Admin only: 立刻執行一次清理（忽略間隔）。 */
+export function useRunCleanup() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input?: { force?: boolean }) =>
+      callMaintenance('run_cleanup', { force: input?.force ?? true }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['system'] });
+      void qc.invalidateQueries({ queryKey: ['notifications'] });
+    },
+  });
 }

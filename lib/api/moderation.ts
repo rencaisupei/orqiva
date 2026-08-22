@@ -4,11 +4,9 @@ import { bilt, callModeration } from '@/lib/backend';
 import type {
   MessageFlag,
   MessageScanResult,
-  ModerationResult,
   ModerationReview,
   ModerationVerdict,
   Product,
-  ReportSeverity,
 } from '@/lib/types';
 
 export type QueueProduct = Product & {
@@ -61,9 +59,10 @@ export function useMessageFlags(enabled: boolean) {
         .select('*')
         .eq('status', 'open')
         .order('created_at', { ascending: false })
-        .limit(100);
+        .limit(100)
+        .returns<MessageFlag[]>();
       if (error) throw new Error(error.message);
-      return (data ?? []) as MessageFlag[];
+      return data ?? [];
     },
   });
 }
@@ -78,9 +77,10 @@ export function useModerationHistory(targetId: string | undefined) {
         .from('moderation_reviews')
         .select('*')
         .eq('target_id', targetId!)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .returns<ModerationReview[]>();
       if (error) throw new Error(error.message);
-      return (data ?? []) as ModerationReview[];
+      return data ?? [];
     },
   });
 }
@@ -97,8 +97,7 @@ function invalidateModeration(qc: ReturnType<typeof useQueryClient>) {
 export function useModerateProduct() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (productId: string) =>
-      callModeration<ModerationResult & { ok: boolean }>('moderate_product', { productId }),
+    mutationFn: (productId: string) => callModeration('moderate_product', { productId }),
     onSuccess: () => invalidateModeration(qc),
   });
 }
@@ -108,7 +107,7 @@ export function useAdminDecideProduct() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: { productId: string; verdict: ModerationVerdict; note?: string }) =>
-      callModeration<{ ok: boolean }>('admin_decide', input),
+      callModeration('admin_decide', input),
     onSuccess: () => invalidateModeration(qc),
   });
 }
@@ -117,7 +116,7 @@ export function useResolveMessageFlag() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: { flagId: string; status: 'reviewed' | 'dismissed' }) =>
-      callModeration<{ ok: boolean }>('resolve_flag', input),
+      callModeration('resolve_flag', input),
     onSuccess: () => invalidateModeration(qc),
   });
 }
@@ -126,11 +125,7 @@ export function useResolveMessageFlag() {
 export function useTriageReport() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (reportId: string) =>
-      callModeration<{ severity: ReportSeverity; summary: string; suggestion: string }>(
-        'triage_report',
-        { reportId },
-      ),
+    mutationFn: (reportId: string) => callModeration('triage_report', { reportId }),
     onSuccess: () => invalidateModeration(qc),
   });
 }

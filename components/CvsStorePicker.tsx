@@ -8,7 +8,7 @@ import { SelectPill } from '@/components/SelectPill';
 import { useMapSelection, useStoreMapUrl } from '@/lib/api/logistics';
 import { BRAND } from '@/lib/brand';
 import type { CvsPickup } from '@/lib/api/commerce';
-import { LOGISTICS_SUB_TYPE_LABEL, type LogisticsSubType } from '@/lib/types';
+import { LOGISTICS_SUB_TYPE_LABEL, toLogisticsSubType, type LogisticsSubType } from '@/lib/types';
 
 type Props = {
   availableSubTypes: LogisticsSubType[];
@@ -27,7 +27,7 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 export function CvsStorePicker({ availableSubTypes, value, onChange, orderId }: Props) {
   // 先選超商才能開地圖：綠界的地圖網址必須帶 LogisticsSubType。
   const [subType, setSubType] = useState<LogisticsSubType | null>(
-    (value?.logisticsSubType as LogisticsSubType | undefined) ?? null,
+    toLogisticsSubType(value?.logisticsSubType),
   );
   const [token, setToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -56,7 +56,7 @@ export function CvsStorePicker({ availableSubTypes, value, onChange, orderId }: 
           }
         } catch (err) {
           if (attempt === attempts - 1) {
-            setError((err as Error).message);
+            setError(err instanceof Error ? err.message : '讀取門市資料失敗，請再試一次。');
             return;
           }
         }

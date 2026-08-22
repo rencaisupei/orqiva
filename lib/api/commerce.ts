@@ -139,9 +139,10 @@ export function useFavoriteIds(userId: string | null) {
       const { data, error } = await bilt
         .from('favorites')
         .select('product_id')
-        .eq('user_id', userId!);
+        .eq('user_id', userId!)
+        .returns<{ product_id: string }[]>();
       if (error) throw new Error(error.message);
-      return ((data ?? []) as { product_id: string }[]).map((r) => r.product_id);
+      return (data ?? []).map((r) => r.product_id);
     },
   });
 }
@@ -157,11 +158,10 @@ export function useFavorites(userId: string | null) {
           'created_at, product:products(*, store:stores(id, name, logo_url, rating, rating_count, location))',
         )
         .eq('user_id', userId!)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .returns<{ product: ProductListItem | null }[]>();
       if (error) throw new Error(error.message);
-      return ((data ?? []) as unknown as { product: ProductListItem | null }[])
-        .map((r) => r.product)
-        .filter((p): p is ProductListItem => !!p);
+      return (data ?? []).map((r) => r.product).filter((p): p is ProductListItem => !!p);
     },
   });
 }
@@ -246,7 +246,7 @@ export function usePlaceOrder() {
       note: string;
       cvsPickup?: CvsPickup | null;
     }) => {
-      return await callMarket<{ order_ids: string[] }>('place_order', {
+      return await callMarket('place_order', {
         items: input.items,
         recipient_name: input.recipientName,
         recipient_phone: input.recipientPhone,

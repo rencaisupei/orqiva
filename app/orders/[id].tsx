@@ -38,7 +38,7 @@ export default function OrderDetailScreen() {
   }
 
   const isBuyer = order.buyer_id === userId;
-  const currentStep = TIMELINE.indexOf(order.status as (typeof TIMELINE)[number]);
+  const currentStep = TIMELINE.findIndex((step) => step === order.status);
 
   const changeStatus = (status: string, label: string) => {
     setStatus.mutate(

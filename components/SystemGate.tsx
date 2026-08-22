@@ -6,7 +6,7 @@ import { router } from 'expo-router';
 import { CalendarClock, Megaphone, RefreshCw, Wrench } from 'lucide-react-native';
 
 import { JihuoLogo } from '@/components/brand/JihuoLogo';
-import { useAppSettings, useMaintenanceState } from '@/lib/api/system';
+import { useAppSettings, useAutoCleanup, useMaintenanceState } from '@/lib/api/system';
 import { BRAND } from '@/lib/brand';
 import { durationUntil, formatDateTime } from '@/lib/format';
 import { useIsAdmin, useIsSignedIn } from '@/lib/session';
@@ -80,6 +80,10 @@ export function SystemGate({ children }: { children: React.ReactNode }) {
   const isAdmin = useIsAdmin();
   const isSignedIn = useIsSignedIn();
   const ota = useOtaUpdates();
+
+  // Housekeeping: fires at most one request per app session, and only when the
+  // shared schedule says a cleanup is actually due.
+  useAutoCleanup();
 
   const [signInEscape, setSignInEscape] = useState(false);
   const [dismissedAnnouncement, setDismissedAnnouncement] = useState<string | null>(null);
