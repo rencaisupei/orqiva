@@ -453,6 +453,78 @@ export const LOGISTICS_STATUS_LABEL: Record<LogisticsStatus, string> = {
   failed: '建立失敗',
 };
 
+export const LOGISTICS_STATUSES: LogisticsStatus[] = [
+  'draft',
+  'requested',
+  'created',
+  'in_transit',
+  'arrived',
+  'picked_up',
+  'returned',
+  'cancelled',
+  'failed',
+];
+
+/**
+ * Narrows `orders.logistics_status` (a plain text column kept in sync by the
+ * ECPay callback and the sync action) onto the union; unknown text becomes null.
+ */
+export function toLogisticsStatus(value: string | null | undefined): LogisticsStatus | null {
+  return LOGISTICS_STATUSES.find((item) => item === value) ?? null;
+}
+
+/**
+ * 買家看得懂的出貨階段：把綠界九種貨態收斂成訂單列表可以篩選的幾個桶。
+ * `awaiting` 也涵蓋「還沒建立物流單」的超商取貨訂單。
+ */
+export type ShipmentStage =
+  | 'awaiting'
+  | 'created'
+  | 'in_transit'
+  | 'arrived'
+  | 'picked_up'
+  | 'issue';
+
+export const SHIPMENT_STAGE_LABEL: Record<ShipmentStage, string> = {
+  awaiting: '待出貨',
+  created: '已建單',
+  in_transit: '運送中',
+  arrived: '待取貨',
+  picked_up: '已取貨',
+  issue: '退回／異常',
+};
+
+const SHIPMENT_STAGE_BY_STATUS: Record<LogisticsStatus, ShipmentStage> = {
+  draft: 'awaiting',
+  requested: 'awaiting',
+  created: 'created',
+  in_transit: 'in_transit',
+  arrived: 'arrived',
+  picked_up: 'picked_up',
+  returned: 'issue',
+  cancelled: 'issue',
+  failed: 'issue',
+};
+
+export function shipmentStage(status: LogisticsStatus | null): ShipmentStage {
+  return status ? SHIPMENT_STAGE_BY_STATUS[status] : 'awaiting';
+}
+
+/** 這筆訂單是不是走綠界超商取貨（宅配訂單沒有貨態可同步）。 */
+export function isCvsOrder(order: Pick<Order, 'shipping_provider' | 'cvs_store_id'>): boolean {
+  return order.shipping_provider === 'ecpay' || !!order.cvs_store_id;
+}
+
+/** 還在運送途中、值得再向綠界查一次的貨態。 */
+export function isTrackableShipment(status: LogisticsStatus | null): boolean {
+  return (
+    status === 'requested' ||
+    status === 'created' ||
+    status === 'in_transit' ||
+    status === 'arrived'
+  );
+}
+
 /** 平台系統設定：維護模式與全站公告，所有人都讀得到，只有管理員能改。 */
 export type AppSettings = {
   id: string;

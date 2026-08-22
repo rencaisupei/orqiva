@@ -202,3 +202,36 @@ export function useSyncLogisticsOrder() {
     },
   });
 }
+
+export type ShipmentSyncResult = { synced: number; failed: number };
+
+/**
+ * 一次向綠界更新多筆訂單的貨態（訂單列表的「同步出貨狀態」）。
+ * 綠界的查詢 API 一次只吃一張物流單，所以逐筆送出；單筆失敗不會中斷其他訂單，
+ * 全部失敗才丟錯，讓畫面能顯示原因。
+ */
+export function useSyncShipments() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (orderIds: string[]): Promise<ShipmentSyncResult> => {
+      let synced = 0;
+      let failed = 0;
+      for (const orderId of orderIds) {
+        try {
+          await callLogistics('sync', { orderId });
+          synced += 1;
+        } catch {
+          failed += 1;
+        }
+      }
+      if (synced === 0 && failed > 0) {
+        throw new Error('目前無法向綠界查詢貨態，請稍後再試一次。');
+      }
+      return { synced, failed };
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['logistics'] });
+      void qc.invalidateQueries({ queryKey: ['orders'] });
+    },
+  });
+}
