@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { bilt, callModeration } from '@/lib/backend';
+import { bilt, callLogistics, callModeration } from '@/lib/backend';
 import { addRole } from '@/lib/session';
 import type {
   ModerationResult,
@@ -44,6 +44,17 @@ async function saveShippingProfile(userId: string, senderName: string, senderCel
     { onConflict: 'user_id' },
   );
   if (error) throw new Error(error.message);
+
+  /*
+   * 資料一存好就立刻對綠界物流 API 做一次狀態檢查（dry run），
+   * 賣家不必自己按任何按鈕就會看到「已開通」或「審核中」。
+   * 檢查失敗不該讓儲存失敗，賣家中心會顯示「尚未檢查」並提供重新檢查。
+   */
+  try {
+    await callLogistics('seller_verify', {});
+  } catch {
+    // 忽略：狀態留在上一次的結果，賣家中心可手動重新檢查。
+  }
 }
 
 export function useMyStoreQuery(userId: string | null) {
@@ -102,6 +113,7 @@ export function useCreateStore() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['my-store'] });
       void qc.invalidateQueries({ queryKey: ['seller-shipping-profile'] });
+      void qc.invalidateQueries({ queryKey: ['seller-logistics-status'] });
       void qc.invalidateQueries({ queryKey: ['notifications'] });
     },
   });
@@ -137,6 +149,7 @@ export function useUpdateStore() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['my-store'] });
       void qc.invalidateQueries({ queryKey: ['seller-shipping-profile'] });
+      void qc.invalidateQueries({ queryKey: ['seller-logistics-status'] });
       void qc.invalidateQueries({ queryKey: ['store'] });
     },
   });

@@ -13,6 +13,7 @@ import { useFavoriteToggle } from '@/hooks/useFavoriteToggle';
 import { useCreateReport } from '@/lib/api/admin';
 import { useProduct, useProductReviews, useTrackProductView } from '@/lib/api/catalog';
 import { useAddToCart } from '@/lib/api/commerce';
+import { useSellerLogisticsStatuses } from '@/lib/api/logistics';
 import { useStartConversation } from '@/lib/api/social';
 import { BRAND } from '@/lib/brand';
 import {
@@ -23,6 +24,7 @@ import {
   formatPrice,
 } from '@/lib/format';
 import { useUserId } from '@/lib/session';
+import { CVS_SELLER_INACTIVE_HINT, CVS_SHIPPING_METHOD } from '@/lib/types';
 
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -47,14 +49,15 @@ export default function ProductDetailScreen() {
     if (id) trackViewMutate(id);
   }, [id, trackViewMutate]);
 
+  // 賣家的超商取貨付款是否已開通（公開鏡像表，不含賣家個資）。
+  const { data: sellerStatuses } = useSellerLogisticsStatuses([product?.seller_id]);
+
   const images = useMemo(() => {
     if (!product) return [];
     const sorted = [...(product.product_images ?? [])].sort((a, b) => a.sort_order - b.sort_order);
     const urls = sorted.map((img) => img.url);
     return urls.length > 0 ? urls : product.cover_url ? [product.cover_url] : [];
   }, [product]);
-
-  const selectedShipping = shippingMethod ?? product?.shipping_methods[0] ?? '宅配';
 
   if (isLoading) {
     return (
@@ -75,6 +78,23 @@ export default function ProductDetailScreen() {
   const discount = discountPercent(product.price, product.original_price);
   const outOfStock = product.stock <= 0;
   const specEntries = Object.entries(product.specs ?? {});
+
+  /*
+   * 超商取貨付款需要賣家自己在綠界完成開通；未開通就不能被選，
+   * 否則買家會一路填到結帳才被伺服器擋下。選項留著但灰掉並說明原因。
+   */
+  const cvsActive =
+    !!product.seller_id && sellerStatuses?.[product.seller_id]?.is_logistics_active === true;
+  const cvsOffered = product.shipping_methods.includes(CVS_SHIPPING_METHOD);
+  const cvsBlocked = cvsOffered && !cvsActive;
+  const usableMethods = product.shipping_methods.filter(
+    (method) => method !== CVS_SHIPPING_METHOD || cvsActive,
+  );
+  const noShippingOption = usableMethods.length === 0;
+  const selectedShipping =
+    shippingMethod && usableMethods.includes(shippingMethod)
+      ? shippingMethod
+      : (usableMethods[0] ?? product.shipping_methods[0] ?? '宅配');
 
   const requireSignIn = () => {
     if (userId) return true;
@@ -236,11 +256,19 @@ export default function ProductDetailScreen() {
                 key={method}
                 size="sm"
                 label={method}
+                disabled={method === CVS_SHIPPING_METHOD && !cvsActive}
                 selected={selectedShipping === method}
                 onPress={() => setShippingMethod(method)}
               />
             ))}
           </View>
+          {cvsBlocked ? (
+            <Typography type="body-xs" className="text-brand-orange leading-5">
+              {noShippingOption
+                ? '此商品只提供超商取貨，但賣家的取貨付款尚在綠界審核中，暫時無法下單。'
+                : CVS_SELLER_INACTIVE_HINT}
+            </Typography>
+          ) : null}
           <View className="flex-row items-center gap-2">
             <Truck size={14} color={BRAND.blue} />
             <Typography type="body-sm" color="muted">
@@ -394,16 +422,21 @@ export default function ProductDetailScreen() {
           size="sm"
           variant="secondary"
           className="flex-1 px-2"
-          isDisabled={outOfStock || addToCart.isPending}
+          isDisabled={outOfStock || noShippingOption || addToCart.isPending}
           onPress={onAddToCart}
         >
           <Button.Label numberOfLines={1} className="text-center">
             加入購物車
           </Button.Label>
         </Button>
-        <Button size="sm" className="flex-1 px-2" isDisabled={outOfStock} onPress={onBuyNow}>
+        <Button
+          size="sm"
+          className="flex-1 px-2"
+          isDisabled={outOfStock || noShippingOption}
+          onPress={onBuyNow}
+        >
           <Button.Label numberOfLines={1} className="text-center">
-            {outOfStock ? '已售完' : '立即購買'}
+            {outOfStock ? '已售完' : noShippingOption ? '暫無配送' : '立即購買'}
           </Button.Label>
         </Button>
       </View>

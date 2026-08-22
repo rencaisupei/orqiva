@@ -11,11 +11,11 @@ import {
   Plus,
   Settings,
   Store as StoreIcon,
-  Truck,
 } from 'lucide-react-native';
 
 import { EmptyState } from '@/components/EmptyState';
 import { JihuoBadge } from '@/components/brand/JihuoLogo';
+import { SellerLogisticsStatusCard } from '@/components/SellerLogisticsStatusCard';
 import { SellerStatTile } from '@/components/SellerStatTile';
 import { SellerTabBar } from '@/components/SellerTabBar';
 import { SignInRequired } from '@/components/SignInRequired';
@@ -134,23 +134,7 @@ export default function SellerDashboardScreen() {
         contentContainerClassName="p-4 gap-3 pb-8"
         showsVerticalScrollIndicator={false}
       >
-        {!shippingLoading && !shippingProfile ? (
-          <Pressable
-            className="border-brand-orange bg-brand-orange-soft flex-row items-center gap-3 rounded-2xl border p-3.5"
-            onPress={() => router.push('/seller/store')}
-          >
-            <Truck size={18} color={BRAND.orange} />
-            <View className="flex-1">
-              <Typography type="body-sm" className="text-navy" style={{ fontWeight: '700' }}>
-                補齊寄件人資訊
-              </Typography>
-              <Typography type="body-xs" color="muted">
-                超商取貨的物流單需要你的本名與手機，未填寫前無法建立寄貨編號。
-              </Typography>
-            </View>
-            <ChevronRight size={18} color={BRAND.orange} />
-          </Pressable>
-        ) : null}
+        {!shippingLoading ? <SellerLogisticsStatusCard profile={shippingProfile} /> : null}
 
         <Typography type="h6" className="text-navy" style={{ fontWeight: '700' }}>
           今日數據

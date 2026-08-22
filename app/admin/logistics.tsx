@@ -335,6 +335,12 @@ export default function AdminLogisticsScreen() {
                   最後驗證：{formatDate(settings.last_verified_at)}
                 </Typography>
               ) : null}
+              {typeof verifyResult.sellersChecked === 'number' ? (
+                <Typography type="body-xs" color="muted">
+                  已重新計算 {verifyResult.sellersChecked} 位賣家的開通狀態，其中{' '}
+                  {verifyResult.sellersActive ?? 0} 位可提供超商取貨付款。
+                </Typography>
+              ) : null}
             </View>
           ) : null}
         </SectionCard>

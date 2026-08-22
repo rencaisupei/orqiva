@@ -8,7 +8,62 @@ import type {
   LogisticsSettings,
   LogisticsSubType,
   LogisticsVerifyResult,
+  SellerLogisticsStatus,
+  SellerVerificationStatus,
 } from '@/lib/types';
+
+export type SellerVerifyResult = {
+  ok: boolean;
+  userId: string;
+  isActive: boolean;
+  status: SellerVerificationStatus;
+  reason: string;
+  message: string;
+  senderReady: boolean;
+  checkedAt: string;
+};
+
+/**
+ * 對綠界物流 API 做一次 dry-run，確認這位賣家能不能提供超商取貨付款，
+ * 並把結果寫進 seller_shipping_profiles（含說明）與公開鏡像 seller_logistics_status。
+ * 不帶 userId 就是檢查自己；管理員可以指定其他賣家。
+ */
+export function useVerifySellerLogistics() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input?: { userId?: string }) =>
+      callLogistics<SellerVerifyResult>('seller_verify', input ?? {}),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['seller-shipping-profile'] });
+      void qc.invalidateQueries({ queryKey: ['seller-logistics-status'] });
+    },
+  });
+}
+
+/**
+ * 買家端：一次讀多個賣家的開通狀態（公開鏡像表，不含任何個資）。
+ * 回傳 map，查不到的賣家代表尚未完成驗證。
+ */
+export function useSellerLogisticsStatuses(sellerIds: (string | null | undefined)[]) {
+  const ids = [...new Set(sellerIds.filter((id): id is string => !!id))];
+  const cacheKey = [...ids].sort((a, b) => a.localeCompare(b)).join(',');
+
+  return useQuery({
+    enabled: ids.length > 0,
+    queryKey: ['seller-logistics-status', cacheKey],
+    staleTime: 30_000,
+    queryFn: async (): Promise<Record<string, SellerLogisticsStatus>> => {
+      const { data, error } = await bilt
+        .from('seller_logistics_status')
+        .select('*')
+        .in('user_id', ids);
+      if (error) throw new Error(error.message);
+      const map: Record<string, SellerLogisticsStatus> = {};
+      for (const row of (data ?? []) as SellerLogisticsStatus[]) map[row.user_id] = row;
+      return map;
+    },
+  });
+}
 
 export type AdminLogisticsPayload = {
   settings: LogisticsSettings;

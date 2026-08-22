@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import {
   Button,
@@ -24,10 +24,14 @@ import {
   type CheckoutLine,
   type CvsPickup,
 } from '@/lib/api/commerce';
-import { useLogisticsConfig } from '@/lib/api/logistics';
+import { useLogisticsConfig, useSellerLogisticsStatuses } from '@/lib/api/logistics';
 import { formatPrice } from '@/lib/format';
 import { useSessionStore, useUserId } from '@/lib/session';
-import { validateReceiverCellPhone, validateReceiverName } from '@/lib/types';
+import {
+  CVS_SELLER_INACTIVE_HINT,
+  validateReceiverCellPhone,
+  validateReceiverName,
+} from '@/lib/types';
 
 type DeliveryMode = 'home' | 'cvs';
 
@@ -55,13 +59,32 @@ export default function CheckoutScreen() {
   const [nameTouched, setNameTouched] = useState(false);
   const [phoneTouched, setPhoneTouched] = useState(false);
 
-  const cvsAvailable = !!logistics?.is_enabled && (logistics?.enabled_sub_types.length ?? 0) > 0;
+  const cvsEnabled = !!logistics?.is_enabled && (logistics?.enabled_sub_types.length ?? 0) > 0;
 
   const lines = useMemo(() => {
     const source = (cartItems ?? []).filter((item) => item.product);
     if (productId) return source.filter((item) => item.product_id === productId);
     return source.filter((item) => item.selected);
   }, [cartItems, productId]);
+
+  /*
+   * 取貨付款只能賣給「物流已開通」的賣家。這一筆結帳裡只要有一位賣家未開通，
+   * 整張訂單就不能走超商取貨（訂單依店舖拆單，但門市與收件資料是共用的）。
+   */
+  const sellerIds = useMemo(() => lines.map((item) => item.product?.seller_id ?? null), [lines]);
+  const { data: sellerStatuses } = useSellerLogisticsStatuses(sellerIds);
+  const cvsSellerReady =
+    lines.length > 0 &&
+    lines.every(
+      (item) =>
+        !!item.product?.seller_id &&
+        sellerStatuses?.[item.product.seller_id]?.is_logistics_active === true,
+    );
+  const cvsSelectable = cvsEnabled && cvsSellerReady;
+
+  useEffect(() => {
+    if (!cvsSelectable) setMode('home');
+  }, [cvsSelectable]);
 
   const subtotal = lines.reduce((sum, item) => sum + (item.product?.price ?? 0) * item.quantity, 0);
   const storeCount = new Set(lines.map((item) => item.product?.store_id)).size;
@@ -177,7 +200,7 @@ export default function CheckoutScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerClassName="p-4 gap-3 pb-6" keyboardShouldPersistTaps="handled">
-        {cvsAvailable ? (
+        {cvsEnabled ? (
           <View className="bg-surface gap-3 rounded-2xl p-4">
             <Typography type="body" className="text-navy" style={{ fontWeight: '600' }}>
               取貨方式
@@ -193,6 +216,7 @@ export default function CheckoutScreen() {
                   key={option.key}
                   size="sm"
                   label={option.label}
+                  disabled={option.key === 'cvs' && !cvsSelectable}
                   selected={mode === option.key}
                   onPress={() => {
                     setMode(option.key);
@@ -204,6 +228,12 @@ export default function CheckoutScreen() {
                 />
               ))}
             </View>
+
+            {!cvsSelectable ? (
+              <Typography type="body-xs" className="text-brand-orange leading-5">
+                {CVS_SELLER_INACTIVE_HINT}
+              </Typography>
+            ) : null}
 
             {mode === 'cvs' ? (
               <>

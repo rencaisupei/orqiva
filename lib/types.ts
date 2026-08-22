@@ -480,7 +480,44 @@ export type SellerShippingProfile = {
   sender_cell_phone: string;
   created_at: string;
   updated_at: string;
+  /* 綠界 C2C 取貨付款開通狀態，由 ecpay-logistics 的 seller_verify 寫入 */
+  is_logistics_active: boolean;
+  verification_status: SellerVerificationStatus;
+  verification_reason: string | null;
+  verification_message: string | null;
+  last_checked_at: string | null;
+  verified_at: string | null;
 };
+
+/**
+ * 賣家的超商取貨付款開通狀態。
+ * unverified = 寄件人資料還沒填；pending = 等綠界／平台開通；
+ * active = 可以收取貨付款訂單；failed = 檢查時出錯（金鑰或連線）。
+ */
+export type SellerVerificationStatus = 'unverified' | 'pending' | 'active' | 'failed';
+
+/**
+ * seller_logistics_status：不含個資的公開鏡像，買家端用它判斷要不要提供取貨付款。
+ * 沒有對應列 = 尚未完成驗證，一律視為未開通。
+ */
+export type SellerLogisticsStatus = {
+  user_id: string;
+  is_logistics_active: boolean;
+  verification_status: SellerVerificationStatus;
+  checked_at: string | null;
+  updated_at: string;
+};
+
+/** 商品／購物車裡代表超商取貨的配送方式字串。 */
+export const CVS_SHIPPING_METHOD = '超商取貨';
+
+/** 賣家端狀態文案（與 ecpay-logistics 的 SELLER_MESSAGES 對應）。 */
+export const SELLER_LOGISTICS_ACTIVE_LABEL = '✅ 超商取貨付款功能已開通！';
+export const SELLER_LOGISTICS_PENDING_LABEL =
+  '⚠️ 您的綠界帳號目前正在官方審核中（預計 2-3 個工作天），審核完成後系統將自動為您開啟取貨付款功能，您目前仍可正常上架商品。';
+
+/** 買家端看到的說明：這位賣家還不能提供取貨付款。 */
+export const CVS_SELLER_INACTIVE_HINT = '此賣家的超商取貨付款尚在綠界審核中，目前只能選擇宅配。';
 
 /** 綠界 C2C 寄件人姓名：本名 2~5 個字（退貨需憑本人身分證領取）。null = 通過。 */
 export function validateSenderName(value: string): string | null {
@@ -528,6 +565,9 @@ export type LogisticsVerifyResult = {
   merchantId?: string;
   /** 'env' = 專案環境變數的金鑰；'ecpay_test' = 綠界公用測試特店。 */
   credentialSource?: 'env' | 'ecpay_test';
+  /** 這次驗證後一併重算開通狀態的賣家數量。 */
+  sellersChecked?: number;
+  sellersActive?: number;
   raw?: string;
 };
 

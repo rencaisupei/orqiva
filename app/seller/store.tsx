@@ -18,6 +18,7 @@ import { Camera, Truck } from 'lucide-react-native';
 
 import { EmptyState } from '@/components/EmptyState';
 import { SelectPill } from '@/components/SelectPill';
+import { SellerLogisticsStatusCard } from '@/components/SellerLogisticsStatusCard';
 import { SignInRequired } from '@/components/SignInRequired';
 import { useMyStoreQuery, useSellerShippingProfile, useUpdateStore } from '@/lib/api/seller';
 import { pickImages, uploadImage } from '@/lib/api/upload';
@@ -218,11 +219,7 @@ export default function StoreSettingsScreen() {
             <Description>只允許數字、10 碼、09 開頭；綠界會用這支手機發送物流通知。</Description>
           </View>
 
-          {!shippingProfile ? (
-            <Typography type="body-xs" className="text-brand-orange">
-              尚未填寫寄件人資訊，填好並儲存後才能建立超商取貨物流單。
-            </Typography>
-          ) : null}
+          <SellerLogisticsStatusCard profile={shippingProfile} showSettingsLink={false} />
         </View>
 
         <View className="bg-surface gap-3 rounded-2xl p-4">

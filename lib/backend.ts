@@ -56,6 +56,8 @@ export type LogisticsAction =
   | 'get_settings'
   | 'save_settings'
   | 'verify'
+  | 'seller_status'
+  | 'seller_verify'
   | 'map_url'
   | 'map_result'
   | 'create'
