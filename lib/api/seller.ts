@@ -37,9 +37,10 @@ export function useSellerShippingProfile(userId: string | null) {
         .from('seller_shipping_profiles')
         .select('*')
         .eq('user_id', userId!)
+        .returns<SellerShippingProfile[]>()
         .maybeSingle();
       if (error) throw new Error(error.message);
-      return (data as SellerShippingProfile | null) ?? null;
+      return data ?? null;
     },
   });
 }
@@ -95,9 +96,10 @@ export function useMyStoreQuery(userId: string | null) {
         .from('stores')
         .select('*')
         .eq('owner_id', userId!)
+        .returns<Store[]>()
         .maybeSingle();
       if (error) throw new Error(error.message);
-      return (data as Store | null) ?? null;
+      return data ?? null;
     },
   });
 }
@@ -127,6 +129,7 @@ export function useCreateStore() {
           logo_url: input.logoUrl,
         })
         .select('*')
+        .returns<Store[]>()
         .single();
       if (error) throw new Error(error.message);
       await addRole('seller');
@@ -137,7 +140,7 @@ export function useCreateStore() {
         body: `店舖「${input.name}」建立成功，現在可以開始上架商品。`,
         link: '/seller',
       });
-      return data as Store;
+      return data;
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['my-store'] });
@@ -196,9 +199,10 @@ export function useSellerProducts(userId: string | null) {
         .from('products')
         .select('*')
         .eq('seller_id', userId!)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .returns<Product[]>();
       if (error) throw new Error(error.message);
-      return (data ?? []) as Product[];
+      return data ?? [];
     },
   });
 }
@@ -402,7 +406,8 @@ export function useSellerDashboard(userId: string | null, storeId: string | null
           .select('*')
           .eq('store_id', storeId!)
           .gte('stat_date', iso(monthStart < weekStart ? monthStart : weekStart))
-          .order('stat_date'),
+          .order('stat_date')
+          .returns<SellerStatistic[]>(),
         bilt.from('products').select('id', { count: 'exact', head: true }).eq('seller_id', userId!),
         bilt
           .from('orders')
@@ -414,10 +419,11 @@ export function useSellerDashboard(userId: string | null, storeId: string | null
           .select('*')
           .eq('seller_id', userId!)
           .order('sold_count', { ascending: false })
-          .limit(5),
+          .limit(5)
+          .returns<Product[]>(),
       ]);
 
-      const stats = (statsRes.data ?? []) as SellerStatistic[];
+      const stats = statsRes.data ?? [];
       const todayKey = iso(today);
       const yesterdayKey = iso(new Date(today.getTime() - 86_400_000));
       const todayRow = stats.find((s) => s.stat_date === todayKey);
@@ -444,7 +450,7 @@ export function useSellerDashboard(userId: string | null, storeId: string | null
         monthRevenue,
         productCount: productsRes.count ?? 0,
         pendingOrders: pendingRes.count ?? 0,
-        topProducts: (topRes.data ?? []) as Product[],
+        topProducts: topRes.data ?? [],
         trend,
       };
     },

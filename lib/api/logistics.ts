@@ -92,10 +92,11 @@ export function useSellerLogisticsStatuses(sellerIds: (string | null | undefined
       const { data, error } = await bilt
         .from('seller_logistics_status')
         .select('*')
-        .in('user_id', ids);
+        .in('user_id', ids)
+        .returns<SellerLogisticsStatus[]>();
       if (error) throw new Error(error.message);
       const map: Record<string, SellerLogisticsStatus> = {};
-      for (const row of (data ?? []) as SellerLogisticsStatus[]) map[row.user_id] = row;
+      for (const row of data ?? []) map[row.user_id] = row;
       return map;
     },
   });
@@ -156,10 +157,13 @@ export function useLogisticsConfig() {
     queryKey: ['logistics', 'public-config'],
     staleTime: 60_000,
     queryFn: async (): Promise<LogisticsPublicConfig> => {
-      const { data, error } = await bilt.rpc('logistics_public_config');
+      const { data, error } = await bilt
+        .rpc('logistics_public_config')
+        .returns<LogisticsPublicConfig[]>()
+        .maybeSingle();
       if (error) throw new Error(error.message);
       return (
-        (data as LogisticsPublicConfig | null) ?? {
+        data ?? {
           provider: 'ecpay',
           environment: 'stage',
           is_enabled: false,
@@ -208,9 +212,10 @@ export function useLogisticsOrder(orderId: string | undefined) {
         .eq('order_id', orderId!)
         .order('created_at', { ascending: false })
         .limit(1)
+        .returns<LogisticsOrder[]>()
         .maybeSingle();
       if (error) throw new Error(error.message);
-      return (data as LogisticsOrder | null) ?? null;
+      return data ?? null;
     },
   });
 }
@@ -224,9 +229,10 @@ export function useLogisticsEvents(logisticsOrderId: string | undefined) {
         .from('logistics_events')
         .select('*')
         .eq('logistics_order_id', logisticsOrderId!)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .returns<LogisticsEvent[]>();
       if (error) throw new Error(error.message);
-      return (data ?? []) as LogisticsEvent[];
+      return data ?? [];
     },
   });
 }
