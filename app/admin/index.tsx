@@ -17,6 +17,7 @@ import { ChevronRight, ShieldAlert, ShieldCheck, Truck, Wrench } from 'lucide-re
 
 import { AppImage } from '@/components/AppImage';
 import { EmptyState } from '@/components/EmptyState';
+import { NativeSelect } from '@/components/NativeSelect';
 import { SelectPill } from '@/components/SelectPill';
 import { SignInRequired } from '@/components/SignInRequired';
 import {
@@ -90,6 +91,9 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'reports', label: '檢舉' },
   { key: 'support', label: '客服' },
 ];
+
+/** Bumped whenever this screen changes, so a stale cached bundle is obvious. */
+const CONSOLE_BUILD = '後台 build 0822-d';
 
 function isTabKey(value: unknown): value is TabKey {
   return typeof value === 'string' && TABS.some((item) => item.key === value);
@@ -695,18 +699,37 @@ export default function AdminScreen() {
   return (
     <View className="bg-background flex-1">
       {/* Wraps instead of scrolling horizontally: a desktop mouse cannot swipe a
-          horizontal ScrollView, which left the last tabs unreachable. Built on
-          SelectPill (plain Pressable) — HeroUI Chip taps did not register here. */}
-      <View className="bg-surface flex-row flex-wrap gap-2 px-4 py-3">
-        {TABS.map((item) => (
-          <SelectPill
-            key={item.key}
-            size="sm"
-            label={item.label}
-            selected={tab === item.key}
-            onPress={() => selectTab(item.key)}
+          horizontal ScrollView, which left the last tabs unreachable. On web
+          SelectPill is a real DOM <button>, and the dropdown below is the
+          browser's own <select> — two independent ways to switch section, so a
+          single broken press path cannot lock the console again. */}
+      <View className="bg-surface gap-2 px-4 py-3" style={{ position: 'relative', zIndex: 30 }}>
+        <View className="flex-row items-center justify-between gap-3">
+          <NativeSelect
+            label="分頁"
+            value={tab}
+            options={TABS.map((item) => ({ key: item.key, label: item.label }))}
+            onChange={(key) => {
+              if (isTabKey(key)) selectTab(key);
+            }}
           />
-        ))}
+          {/* Build marker: tells us instantly whether the browser is running the
+              current bundle or a cached one. */}
+          <Typography type="body-xs" color="muted">
+            {CONSOLE_BUILD}
+          </Typography>
+        </View>
+        <View className="flex-row flex-wrap gap-2">
+          {TABS.map((item) => (
+            <SelectPill
+              key={item.key}
+              size="sm"
+              label={item.label}
+              selected={tab === item.key}
+              onPress={() => selectTab(item.key)}
+            />
+          ))}
+        </View>
       </View>
 
       <ScrollView contentContainerClassName="p-4 gap-3 pb-10">
