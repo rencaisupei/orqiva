@@ -94,8 +94,8 @@ export function EcpaySignupGuide({ showBackfillGuide = true }: { showBackfillGui
       </Button>
       <Typography type="body-xs" color="muted" className="leading-5">
         {Platform.OS === 'web'
-          ? 'vendor.ecpay.com.tw/User/LogOn_Step1 會在新分頁開啟，註冊完關掉分頁即可回到極貨網。'
-          : 'vendor.ecpay.com.tw/User/LogOn_Step1 會在 App 內瀏覽器開啟，完成後按左上角「關閉」就回到這一頁。'}
+          ? '綠界官方註冊頁會在新分頁開啟，註冊完關掉分頁即可回到極貨網。'
+          : '綠界官方註冊頁會在 App 內瀏覽器開啟，完成後按左上角「關閉」就回到這一頁。'}
       </Typography>
 
       {showBackfillGuide ? (
