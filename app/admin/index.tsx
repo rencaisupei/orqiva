@@ -577,20 +577,23 @@ export default function AdminScreen() {
   const userId = useUserId();
   const isAdmin = useIsAdminConsole();
   const { toast } = useToast();
-  // The console is web-only, so the open section lives in the URL. Tapping a
-  // tab updates both local state (instant feedback) and the route, so browser
-  // back/forward and shared links land on the same section.
   const params = useLocalSearchParams<{ tab?: string }>();
-  const urlTab: TabKey = isTabKey(params.tab) ? params.tab : 'overview';
-  const [tab, setTab] = useState<TabKey>(urlTab);
+  // The open section is plain local state. It used to be mirrored into the URL
+  // with `router.setParams`, but the router re-resolves `/admin` from the URL and
+  // drops the unknown `tab` param again, so the sync effect immediately snapped
+  // the selection back to 'overview' — a tap looked like it did nothing. A deep
+  // link like /admin?tab=users is still honoured, but only until the first tap.
+  const [tab, setTab] = useState<TabKey>(() => (isTabKey(params.tab) ? params.tab : 'overview'));
+  const touched = useRef(false);
 
   useEffect(() => {
-    setTab(urlTab);
-  }, [urlTab]);
+    if (touched.current) return;
+    if (isTabKey(params.tab)) setTab(params.tab);
+  }, [params.tab]);
 
   const selectTab = (key: TabKey) => {
+    touched.current = true;
     setTab(key);
-    router.setParams({ tab: key });
   };
 
   const overview = useAdminOverview(isAdmin && tab === 'overview');
@@ -707,6 +710,11 @@ export default function AdminScreen() {
       </View>
 
       <ScrollView contentContainerClassName="p-4 gap-3 pb-10">
+        {/* Names the open section: makes a tab switch visible even while its data loads. */}
+        <Typography type="h5" className="text-navy" style={{ fontWeight: '700' }}>
+          {TABS.find((item) => item.key === tab)?.label ?? '總覽'}
+        </Typography>
+
         {loading ? (
           <View className="py-10">
             <Spinner />

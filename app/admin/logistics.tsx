@@ -44,6 +44,10 @@ const ENV_OPTIONS = [
   { value: 'production', label: '正式環境 (Production)', hint: 'logistics.ecpay.com.tw' },
 ];
 
+function isLogisticsEnvironment(value: string): value is LogisticsEnvironment {
+  return value === 'stage' || value === 'production';
+}
+
 function SectionCard({
   title,
   subtitle,
@@ -245,7 +249,11 @@ export default function AdminLogisticsScreen() {
     });
   };
 
-  const verifyResult = verify.data ?? (settings?.last_verify_result as typeof verify.data);
+  const lastVerifyResult =
+    settings?.last_verify_result && 'ok' in settings.last_verify_result
+      ? settings.last_verify_result
+      : undefined;
+  const verifyResult = verify.data ?? lastVerifyResult;
   const callbackUrl = query.data?.callbackUrl ?? '';
 
   return (
@@ -276,7 +284,9 @@ export default function AdminLogisticsScreen() {
             label="環境"
             options={ENV_OPTIONS}
             value={environment}
-            onChange={(value) => patch({ environment: value as LogisticsEnvironment })}
+            onChange={(value) => {
+              if (isLogisticsEnvironment(value)) patch({ environment: value });
+            }}
           />
 
           {environment === 'stage' ? (
@@ -398,7 +408,10 @@ export default function AdminLogisticsScreen() {
           <Description>綠界申請的物流模式需為 C2C（店到店）才能使用這些子類型。</Description>
         </SectionCard>
 
-        <SectionCard title="寄件人資訊" subtitle="改由每位賣家自己填寫，平台後台不再統一設定。">
+        <SectionCard
+          title="寄件人與賣家綠界帳號"
+          subtitle="改由每位賣家自己填寫，平台後台不再統一設定。"
+        >
           <View className="bg-background gap-1 rounded-xl p-3">
             <Typography type="body-sm" className="text-navy" style={{ fontWeight: '600' }}>
               取自賣家本人的資料
@@ -413,6 +426,11 @@ export default function AdminLogisticsScreen() {
             </Typography>
             <Typography type="body-xs" color="muted">
               寄件人資料屬於個資，存放在 seller_shipping_profiles，只有賣家本人與管理員讀得到。
+            </Typography>
+            <Typography type="body-xs" color="muted">
+              目前有 {query.data?.sellerCredentialCount ?? 0}{' '}
+              位賣家填了自己的綠界特店金鑰，這些訂單會用賣家自己的帳號建單；其餘退回這裡設定的平台金鑰。金鑰存在
+              seller_ecpay_credentials，沒有任何 RLS 政策，只有物流函式讀得到。
             </Typography>
           </View>
         </SectionCard>

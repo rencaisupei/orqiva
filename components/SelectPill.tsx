@@ -27,9 +27,13 @@ export function SelectPill({
 }) {
   const padding = size === 'sm' ? 'px-3 py-1.5' : 'px-4 py-2';
   const textType = size === 'sm' ? 'body-xs' : 'body-sm';
-  // Web needs an explicit pointer cursor; native gets a slightly bigger touch target.
-  const cursor: ViewStyle | null =
-    Platform.OS === 'web' && !disabled ? { cursor: 'pointer' } : null;
+  // Plain object, never a `style={({ pressed }) => …}` callback: a function style
+  // stops composing once Uniwind merges `className` into the same prop, which is
+  // the one difference this component had from the sign-in switcher that works.
+  const style: ViewStyle = {
+    ...(Platform.OS === 'web' && !disabled ? { cursor: 'pointer' } : null),
+    ...(disabled ? { opacity: 0.45 } : null),
+  };
 
   return (
     <Pressable
@@ -38,7 +42,7 @@ export function SelectPill({
       disabled={disabled}
       hitSlop={6}
       onPress={onPress}
-      style={({ pressed }) => [cursor, { opacity: disabled ? 0.45 : pressed ? 0.7 : 1 }]}
+      style={style}
       className={`flex-row items-center justify-center rounded-full border ${padding} ${
         selected ? 'bg-navy border-navy' : 'bg-background border-border'
       } ${className ?? ''}`}

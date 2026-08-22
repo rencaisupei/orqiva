@@ -13,6 +13,17 @@ import type {
 } from '@/lib/types';
 
 /**
+ * 賣家自己的綠界特店金鑰。存進 seller_ecpay_credentials（沒有任何 RLS 政策，
+ * 只有 ecpay-logistics 這支 edge function 讀得到），前端只送不收。
+ * hashKey / hashIv 留空 = 沿用已儲存的金鑰；三欄全空 = 改用平台金鑰。
+ */
+export type SellerEcpayInput = {
+  merchantId: string;
+  hashKey: string;
+  hashIv: string;
+};
+
+/**
  * 賣家的寄件人資料（綠界 C2C 建單用）。
  * 存在獨立的 seller_shipping_profiles，RLS 只讓本人與管理員讀得到，
  * 因為 stores / profiles 是全站可讀的公開資料。
@@ -33,7 +44,12 @@ export function useSellerShippingProfile(userId: string | null) {
   });
 }
 
-async function saveShippingProfile(userId: string, senderName: string, senderCellPhone: string) {
+async function saveShippingProfile(
+  userId: string,
+  senderName: string,
+  senderCellPhone: string,
+  ecpay?: SellerEcpayInput,
+) {
   const { error } = await bilt.from('seller_shipping_profiles').upsert(
     {
       user_id: userId,
@@ -48,8 +64,21 @@ async function saveShippingProfile(userId: string, senderName: string, senderCel
   /*
    * 資料一存好就立刻對綠界物流 API 做一次狀態檢查（dry run），
    * 賣家不必自己按任何按鈕就會看到「已開通」或「審核中」。
-   * 檢查失敗不該讓儲存失敗，賣家中心會顯示「尚未檢查」並提供重新檢查。
+   *
+   * 有填自己的綠界特店金鑰時走 save_seller_credentials：它會先存進
+   * seller_ecpay_credentials（service key only），再用那組金鑰試打一次。
+   * 這一步的錯誤要往外丟，賣家才知道商店代號或金鑰格式不對；只有純狀態檢查
+   * 失敗才忽略，避免網路問題讓整筆儲存看起來失敗。
    */
+  if (ecpay) {
+    await callLogistics('save_seller_credentials', {
+      merchantId: ecpay.merchantId.trim(),
+      hashKey: ecpay.hashKey.trim(),
+      hashIv: ecpay.hashIv.trim(),
+    });
+    return;
+  }
+
   try {
     await callLogistics('seller_verify', {});
   } catch {
@@ -131,6 +160,8 @@ export function useUpdateStore() {
       logoUrl: string | null;
       senderName: string;
       senderCellPhone: string;
+      /** 賣家自己的綠界特店金鑰。undefined = 不動既有設定。 */
+      ecpay?: SellerEcpayInput;
     }) => {
       const { error } = await bilt
         .from('stores')
@@ -144,12 +175,13 @@ export function useUpdateStore() {
         .eq('id', input.storeId);
       if (error) throw new Error(error.message);
 
-      await saveShippingProfile(input.userId, input.senderName, input.senderCellPhone);
+      await saveShippingProfile(input.userId, input.senderName, input.senderCellPhone, input.ecpay);
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['my-store'] });
       void qc.invalidateQueries({ queryKey: ['seller-shipping-profile'] });
       void qc.invalidateQueries({ queryKey: ['seller-logistics-status'] });
+      void qc.invalidateQueries({ queryKey: ['seller-ecpay-settings'] });
       void qc.invalidateQueries({ queryKey: ['store'] });
     },
   });

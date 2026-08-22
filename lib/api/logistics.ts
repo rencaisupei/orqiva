@@ -20,8 +20,43 @@ export type SellerVerifyResult = {
   reason: string;
   message: string;
   senderReady: boolean;
+  /** true = 用賣家自己的綠界特店金鑰驗證，false = 退回平台金鑰。 */
+  hasOwnCredentials: boolean;
+  credentialSource: 'env' | 'ecpay_test' | 'seller' | null;
+  merchantId: string | null;
   checkedAt: string;
 };
+
+/** 賣家的寄件人 + 綠界特店設定。HashKey / HashIV 只回「有沒有設定」，不回內容。 */
+export type SellerEcpaySettings = {
+  sender: { name: string; cellPhone: string };
+  ecpay: {
+    merchantId: string;
+    hasHashKey: boolean;
+    hasHashIv: boolean;
+    updatedAt: string | null;
+  };
+  status: {
+    isActive: boolean;
+    verificationStatus: SellerVerificationStatus;
+    message: string | null;
+    lastCheckedAt: string | null;
+  };
+  platform: {
+    isEnabled: boolean;
+    environment: 'stage' | 'production';
+    apiHost: string;
+    fallbackReady: boolean;
+  };
+};
+
+export function useSellerEcpaySettings(userId: string | null) {
+  return useQuery({
+    enabled: !!userId,
+    queryKey: ['seller-ecpay-settings', userId],
+    queryFn: () => callLogistics<SellerEcpaySettings>('seller_settings', {}),
+  });
+}
 
 /**
  * 對綠界物流 API 做一次 dry-run，確認這位賣家能不能提供超商取貨付款，
@@ -36,6 +71,7 @@ export function useVerifySellerLogistics() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['seller-shipping-profile'] });
       void qc.invalidateQueries({ queryKey: ['seller-logistics-status'] });
+      void qc.invalidateQueries({ queryKey: ['seller-ecpay-settings'] });
     },
   });
 }
@@ -76,6 +112,8 @@ export type AdminLogisticsPayload = {
   testAccountMerchantId: string;
   /** 寄件人資料來源；固定為 seller_shipping_profiles（每個賣家自己填）。 */
   senderSource: string;
+  /** 有填自己綠界特店金鑰的賣家數（那些訂單會用賣家自己的帳號建單）。 */
+  sellerCredentialCount: number;
   credentials: {
     stage: { ready: boolean; merchantId: string | null; source: 'env' | 'ecpay_test' };
     production: { ready: boolean; merchantId: string | null; source: 'env' | 'ecpay_test' };
