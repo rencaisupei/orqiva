@@ -1,20 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
-import {
-  Button,
-  FieldError,
-  Input,
-  Label,
-  Separator,
-  Spinner,
-  Typography,
-  useToast,
-} from 'heroui-native';
+import { Button, Input, Label, Separator, Spinner, Typography, useToast } from 'heroui-native';
 import { router, useLocalSearchParams } from 'expo-router';
 
 import { AppImage } from '@/components/AppImage';
 import { CvsStorePicker } from '@/components/CvsStorePicker';
 import { EmptyState } from '@/components/EmptyState';
+import { FormError } from '@/components/FormError';
 import { SelectPill } from '@/components/SelectPill';
 import { SignInRequired } from '@/components/SignInRequired';
 import {
@@ -268,7 +260,7 @@ export default function CheckoutScreen() {
               }}
             />
             {showNameError ? (
-              <FieldError>{nameError}</FieldError>
+              <FormError message={nameError} className="mt-1.5" />
             ) : isCvs ? (
               <Typography type="body-xs" color="muted" className="mt-1">
                 超商取貨時需與證件相符，請填中文本名，不要填暱稱或英文。
@@ -286,7 +278,7 @@ export default function CheckoutScreen() {
               isInvalid={showPhoneError}
               onChangeText={onChangePhone}
             />
-            {showPhoneError ? <FieldError>{phoneError}</FieldError> : null}
+            {showPhoneError ? <FormError message={phoneError} className="mt-1.5" /> : null}
           </View>
           {mode === 'home' ? (
             <View>
@@ -355,7 +347,7 @@ export default function CheckoutScreen() {
           </Typography>
         </View>
 
-        {error ? <FieldError>{error}</FieldError> : null}
+        <FormError message={error} />
       </ScrollView>
 
       <View className="border-border bg-surface pb-safe-offset-3 gap-2 border-t px-4 py-3">

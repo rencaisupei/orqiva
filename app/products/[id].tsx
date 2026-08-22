@@ -2,7 +2,15 @@ import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
 import { Avatar, Button, Chip, Separator, Spinner, Typography, useToast } from 'heroui-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Flag, Heart, MapPin, MessageCircle, ShieldCheck, Truck } from 'lucide-react-native';
+import {
+  Flag,
+  Heart,
+  MapPin,
+  MessageCircle,
+  Share2,
+  ShieldCheck,
+  Truck,
+} from 'lucide-react-native';
 
 import { AppImage } from '@/components/AppImage';
 import { EmptyState } from '@/components/EmptyState';
@@ -23,7 +31,9 @@ import {
   formatDate,
   formatPrice,
 } from '@/lib/format';
+import { useRecentlyViewedStore } from '@/lib/recentlyViewed';
 import { useUserId } from '@/lib/session';
+import { shareProduct } from '@/lib/share';
 import { CVS_SELLER_INACTIVE_HINT, CVS_SHIPPING_METHOD } from '@/lib/types';
 
 export default function ProductDetailScreen() {
@@ -45,9 +55,12 @@ export default function ProductDetailScreen() {
   const [imageIndex, setImageIndex] = useState(0);
 
   const trackViewMutate = trackView.mutate;
+  const trackRecentlyViewed = useRecentlyViewedStore((s) => s.track);
   useEffect(() => {
-    if (id) trackViewMutate(id);
-  }, [id, trackViewMutate]);
+    if (!id) return;
+    trackViewMutate(id);
+    trackRecentlyViewed(id);
+  }, [id, trackViewMutate, trackRecentlyViewed]);
 
   // 賣家的超商取貨付款是否已開通（公開鏡像表，不含賣家個資）。
   const { data: sellerStatuses } = useSellerLogisticsStatuses([product?.seller_id]);
@@ -149,6 +162,22 @@ export default function ProductDetailScreen() {
     );
   };
 
+  /** OS share sheet, falling back to copying the link on desktop browsers. */
+  const onShare = () => {
+    void (async () => {
+      const outcome = await shareProduct({
+        id: product.id,
+        title: product.title,
+        price: product.price,
+      });
+      if (outcome === 'copied') {
+        toast.show({ variant: 'success', label: '商品連結已複製，貼上就能分享' });
+      } else if (outcome === 'failed') {
+        toast.show({ variant: 'danger', label: '分享失敗，請稍後再試' });
+      }
+    })();
+  };
+
   const onReport = () => {
     if (!requireSignIn() || !userId) return;
     createReport.mutate(
@@ -216,6 +245,19 @@ export default function ProductDetailScreen() {
                 省 {discount}%
               </Chip>
             ) : null}
+            <View className="flex-1" />
+            <Pressable
+              className="border-border flex-row items-center gap-1 rounded-full border px-3 py-1.5"
+              hitSlop={6}
+              onPress={onShare}
+              accessibilityRole="button"
+              accessibilityLabel="分享商品"
+            >
+              <Share2 size={14} color={BRAND.navy} />
+              <Typography type="body-xs" className="text-navy" style={{ fontWeight: '600' }}>
+                分享
+              </Typography>
+            </Pressable>
           </View>
 
           <Typography type="h5" className="text-navy leading-7">

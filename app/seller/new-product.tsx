@@ -3,7 +3,6 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'rea
 import {
   Button,
   Chip,
-  FieldError,
   Input,
   Label,
   Separator,
@@ -16,6 +15,7 @@ import { CheckCircle2, ImagePlus, Plus, ShieldAlert, Trash2, X } from 'lucide-re
 
 import { AppImage } from '@/components/AppImage';
 import { EmptyState } from '@/components/EmptyState';
+import { FormError } from '@/components/FormError';
 import { OptionSelect, type SelectOption } from '@/components/OptionSelect';
 import { SelectPill } from '@/components/SelectPill';
 import { SignInRequired } from '@/components/SignInRequired';
@@ -573,7 +573,7 @@ export default function NewProductScreen() {
             </>
           ) : null}
 
-          {error ? <FieldError>{error}</FieldError> : null}
+          <FormError message={error} />
         </View>
       </ScrollView>
 

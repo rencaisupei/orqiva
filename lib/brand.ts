@@ -11,6 +11,8 @@ export const BRAND = {
   white: '#FFFFFF',
   border: '#E3E8F0',
   muted: '#6B7A99',
+  /** Matches the `--danger` theme token (oklch(0.6 0.22 24)) for native color props. */
+  danger: '#E0392E',
 } as const;
 
 export const BRAND_COPY = {

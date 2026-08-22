@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FlatList, Pressable, ScrollView, View } from 'react-native';
+import { FlatList, Pressable, View } from 'react-native';
 import { Button, Chip, Spinner, Typography, useToast } from 'heroui-native';
 import { router } from 'expo-router';
 import { ClipboardList } from 'lucide-react-native';
@@ -7,7 +7,7 @@ import { ClipboardList } from 'lucide-react-native';
 import { AppImage } from '@/components/AppImage';
 import { EmptyState } from '@/components/EmptyState';
 import { LogisticsPanel } from '@/components/LogisticsPanel';
-import { SelectPill } from '@/components/SelectPill';
+import { SegmentedControl, type Segment } from '@/components/SegmentedControl';
 import { SellerTabBar } from '@/components/SellerTabBar';
 import { SignInRequired } from '@/components/SignInRequired';
 import { useSetOrderStatus } from '@/lib/api/commerce';
@@ -17,7 +17,9 @@ import { formatDateTime, formatPrice } from '@/lib/format';
 import { useUserId } from '@/lib/session';
 import { ORDER_STATUS_LABEL, type OrderStatus } from '@/lib/types';
 
-const FILTERS: { key: OrderStatus | 'all'; label: string }[] = [
+type StatusFilter = OrderStatus | 'all';
+
+const FILTERS: Segment<StatusFilter>[] = [
   { key: 'all', label: '全部' },
   { key: 'pending', label: '待付款' },
   { key: 'paid', label: '備貨中' },
@@ -29,7 +31,7 @@ const FILTERS: { key: OrderStatus | 'all'; label: string }[] = [
 export default function SellerOrdersScreen() {
   const userId = useUserId();
   const { toast } = useToast();
-  const [filter, setFilter] = useState<OrderStatus | 'all'>('all');
+  const [filter, setFilter] = useState<StatusFilter>('all');
   const { data: orders, isLoading } = useSellerOrders(userId);
   const setStatus = useSetOrderStatus();
 
@@ -51,20 +53,9 @@ export default function SellerOrdersScreen() {
 
   return (
     <View className="bg-background flex-1">
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} className="bg-surface">
-        <View className="flex-row gap-2 px-4 py-3">
-          {FILTERS.map((item) => (
-            <SelectPill
-              key={item.key}
-              size="sm"
-              tone="soft"
-              label={item.label}
-              selected={filter === item.key}
-              onPress={() => setFilter(item.key)}
-            />
-          ))}
-        </View>
-      </ScrollView>
+      <View className="bg-surface px-4 py-3">
+        <SegmentedControl items={FILTERS} value={filter} onChange={setFilter} size="sm" />
+      </View>
 
       {isLoading ? (
         <View className="flex-1 items-center justify-center">

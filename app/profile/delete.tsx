@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
-import { Button, Description, FieldError, Input, Label, Spinner, Typography } from 'heroui-native';
+import { Button, Description, Input, Label, Spinner, Typography } from 'heroui-native';
 import { router } from 'expo-router';
 import { TriangleAlert } from 'lucide-react-native';
 
+import { FormError } from '@/components/FormError';
 import { SignInRequired } from '@/components/SignInRequired';
 import { useAccountDeletionSummary, useDeleteAccount } from '@/lib/api/account';
 import { BRAND } from '@/lib/brand';
@@ -140,7 +141,7 @@ export default function DeleteAccountScreen() {
           </View>
         )}
 
-        {error ? <FieldError>{error}</FieldError> : null}
+        <FormError message={error} />
       </ScrollView>
 
       {blocked ? null : (

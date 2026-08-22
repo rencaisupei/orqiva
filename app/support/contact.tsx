@@ -3,7 +3,6 @@ import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import {
   Button,
   Chip,
-  FieldError,
   Input,
   Label,
   Separator,
@@ -14,6 +13,7 @@ import {
 import { router } from 'expo-router';
 import { LifeBuoy, ShieldCheck } from 'lucide-react-native';
 
+import { FormError } from '@/components/FormError';
 import { OptionSelect, type SelectOption } from '@/components/OptionSelect';
 import { useCreateSupportTicket, useMySupportTickets } from '@/lib/api/support';
 import { BRAND, BRAND_COPY } from '@/lib/brand';
@@ -164,7 +164,7 @@ export default function ContactScreen() {
             />
           </View>
 
-          {error ? <FieldError>{error}</FieldError> : null}
+          <FormError message={error} />
 
           <Button isDisabled={createTicket.isPending} onPress={submit}>
             <Button.Label>{createTicket.isPending ? '送出中…' : '送出問題'}</Button.Label>

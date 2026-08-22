@@ -90,6 +90,69 @@ export function useProducts(filters: ProductFilters) {
   });
 }
 
+/**
+ * Discounted products for the home 限時特賣 rail.
+ *
+ * PostgREST cannot compare two columns, so the query only narrows to rows that
+ * carry an `original_price` and the "is it actually cheaper" test plus the
+ * biggest-saving ordering happen here.
+ */
+export function useDealProducts(limit = 10) {
+  return useQuery({
+    queryKey: ['products', 'deals', limit],
+    queryFn: async (): Promise<ProductListItem[]> => {
+      const { data, error } = await bilt
+        .from('products')
+        .select(LIST_SELECT)
+        .eq('status', 'active')
+        .not('original_price', 'is', null)
+        .gt('stock', 0)
+        .order('created_at', { ascending: false })
+        .limit(60)
+        .returns<ProductListItem[]>();
+      if (error) throw new Error(error.message);
+
+      return (data ?? [])
+        .filter((product) => (product.original_price ?? 0) > product.price)
+        .map((product) => ({
+          product,
+          saving: (product.original_price ?? 0) - product.price,
+        }))
+        .sort((a, b) => b.saving - a.saving)
+        .slice(0, limit)
+        .map((entry) => entry.product);
+    },
+    staleTime: 60_000,
+  });
+}
+
+/**
+ * Products for an explicit list of ids, returned in the order the ids were
+ * given — used by the locally stored 最近瀏覽 list.
+ */
+export function useProductsByIds(ids: string[]) {
+  const key = ids.join(',');
+  return useQuery({
+    enabled: ids.length > 0,
+    queryKey: ['products', 'by-ids', key],
+    queryFn: async (): Promise<ProductListItem[]> => {
+      const { data, error } = await bilt
+        .from('products')
+        .select(LIST_SELECT)
+        .eq('status', 'active')
+        .in('id', ids)
+        .returns<ProductListItem[]>();
+      if (error) throw new Error(error.message);
+
+      const byId = new Map((data ?? []).map((product) => [product.id, product]));
+      return ids
+        .map((id) => byId.get(id))
+        .filter((product): product is ProductListItem => !!product);
+    },
+    staleTime: 30_000,
+  });
+}
+
 export function useProduct(id: string | undefined) {
   return useQuery({
     enabled: !!id,

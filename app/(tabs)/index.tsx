@@ -8,13 +8,15 @@ import { CategoryIcon } from '@/components/CategoryIcon';
 import { HomeQuickLinks } from '@/components/HomeQuickLinks';
 import { JihuoLogo, JihuoMark } from '@/components/brand/JihuoLogo';
 import { ProductCard } from '@/components/ProductCard';
+import { ProductRail } from '@/components/ProductRail';
 import { LinearGradient } from '@/components/ui/primitives/LinearGradient';
 import { useFavoriteToggle } from '@/hooks/useFavoriteToggle';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
-import { useCategories, useProducts } from '@/lib/api/catalog';
+import { useCategories, useDealProducts, useProducts, useProductsByIds } from '@/lib/api/catalog';
 import { useCartCount } from '@/lib/api/commerce';
 import { useUnreadNotificationCount } from '@/lib/api/social';
 import { BRAND, BRAND_COPY } from '@/lib/brand';
+import { useRecentlyViewedStore } from '@/lib/recentlyViewed';
 import { useUserId } from '@/lib/session';
 
 function Badge({ count }: { count: number }) {
@@ -28,23 +30,35 @@ function Badge({ count }: { count: number }) {
   );
 }
 
-function SectionHeader({ title, onMore }: { title: string; onMore?: () => void }) {
+function SectionHeader({
+  title,
+  subtitle,
+  actionLabel = '查看全部',
+  onAction,
+}: {
+  title: string;
+  subtitle?: string;
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
   return (
     <View className="mb-3 flex-row items-center justify-between gap-3">
-      <Typography
-        type="h6"
-        numberOfLines={1}
-        className="text-navy flex-1"
-        style={{ fontWeight: '700' }}
-      >
-        {title}
-      </Typography>
-      {onMore ? (
-        <Pressable className="shrink-0 flex-row items-center" onPress={onMore}>
-          <Typography type="body-sm" className="text-brand-blue">
-            查看全部
+      <View className="flex-1">
+        <Typography type="h6" numberOfLines={1} className="text-navy" style={{ fontWeight: '700' }}>
+          {title}
+        </Typography>
+        {subtitle ? (
+          <Typography type="body-xs" color="muted" numberOfLines={1}>
+            {subtitle}
           </Typography>
-          <ChevronRight size={14} color={BRAND.blue} />
+        ) : null}
+      </View>
+      {onAction ? (
+        <Pressable className="shrink-0 flex-row items-center" hitSlop={6} onPress={onAction}>
+          <Typography type="body-sm" className="text-brand-blue">
+            {actionLabel}
+          </Typography>
+          {actionLabel === '查看全部' ? <ChevronRight size={14} color={BRAND.blue} /> : null}
         </Pressable>
       ) : null}
     </View>
@@ -57,6 +71,12 @@ export default function HomeScreen() {
   const { data: categories } = useCategories();
   const { data: popular } = useProducts({ sort: 'popular', limit: 4 });
   const { data: newest } = useProducts({ sort: 'newest', limit: 6 });
+  const { data: deals } = useDealProducts(10);
+  const { data: topRated } = useProducts({ sort: 'rating', minRating: 4, limit: 10 });
+  const { data: budget } = useProducts({ sort: 'price_asc', limit: 10 });
+  const recentIds = useRecentlyViewedStore((s) => s.ids);
+  const clearRecentlyViewed = useRecentlyViewedStore((s) => s.clear);
+  const { data: recentlyViewed } = useProductsByIds(recentIds.slice(0, 12));
   const { data: cartCount } = useCartCount(userId);
   const { data: unread } = useUnreadNotificationCount(userId);
   const { isFavorite, onToggleFavorite } = useFavoriteToggle();
@@ -249,10 +269,27 @@ export default function HomeScreen() {
           </View>
         </View>
 
+        {(deals ?? []).length > 0 ? (
+          <View className="mt-3">
+            <View className="px-4">
+              <SectionHeader
+                title="限時特賣"
+                subtitle="賣家自訂原價的降價商品，省最多的排前面"
+                onAction={() => router.push({ pathname: '/products', params: { sort: 'newest' } })}
+              />
+            </View>
+            <ProductRail
+              products={deals ?? []}
+              isFavorite={isFavorite}
+              onToggleFavorite={onToggleFavorite}
+            />
+          </View>
+        ) : null}
+
         <View className="mt-3 px-4">
           <SectionHeader
             title="熱門推薦"
-            onMore={() => router.push({ pathname: '/products', params: { sort: 'popular' } })}
+            onAction={() => router.push({ pathname: '/products', params: { sort: 'popular' } })}
           />
           <View className="flex-row flex-wrap justify-between">
             {(popular ?? []).map((product) => (
@@ -267,10 +304,45 @@ export default function HomeScreen() {
           </View>
         </View>
 
+        {(recentlyViewed ?? []).length > 0 ? (
+          <View className="mt-1">
+            <View className="px-4">
+              <SectionHeader
+                title="最近瀏覽"
+                subtitle="只保存在這台裝置上"
+                actionLabel="清除紀錄"
+                onAction={clearRecentlyViewed}
+              />
+            </View>
+            <ProductRail
+              products={recentlyViewed ?? []}
+              isFavorite={isFavorite}
+              onToggleFavorite={onToggleFavorite}
+            />
+          </View>
+        ) : null}
+
+        {(topRated ?? []).length > 0 ? (
+          <View className="mt-2">
+            <View className="px-4">
+              <SectionHeader
+                title="好評推薦"
+                subtitle="買家評價 4 星以上"
+                onAction={() => router.push({ pathname: '/products', params: { sort: 'rating' } })}
+              />
+            </View>
+            <ProductRail
+              products={topRated ?? []}
+              isFavorite={isFavorite}
+              onToggleFavorite={onToggleFavorite}
+            />
+          </View>
+        ) : null}
+
         <View className="mt-2 px-4">
           <SectionHeader
             title="最新上架"
-            onMore={() => router.push({ pathname: '/products', params: { sort: 'newest' } })}
+            onAction={() => router.push({ pathname: '/products', params: { sort: 'newest' } })}
           />
           <View className="flex-row flex-wrap justify-between">
             {(newest ?? []).map((product) => (
@@ -284,6 +356,25 @@ export default function HomeScreen() {
             ))}
           </View>
         </View>
+
+        {(budget ?? []).length > 0 ? (
+          <View className="mt-1">
+            <View className="px-4">
+              <SectionHeader
+                title="小資精選"
+                subtitle="價格由低到高，省錢也能挑好物"
+                onAction={() =>
+                  router.push({ pathname: '/products', params: { sort: 'price_asc' } })
+                }
+              />
+            </View>
+            <ProductRail
+              products={budget ?? []}
+              isFavorite={isFavorite}
+              onToggleFavorite={onToggleFavorite}
+            />
+          </View>
+        ) : null}
 
         <View className="mt-1 px-4">
           <Pressable

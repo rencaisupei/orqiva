@@ -3,7 +3,6 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'rea
 import {
   Button,
   Description,
-  FieldError,
   Input,
   Label,
   Separator,
@@ -17,6 +16,7 @@ import * as Clipboard from 'expo-clipboard';
 import { CheckCircle2, Copy, ShieldAlert, Truck, XCircle } from 'lucide-react-native';
 
 import { EmptyState } from '@/components/EmptyState';
+import { FormError } from '@/components/FormError';
 import { OptionSelect } from '@/components/OptionSelect';
 import { SelectPill } from '@/components/SelectPill';
 import { SignInRequired } from '@/components/SignInRequired';
@@ -477,7 +477,7 @@ export default function AdminLogisticsScreen() {
       </ScrollView>
 
       <View className="border-border bg-surface pb-safe-offset-3 gap-2 border-t px-4 py-3">
-        {error ? <FieldError>{error}</FieldError> : null}
+        <FormError message={error} />
         {!error && isDirty ? (
           <Typography type="body-xs" className="text-brand-orange">
             有未儲存的變更，請按下方按鈕儲存。

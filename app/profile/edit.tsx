@@ -1,17 +1,9 @@
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
-import {
-  Avatar,
-  Button,
-  FieldError,
-  Input,
-  Label,
-  TextArea,
-  Typography,
-  useToast,
-} from 'heroui-native';
+import { Avatar, Button, Input, Label, TextArea, Typography, useToast } from 'heroui-native';
 import { Camera } from 'lucide-react-native';
 
+import { FormError } from '@/components/FormError';
 import { SignInRequired } from '@/components/SignInRequired';
 import { useUpdateProfile } from '@/lib/api/social';
 import { pickImages, uploadImage } from '@/lib/api/upload';
@@ -122,7 +114,7 @@ export default function EditProfileScreen() {
             />
           </View>
 
-          {error ? <FieldError>{error}</FieldError> : null}
+          <FormError message={error} />
 
           <Button isDisabled={updateProfile.isPending} onPress={save}>
             <Button.Label>{updateProfile.isPending ? '儲存中…' : '儲存'}</Button.Label>

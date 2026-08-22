@@ -4,7 +4,6 @@ import {
   Avatar,
   Button,
   Description,
-  FieldError,
   Input,
   Label,
   Separator,
@@ -18,6 +17,7 @@ import { Camera, KeyRound, Truck } from 'lucide-react-native';
 
 import { EcpaySignupGuide } from '@/components/EcpaySignupGuide';
 import { EmptyState } from '@/components/EmptyState';
+import { FormError } from '@/components/FormError';
 import { SelectPill } from '@/components/SelectPill';
 import { SellerLogisticsStatusCard } from '@/components/SellerLogisticsStatusCard';
 import { SignInRequired } from '@/components/SignInRequired';
@@ -315,7 +315,7 @@ export default function StoreSettingsScreen() {
         </View>
 
         <View className="bg-surface gap-3 rounded-2xl p-4">
-          {error ? <FieldError>{error}</FieldError> : null}
+          <FormError message={error} />
           <Button isDisabled={updateStore.isPending} onPress={save}>
             <Button.Label>{updateStore.isPending ? '儲存並驗證中…' : '儲存並驗證'}</Button.Label>
           </Button>

@@ -44,6 +44,43 @@ function invalidateCart(qc: ReturnType<typeof useQueryClient>) {
   void qc.invalidateQueries({ queryKey: ['cart-count'] });
 }
 
+/** Adds one line to the cart, merging with an existing row for the same product. */
+async function upsertCartItem(input: {
+  userId: string;
+  productId: string;
+  quantity: number;
+  shippingMethod: string;
+}) {
+  const { data: existing } = await bilt
+    .from('cart_items')
+    .select('id, quantity')
+    .eq('user_id', input.userId)
+    .eq('product_id', input.productId)
+    .returns<{ id: string; quantity: number }[]>()
+    .maybeSingle();
+
+  if (existing) {
+    const { error } = await bilt
+      .from('cart_items')
+      .update({
+        quantity: existing.quantity + input.quantity,
+        shipping_method: input.shippingMethod,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', existing.id);
+    if (error) throw new Error(error.message);
+    return;
+  }
+
+  const { error } = await bilt.from('cart_items').insert({
+    user_id: input.userId,
+    product_id: input.productId,
+    quantity: input.quantity,
+    shipping_method: input.shippingMethod,
+  });
+  if (error) throw new Error(error.message);
+}
+
 export function useAddToCart() {
   const qc = useQueryClient();
   return useMutation({
@@ -53,34 +90,58 @@ export function useAddToCart() {
       quantity: number;
       shippingMethod: string;
     }) => {
-      const { data: existing } = await bilt
-        .from('cart_items')
-        .select('id, quantity')
-        .eq('user_id', input.userId)
-        .eq('product_id', input.productId)
-        .maybeSingle();
+      await upsertCartItem(input);
+    },
+    onSuccess: () => invalidateCart(qc),
+  });
+}
 
-      if (existing) {
-        const row = existing;
-        const { error } = await bilt
-          .from('cart_items')
-          .update({
-            quantity: row.quantity + input.quantity,
-            shipping_method: input.shippingMethod,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', row.id);
-        if (error) throw new Error(error.message);
-        return;
+export type ReorderResult = { added: number; skipped: number };
+
+/**
+ * "再買一次": puts every still-buyable line of a past order back in the cart.
+ * Sold-out / delisted lines are counted in `skipped` so the screen can say what
+ * was left behind instead of silently dropping it.
+ */
+export function useReorder() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { userId: string; order: Order }): Promise<ReorderResult> => {
+      const lines = input.order.order_items.filter((line) => !!line.product_id);
+      if (lines.length === 0) throw new Error('這筆訂單的商品都已下架，無法再次購買。');
+
+      const ids = [...new Set(lines.map((line) => line.product_id!))];
+      const { data, error } = await bilt
+        .from('products')
+        .select('id, stock, status, shipping_methods')
+        .in('id', ids)
+        .returns<{ id: string; stock: number; status: string; shipping_methods: string[] }[]>();
+      if (error) throw new Error(error.message);
+
+      const byId = new Map((data ?? []).map((product) => [product.id, product]));
+      let added = 0;
+      let skipped = 0;
+
+      for (const line of lines) {
+        const product = byId.get(line.product_id!);
+        if (!product || product.status !== 'active' || product.stock <= 0) {
+          skipped += 1;
+          continue;
+        }
+        const shippingMethod = product.shipping_methods.includes(input.order.shipping_method)
+          ? input.order.shipping_method
+          : (product.shipping_methods[0] ?? '宅配');
+        await upsertCartItem({
+          userId: input.userId,
+          productId: product.id,
+          quantity: Math.min(Math.max(1, line.quantity), product.stock),
+          shippingMethod,
+        });
+        added += 1;
       }
 
-      const { error } = await bilt.from('cart_items').insert({
-        user_id: input.userId,
-        product_id: input.productId,
-        quantity: input.quantity,
-        shipping_method: input.shippingMethod,
-      });
-      if (error) throw new Error(error.message);
+      if (added === 0) throw new Error('這些商品目前都已下架或缺貨，無法再次購買。');
+      return { added, skipped };
     },
     onSuccess: () => invalidateCart(qc),
   });

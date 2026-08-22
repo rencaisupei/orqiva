@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
-import { Button, FieldError, Input, Label, Spinner, TextArea, useToast } from 'heroui-native';
+import { Button, Input, Label, Spinner, TextArea, useToast } from 'heroui-native';
 import { router, useLocalSearchParams } from 'expo-router';
 
 import { AppImage } from '@/components/AppImage';
 import { EmptyState } from '@/components/EmptyState';
+import { FormError } from '@/components/FormError';
 import { OptionSelect, type SelectOption } from '@/components/OptionSelect';
 import { SelectPill } from '@/components/SelectPill';
 import { SignInRequired } from '@/components/SignInRequired';
@@ -234,7 +235,7 @@ export default function EditProductScreen() {
             </View>
           </View>
 
-          {error ? <FieldError>{error}</FieldError> : null}
+          <FormError message={error} />
 
           <Button isDisabled={updateProduct.isPending} onPress={save}>
             <Button.Label>{updateProduct.isPending ? '儲存中…' : '儲存變更'}</Button.Label>

@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
-import { Button, FieldError, Label, TextArea, Typography, useToast } from 'heroui-native';
+import { Button, Label, TextArea, Typography, useToast } from 'heroui-native';
 import { useLocalSearchParams } from 'expo-router';
 import { Star } from 'lucide-react-native';
 
 import { AppImage } from '@/components/AppImage';
+import { FormError } from '@/components/FormError';
 import { SignInRequired } from '@/components/SignInRequired';
 import { useCreateReview, useProduct } from '@/lib/api/catalog';
 import { BRAND } from '@/lib/brand';
@@ -90,7 +91,7 @@ export default function ReviewScreen() {
             numberOfLines={5}
           />
 
-          {error ? <FieldError>{error}</FieldError> : null}
+          <FormError message={error} />
 
           <Button isDisabled={createReview.isPending} onPress={submit}>
             <Button.Label>{createReview.isPending ? '送出中…' : '送出評價'}</Button.Label>

@@ -6,7 +6,7 @@ import { MapPin, Package, Truck } from 'lucide-react-native';
 import { AppImage } from '@/components/AppImage';
 import { EmptyState } from '@/components/EmptyState';
 import { LogisticsPanel } from '@/components/LogisticsPanel';
-import { useOrder, useSetOrderStatus } from '@/lib/api/commerce';
+import { useOrder, useReorder, useSetOrderStatus } from '@/lib/api/commerce';
 import { BRAND } from '@/lib/brand';
 import { deliveryEstimate, formatDateTime, formatPrice } from '@/lib/format';
 import { useUserId } from '@/lib/session';
@@ -20,6 +20,7 @@ export default function OrderDetailScreen() {
   const { toast } = useToast();
   const { data: order, isLoading } = useOrder(id);
   const setStatus = useSetOrderStatus();
+  const reorder = useReorder();
 
   if (isLoading) {
     return (
@@ -45,6 +46,30 @@ export default function OrderDetailScreen() {
       { orderId: order.id, status },
       {
         onSuccess: () => toast.show({ variant: 'success', label }),
+        onError: (error: Error) => toast.show({ variant: 'danger', label: error.message }),
+      },
+    );
+  };
+
+  /** Puts every still-buyable line back in the cart and goes there. */
+  const buyAgain = () => {
+    if (!userId) {
+      router.push('/auth/sign-in');
+      return;
+    }
+    reorder.mutate(
+      { userId, order },
+      {
+        onSuccess: (result) => {
+          toast.show({
+            variant: 'success',
+            label:
+              result.skipped > 0
+                ? `已加入 ${result.added} 項商品，${result.skipped} 項已下架或缺貨`
+                : `已把 ${result.added} 項商品加入購物車`,
+          });
+          router.push('/cart');
+        },
         onError: (error: Error) => toast.show({ variant: 'danger', label: error.message }),
       },
     );
@@ -228,9 +253,16 @@ export default function OrderDetailScreen() {
             <Button.Label>標記出貨</Button.Label>
           </Button>
         ) : null}
+        {isBuyer && (order.status === 'completed' || order.status === 'cancelled') ? (
+          <Button className="flex-1" isDisabled={reorder.isPending} onPress={buyAgain}>
+            <Button.Label numberOfLines={1}>
+              {reorder.isPending ? '加入中…' : '再買一次'}
+            </Button.Label>
+          </Button>
+        ) : null}
         {order.status === 'completed' || order.status === 'cancelled' ? (
           <Button variant="secondary" className="flex-1" onPress={() => router.push('/products')}>
-            <Button.Label>繼續探索</Button.Label>
+            <Button.Label numberOfLines={1}>繼續探索</Button.Label>
           </Button>
         ) : null}
       </View>

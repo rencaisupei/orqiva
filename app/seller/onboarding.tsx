@@ -4,7 +4,6 @@ import {
   Avatar,
   Button,
   Description,
-  FieldError,
   Input,
   Label,
   Separator,
@@ -16,6 +15,7 @@ import { router } from 'expo-router';
 import { Camera, ShieldCheck, Sparkles, TrendingUp, Truck } from 'lucide-react-native';
 
 import { EcpaySignupGuide } from '@/components/EcpaySignupGuide';
+import { FormError } from '@/components/FormError';
 import { SelectPill } from '@/components/SelectPill';
 import { SignInRequired } from '@/components/SignInRequired';
 import { useCreateStore, useMyStoreQuery } from '@/lib/api/seller';
@@ -221,7 +221,7 @@ export default function SellerOnboardingScreen() {
             <Description>只允許數字、10 碼、09 開頭。</Description>
           </View>
 
-          {error ? <FieldError>{error}</FieldError> : null}
+          <FormError message={error} />
 
           <Button isDisabled={createStore.isPending} onPress={submit}>
             <Button.Label>{createStore.isPending ? '建立中…' : '建立店舖'}</Button.Label>

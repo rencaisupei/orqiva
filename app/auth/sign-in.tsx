@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
-import { Button, Description, FieldError, Input, InputOTP, Label, Typography } from 'heroui-native';
+import { Button, Description, Input, InputOTP, Label, Typography } from 'heroui-native';
 import { router } from 'expo-router';
 import { Eye, EyeOff } from 'lucide-react-native';
 
+import { FormError } from '@/components/FormError';
 import { JihuoArtwork } from '@/components/brand/JihuoLogo';
 import { bilt } from '@/lib/backend';
 import { BRAND } from '@/lib/brand';
@@ -119,7 +120,13 @@ export default function SignInScreen() {
         setError('這組帳號尚未完成 Email 驗證，請點下方「重寄驗證碼」。');
         return;
       }
-      setError('Email 或密碼不正確');
+      if (/too many|rate limit/i.test(message)) {
+        setError('嘗試次數過多，請稍等幾分鐘後再試一次。');
+        return;
+      }
+      setError(
+        '密碼錯誤，或這個 Email 尚未註冊。請確認後再試一次；忘記密碼可點下方「忘記密碼」重設。',
+      );
       return;
     }
 
@@ -313,7 +320,7 @@ export default function SignInScreen() {
                 autoComplete="current-password"
               />
 
-              {error ? <FieldError>{error}</FieldError> : null}
+              <FormError message={error} />
 
               <Button isDisabled={busy} onPress={() => void signIn()}>
                 <Button.Label>{busy ? '登入中…' : '登入'}</Button.Label>
@@ -377,7 +384,7 @@ export default function SignInScreen() {
                 autoComplete="new-password"
               />
 
-              {error ? <FieldError>{error}</FieldError> : null}
+              <FormError message={error} />
 
               <Button isDisabled={busy} onPress={() => void signUp()}>
                 <Button.Label>{busy ? '建立帳號中…' : '建立帳號'}</Button.Label>
@@ -448,7 +455,7 @@ export default function SignInScreen() {
                 />
               </View>
 
-              {error ? <FieldError>{error}</FieldError> : null}
+              <FormError message={error} />
 
               <Button isDisabled={busy} onPress={() => void sendResetCode()}>
                 <Button.Label>{busy ? '寄送中…' : '寄送驗證碼'}</Button.Label>
@@ -493,7 +500,7 @@ export default function SignInScreen() {
                 </InputOTP>
               </View>
 
-              {error ? <FieldError>{error}</FieldError> : null}
+              <FormError message={error} />
 
               <Button
                 isDisabled={busy || code.length < 6}
@@ -548,7 +555,7 @@ export default function SignInScreen() {
                 autoComplete="new-password"
               />
 
-              {error ? <FieldError>{error}</FieldError> : null}
+              <FormError message={error} />
 
               <Button isDisabled={busy} onPress={() => void applyNewPassword()}>
                 <Button.Label>{busy ? '更新中…' : '更新密碼並登入'}</Button.Label>

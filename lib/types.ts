@@ -671,14 +671,34 @@ export type LogisticsEvent = {
   created_at: string;
 };
 
+/*
+ * All 22 Taiwanese cities/counties, ordered north → south → east → outlying
+ * islands. Written with 台 (not 臺) so the values keep matching the rows that
+ * already exist in `products.location` / `stores.location`.
+ */
 export const LOCATIONS = [
+  '基隆市',
   '台北市',
   '新北市',
   '桃園市',
+  '新竹市',
+  '新竹縣',
+  '苗栗縣',
   '台中市',
+  '彰化縣',
+  '南投縣',
+  '雲林縣',
+  '嘉義市',
+  '嘉義縣',
   '台南市',
   '高雄市',
-  '新竹市',
+  '屏東縣',
+  '宜蘭縣',
+  '花蓮縣',
+  '台東縣',
+  '澎湖縣',
+  '金門縣',
+  '連江縣',
   '其他',
 ] as const;
 
