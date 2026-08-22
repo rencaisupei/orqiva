@@ -27,8 +27,12 @@ import {
 import { useLogisticsConfig } from '@/lib/api/logistics';
 import { formatPrice } from '@/lib/format';
 import { useSessionStore, useUserId } from '@/lib/session';
+import { validateReceiverCellPhone, validateReceiverName } from '@/lib/types';
 
 type DeliveryMode = 'home' | 'cvs';
+
+const MIN_CVS_AMOUNT = 1;
+const MAX_CVS_AMOUNT = 20000;
 
 export default function CheckoutScreen() {
   const { productId } = useLocalSearchParams<{ productId?: string }>();
@@ -48,6 +52,8 @@ export default function CheckoutScreen() {
   const [mode, setMode] = useState<DeliveryMode>('home');
   const [pickup, setPickup] = useState<CvsPickup | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [nameTouched, setNameTouched] = useState(false);
+  const [phoneTouched, setPhoneTouched] = useState(false);
 
   const cvsAvailable = !!logistics?.is_enabled && (logistics?.enabled_sub_types.length ?? 0) > 0;
 
@@ -90,25 +96,49 @@ export default function CheckoutScreen() {
     );
   }
 
+  const isCvs = mode === 'cvs';
+
+  /*
+   * 超商取貨的收件人姓名／手機由超商系統核對，格式錯了包裹會被退回，
+   * 所以規則比宅配嚴格：姓名限 2~5 個中文本名、手機限 09 開頭 10 碼。
+   */
+  const nameError = isCvs ? validateReceiverName(name) : name.trim() ? null : '請填寫收件人姓名';
+  const phoneError = isCvs
+    ? validateReceiverCellPhone(phone)
+    : phone.trim()
+      ? null
+      : '請填寫聯絡電話';
+  const showNameError = !!nameError && (nameTouched || name.length > 0);
+  const showPhoneError = !!phoneError && (phoneTouched || phone.length > 0);
+
+  const storeSelected = !!pickup?.storeId;
+  const amountError =
+    isCvs && (total < MIN_CVS_AMOUNT || total > MAX_CVS_AMOUNT)
+      ? '綠界超商取貨付款金額限制為 1 ~ 20,000 元，請調整購物車'
+      : null;
+  const addressError = !isCvs && !address.trim() ? '請填寫收件地址' : null;
+
+  const canSubmit =
+    !nameError && !phoneError && !amountError && (isCvs ? storeSelected : !addressError);
+
+  const blockReason = (() => {
+    if (canSubmit) return null;
+    if (amountError) return amountError;
+    if (nameError || phoneError) return '請先填好收件人姓名與手機，才能送出訂單。';
+    if (isCvs && !storeSelected) return '請先選擇超商取貨門市。';
+    return addressError;
+  })();
+
+  const onChangePhone = (value: string) => {
+    setPhone(isCvs ? value.replace(/\D/g, '').slice(0, 10) : value);
+    setPhoneTouched(true);
+  };
+
   const submit = () => {
-    if (!name.trim() || !phone.trim()) {
-      setError('請完整填寫收件人與電話');
-      return;
-    }
-    if (mode === 'home' && !address.trim()) {
-      setError('請填寫收件地址');
-      return;
-    }
-    if (mode === 'cvs' && !pickup) {
-      setError('請先選擇超商取貨門市');
-      return;
-    }
-    if (mode === 'cvs' && !/^09\d{8}$/.test(phone.trim())) {
-      setError('超商取貨的收件人手機需為 09 開頭的 10 碼數字');
-      return;
-    }
-    if (mode === 'cvs' && (total < 1 || total > 20000)) {
-      setError('綠界超商取貨付款金額限制為 1 ~ 20,000 元，請調整購物車');
+    setNameTouched(true);
+    setPhoneTouched(true);
+    if (!canSubmit) {
+      setError(blockReason);
       return;
     }
     setError(null);
@@ -166,6 +196,9 @@ export default function CheckoutScreen() {
                   onPress={() => {
                     setMode(option.key);
                     setError(null);
+                    // 切到超商取貨時，先把電話裡的分隔符號去掉，避免看起來已填卻不符格式。
+                    if (option.key === 'cvs')
+                      setPhone((prev) => prev.replace(/\D/g, '').slice(0, 10));
                   }}
                 >
                   {option.label}
@@ -194,21 +227,41 @@ export default function CheckoutScreen() {
             收件資訊
           </Typography>
           <View>
-            <Label>收件人</Label>
-            <Input placeholder="姓名" value={name} onChangeText={setName} />
+            <Label isRequired>收件人{isCvs ? '姓名（中文本名）' : ''}</Label>
+            <Input
+              placeholder={isCvs ? '2~5 個中文字，例如：王小明' : '姓名'}
+              value={name}
+              isInvalid={showNameError}
+              maxLength={isCvs ? 5 : undefined}
+              onChangeText={(value) => {
+                setName(value);
+                setNameTouched(true);
+              }}
+            />
+            {showNameError ? (
+              <FieldError>{nameError}</FieldError>
+            ) : isCvs ? (
+              <Typography type="body-xs" color="muted" className="mt-1">
+                超商取貨時需與證件相符，請填中文本名，不要填暱稱或英文。
+              </Typography>
+            ) : null}
           </View>
           <View>
-            <Label>聯絡電話</Label>
+            <Label isRequired>{isCvs ? '收件人手機' : '聯絡電話'}</Label>
             <Input
-              placeholder="09xxxxxxxx"
+              placeholder="0912345678"
               keyboardType="phone-pad"
+              inputMode={isCvs ? 'numeric' : 'tel'}
+              maxLength={isCvs ? 10 : undefined}
               value={phone}
-              onChangeText={setPhone}
+              isInvalid={showPhoneError}
+              onChangeText={onChangePhone}
             />
+            {showPhoneError ? <FieldError>{phoneError}</FieldError> : null}
           </View>
           {mode === 'home' ? (
             <View>
-              <Label>收件地址</Label>
+              <Label isRequired>收件地址</Label>
               <Input placeholder="縣市 / 區 / 路名門牌" value={address} onChangeText={setAddress} />
             </View>
           ) : null}
@@ -276,8 +329,13 @@ export default function CheckoutScreen() {
         {error ? <FieldError>{error}</FieldError> : null}
       </ScrollView>
 
-      <View className="border-border bg-surface pb-safe-offset-3 border-t px-4 py-3">
-        <Button isDisabled={placeOrder.isPending} onPress={submit}>
+      <View className="border-border bg-surface pb-safe-offset-3 gap-2 border-t px-4 py-3">
+        {blockReason && !error ? (
+          <Typography type="body-xs" color="muted" className="text-center">
+            {blockReason}
+          </Typography>
+        ) : null}
+        <Button isDisabled={placeOrder.isPending || !canSubmit} onPress={submit}>
           <Button.Label>
             {placeOrder.isPending ? '建立訂單中…' : `送出訂單 ${formatPrice(total)}`}
           </Button.Label>

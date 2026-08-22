@@ -499,6 +499,26 @@ export function validateSenderCellPhone(value: string): string | null {
   return null;
 }
 
+/**
+ * 綠界超商取貨的收件人姓名只接受中文本名（到店取貨要核對證件），
+ * 英文字母、數字、空白、表情符號、標點都會被超商系統退掉。
+ * 涵蓋常用漢字、擴充 A 區與相容漢字，長度以字元數計 2~5。
+ */
+const CHINESE_NAME_RE = /^[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]{2,5}$/;
+
+export const RECEIVER_NAME_ERROR = '請輸入 2-5 字的真實中文姓名，以免無法在超商取貨。';
+export const RECEIVER_CELL_PHONE_ERROR = '請輸入正確的 10 碼台灣手機號碼 (如: 0912345678)。';
+
+/** 超商取貨收件人姓名：2~5 個中文字。null = 通過。 */
+export function validateReceiverName(value: string): string | null {
+  return CHINESE_NAME_RE.test(value.trim()) ? null : RECEIVER_NAME_ERROR;
+}
+
+/** 超商取貨收件人手機：09 開頭 10 碼數字。null = 通過。 */
+export function validateReceiverCellPhone(value: string): string | null {
+  return /^09\d{8}$/.test(value.trim()) ? null : RECEIVER_CELL_PHONE_ERROR;
+}
+
 export type LogisticsVerifyResult = {
   ok: boolean;
   environment: LogisticsEnvironment;
