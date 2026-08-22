@@ -78,6 +78,7 @@ export default function SellerProductsScreen() {
                 </View>
                 <View className="flex-row flex-wrap items-center gap-1.5">
                   <Chip
+                    disabled
                     size="sm"
                     variant="soft"
                     color={
@@ -96,6 +97,7 @@ export default function SellerProductsScreen() {
                   </Chip>
                   {item.moderation_status !== 'approved' ? (
                     <Chip
+                      disabled
                       size="sm"
                       variant="soft"
                       color={item.moderation_status === 'rejected' ? 'danger' : 'warning'}

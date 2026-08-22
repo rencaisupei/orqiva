@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Platform, View } from 'react-native';
-import { Button, Chip, Label, Spinner, Typography } from 'heroui-native';
+import { Button, Label, Spinner, Typography } from 'heroui-native';
 import * as WebBrowser from 'expo-web-browser';
 import { MapPin, RefreshCw, Store } from 'lucide-react-native';
 
+import { SelectPill } from '@/components/SelectPill';
 import { useMapSelection, useStoreMapUrl } from '@/lib/api/logistics';
 import { BRAND } from '@/lib/brand';
 import type { CvsPickup } from '@/lib/api/commerce';
@@ -97,19 +98,18 @@ export function CvsStorePicker({ availableSubTypes, value, onChange, orderId }: 
         <Label isRequired>取貨超商</Label>
         <View className="flex-row flex-wrap gap-2">
           {availableSubTypes.map((item) => (
-            <Chip
+            <SelectPill
               key={item}
               size="sm"
-              variant={subType === item ? 'primary' : 'tertiary'}
+              label={`${LOGISTICS_SUB_TYPE_LABEL[item]} 取貨付款`}
+              selected={subType === item}
               onPress={() => {
                 setSubType(item);
                 setToken(null);
                 setError(null);
                 onChange(null);
               }}
-            >
-              {LOGISTICS_SUB_TYPE_LABEL[item]} 取貨付款
-            </Chip>
+            />
           ))}
         </View>
       </View>

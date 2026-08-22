@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
 import {
   Button,
-  Chip,
   Description,
   FieldError,
   Input,
@@ -19,6 +18,7 @@ import { CheckCircle2, Copy, ShieldAlert, Truck, XCircle } from 'lucide-react-na
 
 import { EmptyState } from '@/components/EmptyState';
 import { OptionSelect } from '@/components/OptionSelect';
+import { SelectPill } from '@/components/SelectPill';
 import { SignInRequired } from '@/components/SignInRequired';
 import {
   useAdminLogistics,
@@ -380,14 +380,13 @@ export default function AdminLogisticsScreen() {
           <Label>開放的超商（可多選）</Label>
           <View className="flex-row flex-wrap gap-2">
             {SUB_TYPES.map((subType) => (
-              <Chip
+              <SelectPill
                 key={subType}
                 size="sm"
-                variant={enabledSubTypes.includes(subType) ? 'primary' : 'tertiary'}
+                label={LOGISTICS_SUB_TYPE_LABEL[subType]}
+                selected={enabledSubTypes.includes(subType)}
                 onPress={() => toggleSubType(subType)}
-              >
-                {LOGISTICS_SUB_TYPE_LABEL[subType]}
-              </Chip>
+              />
             ))}
           </View>
           <Description>綠界申請的物流模式需為 C2C（店到店）才能使用這些子類型。</Description>

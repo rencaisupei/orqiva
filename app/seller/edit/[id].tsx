@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
-import { Button, Chip, FieldError, Input, Label, Spinner, TextArea, useToast } from 'heroui-native';
+import { Button, FieldError, Input, Label, Spinner, TextArea, useToast } from 'heroui-native';
 import { router, useLocalSearchParams } from 'expo-router';
 
 import { AppImage } from '@/components/AppImage';
 import { EmptyState } from '@/components/EmptyState';
 import { OptionSelect, type SelectOption } from '@/components/OptionSelect';
+import { SelectPill } from '@/components/SelectPill';
 import { SignInRequired } from '@/components/SignInRequired';
 import { useCategories, useProduct } from '@/lib/api/catalog';
 import { useDeleteProduct, useUpdateProduct } from '@/lib/api/seller';
@@ -188,14 +189,13 @@ export default function EditProductScreen() {
             <Label>商品狀態</Label>
             <View className="flex-row gap-2">
               {(['new', 'used'] as ProductCondition[]).map((value) => (
-                <Chip
+                <SelectPill
                   key={value}
                   size="sm"
-                  variant={condition === value ? 'primary' : 'tertiary'}
+                  label={value === 'new' ? '全新' : '二手'}
+                  selected={condition === value}
                   onPress={() => setCondition(value)}
-                >
-                  {value === 'new' ? '全新' : '二手'}
-                </Chip>
+                />
               ))}
             </View>
           </View>
@@ -204,18 +204,17 @@ export default function EditProductScreen() {
             <Label>配送方式</Label>
             <View className="flex-row flex-wrap gap-2">
               {SHIPPING_METHODS.map((method) => (
-                <Chip
+                <SelectPill
                   key={method}
                   size="sm"
-                  variant={shipping.includes(method) ? 'primary' : 'tertiary'}
+                  label={method}
+                  selected={shipping.includes(method)}
                   onPress={() =>
                     setShipping((prev) =>
                       prev.includes(method) ? prev.filter((m) => m !== method) : [...prev, method],
                     )
                   }
-                >
-                  {method}
-                </Chip>
+                />
               ))}
             </View>
           </View>
@@ -224,14 +223,13 @@ export default function EditProductScreen() {
             <Label>所在地</Label>
             <View className="flex-row flex-wrap gap-2">
               {LOCATIONS.map((item) => (
-                <Chip
+                <SelectPill
                   key={item}
                   size="sm"
-                  variant={location === item ? 'primary' : 'tertiary'}
+                  label={item}
+                  selected={location === item}
                   onPress={() => setLocation(item)}
-                >
-                  {item}
-                </Chip>
+                />
               ))}
             </View>
           </View>

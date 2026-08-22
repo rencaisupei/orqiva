@@ -3,7 +3,6 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'rea
 import {
   Avatar,
   Button,
-  Chip,
   Description,
   FieldError,
   Input,
@@ -18,6 +17,7 @@ import { router } from 'expo-router';
 import { Camera, Truck } from 'lucide-react-native';
 
 import { EmptyState } from '@/components/EmptyState';
+import { SelectPill } from '@/components/SelectPill';
 import { SignInRequired } from '@/components/SignInRequired';
 import { useMyStoreQuery, useSellerShippingProfile, useUpdateStore } from '@/lib/api/seller';
 import { pickImages, uploadImage } from '@/lib/api/upload';
@@ -171,14 +171,13 @@ export default function StoreSettingsScreen() {
             <Label>店舖所在地</Label>
             <View className="flex-row flex-wrap gap-2">
               {LOCATIONS.map((item) => (
-                <Chip
+                <SelectPill
                   key={item}
                   size="sm"
-                  variant={location === item ? 'primary' : 'tertiary'}
+                  label={item}
+                  selected={location === item}
                   onPress={() => setLocation(item)}
-                >
-                  {item}
-                </Chip>
+                />
               ))}
             </View>
           </View>

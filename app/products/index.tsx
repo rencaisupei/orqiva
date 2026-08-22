@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
 import { FlatList, Pressable, ScrollView, View } from 'react-native';
-import { Button, Chip, Input, Separator, Spinner, Typography } from 'heroui-native';
+import { Button, Input, Separator, Spinner, Typography } from 'heroui-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { PackageSearch, SlidersHorizontal, X } from 'lucide-react-native';
 
 import { EmptyState } from '@/components/EmptyState';
 import { ProductCard } from '@/components/ProductCard';
+import { SelectPill } from '@/components/SelectPill';
 import { useFavoriteToggle } from '@/hooks/useFavoriteToggle';
 import { useProducts } from '@/lib/api/catalog';
 import { BRAND, BRAND_COPY } from '@/lib/brand';
@@ -112,15 +113,13 @@ export default function ProductListScreen() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-3">
           <View className="flex-row gap-2">
             {SORT_OPTIONS.map((option) => (
-              <Chip
+              <SelectPill
                 key={option.key}
                 size="sm"
-                variant={sort === option.key ? 'primary' : 'tertiary'}
-                color={sort === option.key ? 'accent' : 'default'}
+                label={option.label}
+                selected={sort === option.key}
                 onPress={() => setSort(option.key)}
-              >
-                {option.label}
-              </Chip>
+              />
             ))}
           </View>
         </ScrollView>
@@ -174,16 +173,15 @@ export default function ProductListScreen() {
             </Typography>
             <View className="flex-row gap-2">
               {(['new', 'used'] as ProductCondition[]).map((value) => (
-                <Chip
+                <SelectPill
                   key={value}
                   size="sm"
-                  variant={draft.condition === value ? 'primary' : 'tertiary'}
+                  label={value === 'new' ? '全新' : '二手'}
+                  selected={draft.condition === value}
                   onPress={() =>
                     setDraft((d) => ({ ...d, condition: d.condition === value ? null : value }))
                   }
-                >
-                  {value === 'new' ? '全新' : '二手'}
-                </Chip>
+                />
               ))}
             </View>
           </View>
@@ -194,16 +192,15 @@ export default function ProductListScreen() {
             </Typography>
             <View className="flex-row flex-wrap gap-2">
               {LOCATIONS.map((value) => (
-                <Chip
+                <SelectPill
                   key={value}
                   size="sm"
-                  variant={draft.location === value ? 'primary' : 'tertiary'}
+                  label={value}
+                  selected={draft.location === value}
                   onPress={() =>
                     setDraft((d) => ({ ...d, location: d.location === value ? null : value }))
                   }
-                >
-                  {value}
-                </Chip>
+                />
               ))}
             </View>
           </View>
@@ -214,16 +211,15 @@ export default function ProductListScreen() {
             </Typography>
             <View className="flex-row gap-2">
               {RATING_OPTIONS.map((value) => (
-                <Chip
+                <SelectPill
                   key={value}
                   size="sm"
-                  variant={draft.minRating === value ? 'primary' : 'tertiary'}
+                  label={`${value} 星以上`}
+                  selected={draft.minRating === value}
                   onPress={() =>
                     setDraft((d) => ({ ...d, minRating: d.minRating === value ? null : value }))
                   }
-                >
-                  {value} 星以上
-                </Chip>
+                />
               ))}
             </View>
           </View>
@@ -234,16 +230,15 @@ export default function ProductListScreen() {
             </Typography>
             <View className="flex-row flex-wrap gap-2">
               {SHIPPING_METHODS.map((value) => (
-                <Chip
+                <SelectPill
                   key={value}
                   size="sm"
-                  variant={draft.shipping === value ? 'primary' : 'tertiary'}
+                  label={value}
+                  selected={draft.shipping === value}
                   onPress={() =>
                     setDraft((d) => ({ ...d, shipping: d.shipping === value ? null : value }))
                   }
-                >
-                  {value}
-                </Chip>
+                />
               ))}
             </View>
           </View>

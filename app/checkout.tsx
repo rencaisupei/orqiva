@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import {
   Button,
-  Chip,
   FieldError,
   Input,
   Label,
@@ -16,6 +15,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { AppImage } from '@/components/AppImage';
 import { CvsStorePicker } from '@/components/CvsStorePicker';
 import { EmptyState } from '@/components/EmptyState';
+import { SelectPill } from '@/components/SelectPill';
 import { SignInRequired } from '@/components/SignInRequired';
 import {
   SHIPPING_FEE,
@@ -189,10 +189,11 @@ export default function CheckoutScreen() {
                   { key: 'cvs', label: '超商取貨付款' },
                 ] satisfies { key: DeliveryMode; label: string }[]
               ).map((option) => (
-                <Chip
+                <SelectPill
                   key={option.key}
                   size="sm"
-                  variant={mode === option.key ? 'primary' : 'tertiary'}
+                  label={option.label}
+                  selected={mode === option.key}
                   onPress={() => {
                     setMode(option.key);
                     setError(null);
@@ -200,9 +201,7 @@ export default function CheckoutScreen() {
                     if (option.key === 'cvs')
                       setPhone((prev) => prev.replace(/\D/g, '').slice(0, 10));
                   }}
-                >
-                  {option.label}
-                </Chip>
+                />
               ))}
             </View>
 

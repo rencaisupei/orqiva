@@ -7,6 +7,7 @@ import { Flag, Heart, MapPin, MessageCircle, ShieldCheck, Truck } from 'lucide-r
 import { AppImage } from '@/components/AppImage';
 import { EmptyState } from '@/components/EmptyState';
 import { QuantityStepper } from '@/components/QuantityStepper';
+import { SelectPill } from '@/components/SelectPill';
 import { StarRating } from '@/components/StarRating';
 import { useFavoriteToggle } from '@/hooks/useFavoriteToggle';
 import { useCreateReport } from '@/lib/api/admin';
@@ -231,14 +232,13 @@ export default function ProductDetailScreen() {
           </Typography>
           <View className="flex-row flex-wrap gap-2">
             {product.shipping_methods.map((method) => (
-              <Chip
+              <SelectPill
                 key={method}
                 size="sm"
-                variant={selectedShipping === method ? 'primary' : 'tertiary'}
+                label={method}
+                selected={selectedShipping === method}
                 onPress={() => setShippingMethod(method)}
-              >
-                {method}
-              </Chip>
+              />
             ))}
           </View>
           <View className="flex-row items-center gap-2">

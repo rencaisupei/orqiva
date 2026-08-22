@@ -17,6 +17,7 @@ import { CheckCircle2, ImagePlus, Plus, ShieldAlert, Trash2, X } from 'lucide-re
 import { AppImage } from '@/components/AppImage';
 import { EmptyState } from '@/components/EmptyState';
 import { OptionSelect, type SelectOption } from '@/components/OptionSelect';
+import { SelectPill } from '@/components/SelectPill';
 import { SignInRequired } from '@/components/SignInRequired';
 import { useCategories } from '@/lib/api/catalog';
 import { useCreateProduct, useMyStoreQuery, type ProductDraft } from '@/lib/api/seller';
@@ -473,10 +474,11 @@ export default function NewProductScreen() {
               <Label isRequired>配送方式（可多選）</Label>
               <View className="flex-row flex-wrap gap-2">
                 {SHIPPING_METHODS.map((method) => (
-                  <Chip
+                  <SelectPill
                     key={method}
                     size="sm"
-                    variant={shipping.includes(method) ? 'primary' : 'tertiary'}
+                    label={method}
+                    selected={shipping.includes(method)}
                     onPress={() =>
                       setShipping((prev) =>
                         prev.includes(method)
@@ -484,37 +486,33 @@ export default function NewProductScreen() {
                           : [...prev, method],
                       )
                     }
-                  >
-                    {method}
-                  </Chip>
+                  />
                 ))}
               </View>
 
               <Label>商品狀態</Label>
               <View className="flex-row gap-2">
                 {(['new', 'used'] as ProductCondition[]).map((value) => (
-                  <Chip
+                  <SelectPill
                     key={value}
                     size="sm"
-                    variant={condition === value ? 'primary' : 'tertiary'}
+                    label={value === 'new' ? '全新' : '二手'}
+                    selected={condition === value}
                     onPress={() => setCondition(value)}
-                  >
-                    {value === 'new' ? '全新' : '二手'}
-                  </Chip>
+                  />
                 ))}
               </View>
 
               <Label>商品所在地</Label>
               <View className="flex-row flex-wrap gap-2">
                 {LOCATIONS.map((item) => (
-                  <Chip
+                  <SelectPill
                     key={item}
                     size="sm"
-                    variant={location === item ? 'primary' : 'tertiary'}
+                    label={item}
+                    selected={location === item}
                     onPress={() => setLocation(item)}
-                  >
-                    {item}
-                  </Chip>
+                  />
                 ))}
               </View>
             </>

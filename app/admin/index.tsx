@@ -12,11 +12,12 @@ import {
   Typography,
   useToast,
 } from 'heroui-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { ChevronRight, ShieldAlert, ShieldCheck, Truck, Wrench } from 'lucide-react-native';
 
 import { AppImage } from '@/components/AppImage';
 import { EmptyState } from '@/components/EmptyState';
+import { SelectPill } from '@/components/SelectPill';
 import { SignInRequired } from '@/components/SignInRequired';
 import {
   useAdminOrders,
@@ -89,6 +90,10 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'reports', label: '檢舉' },
   { key: 'support', label: '客服' },
 ];
+
+function isTabKey(value: unknown): value is TabKey {
+  return typeof value === 'string' && TABS.some((item) => item.key === value);
+}
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
@@ -572,7 +577,21 @@ export default function AdminScreen() {
   const userId = useUserId();
   const isAdmin = useIsAdminConsole();
   const { toast } = useToast();
-  const [tab, setTab] = useState<TabKey>('overview');
+  // The console is web-only, so the open section lives in the URL. Tapping a
+  // tab updates both local state (instant feedback) and the route, so browser
+  // back/forward and shared links land on the same section.
+  const params = useLocalSearchParams<{ tab?: string }>();
+  const urlTab: TabKey = isTabKey(params.tab) ? params.tab : 'overview';
+  const [tab, setTab] = useState<TabKey>(urlTab);
+
+  useEffect(() => {
+    setTab(urlTab);
+  }, [urlTab]);
+
+  const selectTab = (key: TabKey) => {
+    setTab(key);
+    router.setParams({ tab: key });
+  };
 
   const overview = useAdminOverview(isAdmin && tab === 'overview');
   const queueCount = useModerationQueueCount(isAdmin && tab === 'overview');
@@ -673,17 +692,17 @@ export default function AdminScreen() {
   return (
     <View className="bg-background flex-1">
       {/* Wraps instead of scrolling horizontally: a desktop mouse cannot swipe a
-          horizontal ScrollView, which left the last tabs unreachable. */}
+          horizontal ScrollView, which left the last tabs unreachable. Built on
+          SelectPill (plain Pressable) — HeroUI Chip taps did not register here. */}
       <View className="bg-surface flex-row flex-wrap gap-2 px-4 py-3">
         {TABS.map((item) => (
-          <Chip
+          <SelectPill
             key={item.key}
             size="sm"
-            variant={tab === item.key ? 'primary' : 'tertiary'}
-            onPress={() => setTab(item.key)}
-          >
-            {item.label}
-          </Chip>
+            label={item.label}
+            selected={tab === item.key}
+            onPress={() => selectTab(item.key)}
+          />
         ))}
       </View>
 
@@ -732,7 +751,7 @@ export default function AdminScreen() {
 
             <Pressable
               className="bg-surface flex-row items-center gap-3 rounded-2xl p-4"
-              onPress={() => setTab('moderation')}
+              onPress={() => selectTab('moderation')}
             >
               <View className="bg-brand-blue-soft h-11 w-11 shrink-0 items-center justify-center rounded-xl">
                 <ShieldCheck size={20} color={BRAND.blue} />

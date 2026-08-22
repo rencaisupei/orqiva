@@ -6,6 +6,7 @@ import { Receipt } from 'lucide-react-native';
 
 import { AppImage } from '@/components/AppImage';
 import { EmptyState } from '@/components/EmptyState';
+import { SelectPill } from '@/components/SelectPill';
 import { SignInRequired } from '@/components/SignInRequired';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { useMyOrders } from '@/lib/api/commerce';
@@ -40,14 +41,13 @@ export default function OrdersScreen() {
       <ScrollView horizontal showsHorizontalScrollIndicator={false} className="bg-surface">
         <View className="flex-row gap-2 px-4 py-3">
           {FILTERS.map((item) => (
-            <Chip
+            <SelectPill
               key={item.key}
               size="sm"
-              variant={filter === item.key ? 'primary' : 'tertiary'}
+              label={item.label}
+              selected={filter === item.key}
               onPress={() => setFilter(item.key)}
-            >
-              {item.label}
-            </Chip>
+            />
           ))}
         </View>
       </ScrollView>
