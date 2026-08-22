@@ -1,23 +1,27 @@
 import { useMemo, useState } from 'react';
-import { FlatList, Platform, Pressable, RefreshControl, View } from 'react-native';
-import { Button, Chip, SearchField, Spinner, Typography, useToast } from 'heroui-native';
+import { FlatList, Pressable, RefreshControl, View } from 'react-native';
+import { Button, Chip, SearchField, Spinner, Typography } from 'heroui-native';
 import { router } from 'expo-router';
-import { Receipt, RefreshCw, Truck } from 'lucide-react-native';
+import { Receipt, Truck } from 'lucide-react-native';
 
 import { AppImage } from '@/components/AppImage';
 import { EmptyState } from '@/components/EmptyState';
 import { SegmentedControl, type Segment } from '@/components/SegmentedControl';
 import { SelectPill } from '@/components/SelectPill';
+import {
+  matchesShipmentFilter,
+  shipmentChipColor,
+  ShipmentStatusBar,
+  type ShipmentFilter,
+} from '@/components/ShipmentStatusBar';
 import { SignInRequired } from '@/components/SignInRequired';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { useMyOrders } from '@/lib/api/commerce';
-import { useSyncShipments } from '@/lib/api/logistics';
 import { BRAND } from '@/lib/brand';
 import { formatDateTime, formatNumber, formatPrice } from '@/lib/format';
 import { useUserId } from '@/lib/session';
 import {
   isCvsOrder,
-  isTrackableShipment,
   LOGISTICS_STATUS_LABEL,
   ORDER_STATUS_LABEL,
   SHIPMENT_STAGE_LABEL,
@@ -25,11 +29,9 @@ import {
   toLogisticsStatus,
   type Order,
   type OrderStatus,
-  type ShipmentStage,
 } from '@/lib/types';
 
 type StatusFilter = OrderStatus | 'all';
-type ShipmentFilter = ShipmentStage | 'all';
 type RangeKey = 'all' | '30d' | '3m' | '1y';
 
 const STATUS_SEGMENTS: Segment<StatusFilter>[] = [
@@ -39,17 +41,6 @@ const STATUS_SEGMENTS: Segment<StatusFilter>[] = [
   { key: 'shipped', label: '已出貨' },
   { key: 'completed', label: '已完成' },
   { key: 'cancelled', label: '已取消' },
-];
-
-/** 出貨狀態篩選：只對綠界超商取貨訂單有意義，宅配訂單沒有貨態。 */
-const SHIPMENT_FILTERS: { key: ShipmentFilter; label: string }[] = [
-  { key: 'all', label: '全部出貨狀態' },
-  { key: 'awaiting', label: SHIPMENT_STAGE_LABEL.awaiting },
-  { key: 'created', label: SHIPMENT_STAGE_LABEL.created },
-  { key: 'in_transit', label: SHIPMENT_STAGE_LABEL.in_transit },
-  { key: 'arrived', label: SHIPMENT_STAGE_LABEL.arrived },
-  { key: 'picked_up', label: SHIPMENT_STAGE_LABEL.picked_up },
-  { key: 'issue', label: SHIPMENT_STAGE_LABEL.issue },
 ];
 
 const RANGES: { key: RangeKey; label: string; days: number | null }[] = [
@@ -69,23 +60,15 @@ function matchesKeyword(order: Order, keyword: string): boolean {
   return order.order_items.some((line) => line.title.toLowerCase().includes(keyword));
 }
 
-/** 貨態徽章顏色：異常紅、已取貨綠、其餘品牌藍。 */
-function shipmentChipColor(stage: ShipmentStage) {
-  if (stage === 'issue') return 'danger';
-  if (stage === 'picked_up') return 'success';
-  return 'accent';
-}
-
+/** 貨態徽章顏色與篩選比對搬到 ShipmentStatusBar，與賣家中心共用同一份規則。 */
 export default function OrdersScreen() {
   const userId = useUserId();
-  const { toast } = useToast();
   const [status, setStatus] = useState<StatusFilter>('all');
   const [shipment, setShipment] = useState<ShipmentFilter>('all');
   const [range, setRange] = useState<RangeKey>('all');
   const [search, setSearch] = useState('');
   const { data: orders, isLoading } = useMyOrders(userId);
   const { refreshing, onRefresh } = usePullToRefresh();
-  const sync = useSyncShipments();
 
   const keyword = search.trim().toLowerCase();
   const rangeDays = RANGES.find((item) => item.key === range)?.days ?? null;
@@ -94,43 +77,11 @@ export default function OrdersScreen() {
     const cutoff = rangeDays ? Date.now() - rangeDays * DAY_MS : null;
     return (orders ?? []).filter((order) => {
       if (status !== 'all' && order.status !== status) return false;
-      if (shipment !== 'all') {
-        if (!isCvsOrder(order)) return false;
-        if (shipmentStage(toLogisticsStatus(order.logistics_status)) !== shipment) return false;
-      }
+      if (!matchesShipmentFilter(order, shipment)) return false;
       if (cutoff && new Date(order.created_at).getTime() < cutoff) return false;
       return matchesKeyword(order, keyword);
     });
   }, [orders, status, shipment, rangeDays, keyword]);
-
-  /** 還在途中的超商取貨訂單：按一下就逐筆向綠界重新查一次貨態。 */
-  const trackableIds = useMemo(
-    () =>
-      (orders ?? [])
-        .filter(
-          (order) =>
-            isCvsOrder(order) && isTrackableShipment(toLogisticsStatus(order.logistics_status)),
-        )
-        .map((order) => order.id),
-    [orders],
-  );
-
-  const hasCvsOrders = (orders ?? []).some((order) => isCvsOrder(order));
-
-  const runSync = () => {
-    if (trackableIds.length === 0 || sync.isPending) return;
-    sync.mutate(trackableIds, {
-      onSuccess: (result) =>
-        toast.show({
-          variant: 'success',
-          label:
-            result.failed > 0
-              ? `已更新 ${result.synced} 筆貨態，${result.failed} 筆稍後再試`
-              : `已更新 ${result.synced} 筆出貨狀態`,
-        }),
-      onError: (err: Error) => toast.show({ variant: 'danger', label: err.message }),
-    });
-  };
 
   if (!userId) {
     return <SignInRequired title="登入後查看訂單" />;
@@ -159,49 +110,7 @@ export default function OrdersScreen() {
 
         <SegmentedControl items={STATUS_SEGMENTS} value={status} onChange={setStatus} size="sm" />
 
-        {hasCvsOrders ? (
-          <View className="gap-2">
-            <View className="flex-row items-center justify-between gap-3">
-              <Typography type="body-xs" color="muted" className="flex-1">
-                超商取貨出貨狀態
-              </Typography>
-              {trackableIds.length > 0 ? (
-                <Pressable
-                  accessibilityRole="button"
-                  hitSlop={6}
-                  disabled={sync.isPending}
-                  onPress={runSync}
-                  style={{
-                    ...(Platform.OS === 'web' && !sync.isPending ? { cursor: 'pointer' } : null),
-                    ...(sync.isPending ? { opacity: 0.6 } : null),
-                  }}
-                  className="bg-brand-blue-soft flex-row items-center gap-1.5 rounded-full px-3 py-1.5"
-                >
-                  <RefreshCw size={13} color={BRAND.blue} />
-                  <Typography
-                    type="body-xs"
-                    className="text-brand-blue"
-                    style={{ fontWeight: '600' }}
-                  >
-                    {sync.isPending ? '同步中…' : `同步出貨狀態（${trackableIds.length}）`}
-                  </Typography>
-                </Pressable>
-              ) : null}
-            </View>
-            <View className="flex-row flex-wrap gap-2">
-              {SHIPMENT_FILTERS.map((item) => (
-                <SelectPill
-                  key={item.key}
-                  size="sm"
-                  tone="soft"
-                  label={item.label}
-                  selected={shipment === item.key}
-                  onPress={() => setShipment(item.key)}
-                />
-              ))}
-            </View>
-          </View>
-        ) : null}
+        <ShipmentStatusBar orders={orders ?? []} value={shipment} onChange={setShipment} />
 
         <View className="flex-row flex-wrap gap-2">
           {RANGES.map((item) => (

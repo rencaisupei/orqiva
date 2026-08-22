@@ -9,11 +9,16 @@ import { EmptyState } from '@/components/EmptyState';
 import { LogisticsPanel } from '@/components/LogisticsPanel';
 import { SegmentedControl, type Segment } from '@/components/SegmentedControl';
 import { SellerTabBar } from '@/components/SellerTabBar';
+import {
+  matchesShipmentFilter,
+  ShipmentStatusBar,
+  type ShipmentFilter,
+} from '@/components/ShipmentStatusBar';
 import { SignInRequired } from '@/components/SignInRequired';
 import { useSetOrderStatus } from '@/lib/api/commerce';
 import { useSellerOrders } from '@/lib/api/seller';
 import { BRAND } from '@/lib/brand';
-import { formatDateTime, formatPrice } from '@/lib/format';
+import { formatDateTime, formatNumber, formatPrice } from '@/lib/format';
 import { useUserId } from '@/lib/session';
 import { ORDER_STATUS_LABEL, type OrderStatus } from '@/lib/types';
 
@@ -32,6 +37,7 @@ export default function SellerOrdersScreen() {
   const userId = useUserId();
   const { toast } = useToast();
   const [filter, setFilter] = useState<StatusFilter>('all');
+  const [shipment, setShipment] = useState<ShipmentFilter>('all');
   const { data: orders, isLoading } = useSellerOrders(userId);
   const setStatus = useSetOrderStatus();
 
@@ -39,7 +45,12 @@ export default function SellerOrdersScreen() {
     return <SignInRequired title="登入後管理訂單" />;
   }
 
-  const filtered = (orders ?? []).filter((order) => filter === 'all' || order.status === filter);
+  const all = orders ?? [];
+  const filtered = all.filter(
+    (order) =>
+      (filter === 'all' || order.status === filter) && matchesShipmentFilter(order, shipment),
+  );
+  const narrowed = filter !== 'all' || shipment !== 'all';
 
   const advance = (orderId: string, status: string, label: string) => {
     setStatus.mutate(
@@ -53,8 +64,35 @@ export default function SellerOrdersScreen() {
 
   return (
     <View className="bg-background flex-1">
-      <View className="bg-surface px-4 py-3">
+      <View className="bg-surface gap-3 px-4 py-3">
         <SegmentedControl items={FILTERS} value={filter} onChange={setFilter} size="sm" />
+
+        <ShipmentStatusBar
+          orders={all}
+          value={shipment}
+          onChange={setShipment}
+          title="你建立的超商取貨物流單"
+        />
+
+        <View className="flex-row items-center justify-between gap-3">
+          <Typography type="body-xs" color="muted">
+            共 {formatNumber(filtered.length)} 筆
+            {narrowed ? `／全部 ${formatNumber(all.length)} 筆` : ''}
+          </Typography>
+          {narrowed ? (
+            <Pressable
+              hitSlop={6}
+              onPress={() => {
+                setFilter('all');
+                setShipment('all');
+              }}
+            >
+              <Typography type="body-xs" className="text-brand-orange">
+                清除條件
+              </Typography>
+            </Pressable>
+          ) : null}
+        </View>
       </View>
 
       {isLoading ? (
@@ -68,11 +106,30 @@ export default function SellerOrdersScreen() {
           keyExtractor={(item) => item.id}
           contentContainerClassName="p-4 gap-3 pb-6"
           ListEmptyComponent={
-            <EmptyState
-              icon={<ClipboardList size={26} color={BRAND.blue} />}
-              title="還沒有訂單"
-              description="買家下單後會出現在這裡，並發送通知給你。"
-            />
+            narrowed && all.length > 0 ? (
+              <EmptyState
+                icon={<ClipboardList size={26} color={BRAND.blue} />}
+                title="找不到符合的訂單"
+                description="把訂單狀態與出貨狀態調回全部就會看到所有訂單。"
+                action={
+                  <Button
+                    variant="secondary"
+                    onPress={() => {
+                      setFilter('all');
+                      setShipment('all');
+                    }}
+                  >
+                    <Button.Label>清除條件</Button.Label>
+                  </Button>
+                }
+              />
+            ) : (
+              <EmptyState
+                icon={<ClipboardList size={26} color={BRAND.blue} />}
+                title="還沒有訂單"
+                description="買家下單後會出現在這裡，並發送通知給你。"
+              />
+            )
           }
           renderItem={({ item }) => (
             <View className="bg-surface gap-3 rounded-2xl p-4">
