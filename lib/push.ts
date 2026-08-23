@@ -83,6 +83,12 @@ export function openNotificationLink(link: string | null | undefined) {
     case '/seller/products':
       router.push('/seller/products');
       break;
+    case '/seller/coins':
+      router.push('/seller/coins');
+      break;
+    case '/seller/promote':
+      router.push('/seller/promote');
+      break;
     case '/admin':
       router.push('/admin');
       break;

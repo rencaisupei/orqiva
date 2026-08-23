@@ -15,6 +15,7 @@ import {
 import { AppImage } from '@/components/AppImage';
 import { EmptyState } from '@/components/EmptyState';
 import { QuantityStepper } from '@/components/QuantityStepper';
+import { RecommendationRail } from '@/components/RecommendationRail';
 import { SelectPill } from '@/components/SelectPill';
 import { StarRating } from '@/components/StarRating';
 import { useFavoriteToggle } from '@/hooks/useFavoriteToggle';
@@ -426,6 +427,9 @@ export default function ProductDetailScreen() {
             ))
           )}
         </View>
+
+        {/* AI 推薦：同分類與可搭配的商品，由伺服器排序並快取。 */}
+        <RecommendationRail title="猜你喜歡" productId={product.id} limit={10} />
 
         <Pressable
           className="mt-3 flex-row items-center justify-center gap-2 p-4"

@@ -11,6 +11,7 @@ import { JihuoLogo, JihuoMark } from '@/components/brand/JihuoLogo';
 import { LaunchAdModal } from '@/components/LaunchAdModal';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductRail } from '@/components/ProductRail';
+import { RecommendationRail } from '@/components/RecommendationRail';
 import { LinearGradient } from '@/components/ui/primitives/LinearGradient';
 import { useFavoriteToggle } from '@/hooks/useFavoriteToggle';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
@@ -19,6 +20,7 @@ import { useAdBanners, useHomeFeed } from '@/lib/api/home';
 import { useCartCount } from '@/lib/api/commerce';
 import { useUnreadNotificationCount } from '@/lib/api/social';
 import { BRAND, BRAND_COPY } from '@/lib/brand';
+import { useRecentlyViewedStore } from '@/lib/recentlyViewed';
 import { useUserId } from '@/lib/session';
 import { HOME_AUTO_SORT } from '@/lib/types';
 
@@ -79,6 +81,7 @@ export default function HomeScreen() {
   const { data: unread } = useUnreadNotificationCount(userId);
   const { isFavorite, onToggleFavorite } = useFavoriteToggle();
   const { refreshing, onRefresh } = usePullToRefresh();
+  const recentlyViewed = useRecentlyViewedStore((s) => s.ids);
 
   const submitSearch = () => {
     const term = query.trim();
@@ -322,6 +325,9 @@ export default function HomeScreen() {
             </View>
           );
         })}
+
+        {/* 個人化推薦：種子是這台裝置最近看過的商品，登入時伺服器再加上購物車與收藏。 */}
+        <RecommendationRail title="為你推薦" seedIds={recentlyViewed} limit={10} />
 
         <View className="mt-1 px-4">
           <Pressable

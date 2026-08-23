@@ -6,6 +6,7 @@ import { router } from 'expo-router';
 import { CalendarClock, Megaphone, RefreshCw, Wrench } from 'lucide-react-native';
 
 import { JihuoLogo } from '@/components/brand/JihuoLogo';
+import { useCheckinReminder } from '@/lib/api/coins';
 import { useAppSettings, useAutoCleanup, useMaintenanceState } from '@/lib/api/system';
 import { BRAND } from '@/lib/brand';
 import { durationUntil, formatDateTime } from '@/lib/format';
@@ -84,6 +85,9 @@ export function SystemGate({ children }: { children: React.ReactNode }) {
   // Housekeeping: fires at most one request per app session, and only when the
   // shared schedule says a cleanup is actually due.
   useAutoCleanup();
+
+  // 賣家的 J幣簽到提醒：當天第一次開 App 時問伺服器一次該不該提醒。
+  useCheckinReminder();
 
   const [signInEscape, setSignInEscape] = useState(false);
   const [dismissedAnnouncement, setDismissedAnnouncement] = useState<string | null>(null);

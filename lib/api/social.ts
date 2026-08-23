@@ -223,7 +223,7 @@ export function useNotificationPrefs(userId: string | null) {
     queryFn: async (): Promise<NotificationPrefs> => {
       const { data, error } = await bilt
         .from('users')
-        .select('notify_messages, notify_orders, notify_moderation')
+        .select('notify_messages, notify_orders, notify_moderation, notify_coins')
         .eq('id', userId!)
         .maybeSingle();
       if (error) throw new Error(error.message);
@@ -232,6 +232,7 @@ export function useNotificationPrefs(userId: string | null) {
           notify_messages: true,
           notify_orders: true,
           notify_moderation: true,
+          notify_coins: true,
         }
       );
     },

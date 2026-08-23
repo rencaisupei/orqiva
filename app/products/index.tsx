@@ -6,11 +6,13 @@ import { PackageSearch, SlidersHorizontal, X } from 'lucide-react-native';
 
 import { EmptyState } from '@/components/EmptyState';
 import { ProductCard } from '@/components/ProductCard';
+import { RecommendationRail } from '@/components/RecommendationRail';
 import { SelectPill } from '@/components/SelectPill';
 import { useFavoriteToggle } from '@/hooks/useFavoriteToggle';
 import { useProducts } from '@/lib/api/catalog';
 import { BRAND, BRAND_COPY } from '@/lib/brand';
 import { formatNumber } from '@/lib/format';
+import { useRecentlyViewedStore } from '@/lib/recentlyViewed';
 import {
   LOCATIONS,
   SHIPPING_METHODS,
@@ -56,6 +58,7 @@ export default function ProductListScreen() {
   const [applied, setApplied] = useState<Draft>(EMPTY_DRAFT);
 
   const { isFavorite, onToggleFavorite } = useFavoriteToggle();
+  const recentlyViewed = useRecentlyViewedStore((s) => s.ids);
 
   const filters = useMemo(
     () => ({
@@ -273,16 +276,22 @@ export default function ProductListScreen() {
           columnWrapperStyle={{ gap: 12 }}
           contentContainerClassName="p-4 gap-3 pb-10"
           ListEmptyComponent={
-            <EmptyState
-              icon={<PackageSearch size={26} color={BRAND.blue} />}
-              title="找不到符合的商品"
-              description="試著調整關鍵字或篩選條件。"
-              action={
-                <Button variant="secondary" onPress={() => router.push('/(tabs)/categories')}>
-                  <Button.Label>瀏覽全部分類</Button.Label>
-                </Button>
-              }
-            />
+            <View>
+              <EmptyState
+                icon={<PackageSearch size={26} color={BRAND.blue} />}
+                title="找不到符合的商品"
+                description="試著調整關鍵字或篩選條件。"
+                action={
+                  <Button variant="secondary" onPress={() => router.push('/(tabs)/categories')}>
+                    <Button.Label>瀏覽全部分類</Button.Label>
+                  </Button>
+                }
+              />
+              {/* 找不到東西時至少給幾個方向，-mx-4 抵銷列表容器的 p-4。 */}
+              <View className="-mx-4">
+                <RecommendationRail title="猜你喜歡" seedIds={recentlyViewed} limit={10} />
+              </View>
+            </View>
           }
           renderItem={({ item }) => (
             <View className="flex-1">

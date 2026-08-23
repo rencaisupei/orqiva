@@ -11,6 +11,7 @@ import type {
   MarketResponses,
   ModerationResponses,
   NotifyResponses,
+  RecommendResponses,
 } from '@/lib/api/contracts';
 
 const url = process.env.EXPO_PUBLIC_BILT_URL;
@@ -214,5 +215,24 @@ export function callMaintenance<A extends MaintenanceAction>(
     action,
     payload,
     '維護服務暫時無法使用，請稍後再試',
+  );
+}
+
+export type RecommendAction = keyof RecommendResponses;
+
+/**
+ * Calls the `recommend` edge function: 「猜你喜歡」/「為你推薦」. The OpenAI key and
+ * the candidate query stay server-side, and the ranking is cached there, so the
+ * app just asks for a list. Works for signed-out visitors too.
+ */
+export function callRecommend<A extends RecommendAction>(
+  action: A,
+  payload: Record<string, unknown> = {},
+): Promise<RecommendResponses[A]> {
+  return invokeEdge<RecommendResponses[A]>(
+    'recommend',
+    action,
+    payload,
+    '推薦服務暫時無法使用，請稍後再試',
   );
 }

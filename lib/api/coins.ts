@@ -1,7 +1,10 @@
+import { useEffect, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import type { CoinRedemption, CoinSummary, CoinTaskKey } from '@/lib/api/contracts';
 import { bilt, callCoins } from '@/lib/backend';
+import { doneToday, markDoneToday } from '@/lib/dailyOnce';
+import { useUserId } from '@/lib/session';
 import type {
   AdBannerPlacement,
   CoinRedemptionStatus,
@@ -38,6 +41,37 @@ export function useClaimCoinTask() {
     mutationFn: (task: CoinTaskKey) => callCoins('claim_task', { task }),
     onSuccess: () => invalidateCoins(qc),
   });
+}
+
+/**
+ * 每天第一次開 App 時提醒賣家去簽到領 J幣。
+ *
+ * 沒有排程伺服器，所以觸發點是「使用者當天第一次開 App」；該不該真的發通知完全由
+ * 伺服器判斷（不是賣家、今天已簽到、今天已提醒過都會 skip），本機旗標只是省下重複
+ * 請求，所以換裝置或重裝 App 也不會收到第二則。
+ */
+export function useCheckinReminder() {
+  const userId = useUserId();
+  const qc = useQueryClient();
+  const askedFor = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!userId || askedFor.current === userId) return;
+    askedFor.current = userId;
+
+    const flag = `coin-checkin-reminder:${userId}`;
+    void (async () => {
+      if (await doneToday(flag)) return;
+      try {
+        const result = await callCoins('checkin_reminder');
+        await markDoneToday(flag);
+        // 提醒本身是一則站內通知，發了就要讓紅點與清單跟上。
+        if (result.reminded) void qc.invalidateQueries({ queryKey: ['notifications'] });
+      } catch {
+        // 提醒失敗不影響任何功能，明天開 App 時會再試一次。
+      }
+    })();
+  }, [userId, qc]);
 }
 
 export type RedeemInput =

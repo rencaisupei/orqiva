@@ -7,6 +7,7 @@ import { ShoppingCart, Store as StoreIcon, Trash2 } from 'lucide-react-native';
 import { AppImage } from '@/components/AppImage';
 import { EmptyState } from '@/components/EmptyState';
 import { QuantityStepper } from '@/components/QuantityStepper';
+import { RecommendationRail } from '@/components/RecommendationRail';
 import { SignInRequired } from '@/components/SignInRequired';
 import {
   SHIPPING_FEE,
@@ -17,6 +18,7 @@ import {
 } from '@/lib/api/commerce';
 import { BRAND } from '@/lib/brand';
 import { formatPrice } from '@/lib/format';
+import { useRecentlyViewedStore } from '@/lib/recentlyViewed';
 import { useUserId } from '@/lib/session';
 import type { CartItem } from '@/lib/types';
 
@@ -29,6 +31,13 @@ export default function CartScreen() {
   const updateItem = useUpdateCartItem();
   const removeItem = useRemoveCartItem();
   const setAllSelected = useSetAllSelected();
+  const recentlyViewed = useRecentlyViewedStore((s) => s.ids);
+
+  /* 推薦的種子：購物車裡的商品最能代表現在想買什麼，空車時退回最近瀏覽。 */
+  const cartSeeds = useMemo(
+    () => (items ?? []).map((item) => item.product_id).slice(0, 8),
+    [items],
+  );
 
   const groups = useMemo<Group[]>(() => {
     const map = new Map<string, Group>();
@@ -71,16 +80,19 @@ export default function CartScreen() {
   if ((items ?? []).length === 0) {
     return (
       <View className="bg-background flex-1">
-        <EmptyState
-          icon={<ShoppingCart size={26} color={BRAND.blue} />}
-          title="購物車還是空的"
-          description="逛逛極貨網，萬物皆品，極致首選。"
-          action={
-            <Button onPress={() => router.push('/products')}>
-              <Button.Label>開始探索</Button.Label>
-            </Button>
-          }
-        />
+        <ScrollView contentContainerClassName="pb-8">
+          <EmptyState
+            icon={<ShoppingCart size={26} color={BRAND.blue} />}
+            title="購物車還是空的"
+            description="逛逛極貨網，萬物皆品，極致首選。"
+            action={
+              <Button onPress={() => router.push('/products')}>
+                <Button.Label>開始探索</Button.Label>
+              </Button>
+            }
+          />
+          <RecommendationRail title="猜你喜歡" seedIds={recentlyViewed} limit={10} />
+        </ScrollView>
       </View>
     );
   }
@@ -161,6 +173,12 @@ export default function CartScreen() {
             ))}
           </View>
         ))}
+
+        {/* 湊單用的推薦：種子是購物車內容，所以會跟著購物車變。
+            -mx-4 抵銷外層的 p-4，橫向列表才與上面的卡片同一條左邊界。 */}
+        <View className="-mx-4">
+          <RecommendationRail title="猜你喜歡" seedIds={cartSeeds} limit={10} />
+        </View>
       </ScrollView>
 
       <View className="border-border bg-surface pb-safe-offset-3 border-t px-4 py-3">

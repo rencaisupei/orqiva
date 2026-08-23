@@ -8,13 +8,15 @@ export type UserAccount = {
   notify_messages: boolean;
   notify_orders: boolean;
   notify_moderation: boolean;
+  /** 賣家的 J幣簽到提醒與入帳通知。 */
+  notify_coins: boolean;
   created_at: string;
   updated_at: string;
 };
 
 export type NotificationPrefs = Pick<
   UserAccount,
-  'notify_messages' | 'notify_orders' | 'notify_moderation'
+  'notify_messages' | 'notify_orders' | 'notify_moderation' | 'notify_coins'
 >;
 
 export type Profile = {

@@ -30,7 +30,7 @@ import { relativeTime } from '@/lib/format';
 import { openNotificationLink } from '@/lib/push';
 import { setAppBadgeCount } from '@/lib/pushToken';
 import { useUserId } from '@/lib/session';
-import type { NotificationPrefs, NotificationType } from '@/lib/types';
+import { COIN_NAME, type NotificationPrefs, type NotificationType } from '@/lib/types';
 
 function iconFor(type: NotificationType) {
   switch (type) {
@@ -61,6 +61,11 @@ const PREF_ROWS: { key: keyof NotificationPrefs; label: string; hint: string }[]
   { key: 'notify_messages', label: '新訊息', hint: '買家或賣家傳訊息時推播' },
   { key: 'notify_orders', label: '訂單與物流', hint: '成立、付款、出貨、到店可取貨' },
   { key: 'notify_moderation', label: '審核結果', hint: '商品通過或需要修正時通知' },
+  {
+    key: 'notify_coins',
+    label: `${COIN_NAME}簽到`,
+    hint: `每天提醒領${COIN_NAME}、入帳時通知（賣家）`,
+  },
 ];
 
 export default function NotificationsScreen() {

@@ -20,6 +20,7 @@ import type {
   LogisticsVerifyResult,
   MessageScanResult,
   ModerationResult,
+  ProductListItem,
   ReportSeverity,
   SellerVerificationStatus,
   StoreBadgeKind,
@@ -321,6 +322,17 @@ export type MaintenanceResponses = {
 export type CoinResponses = {
   summary: CoinSummary;
   checkin: { ok: boolean; coins: number; streak: number; balance: number };
+  /**
+   * 簽到提醒。伺服器自己決定該不該發（不是賣家、今天已簽到、今天已提醒都會 skip），
+   * 所以 App 每天啟動時呼叫一次就好，reminded 才代表真的送出了通知。
+   */
+  checkin_reminder: {
+    ok: boolean;
+    reminded: boolean;
+    coins?: number;
+    pushed?: number;
+    reason?: 'not_seller' | 'already_checked_in' | 'already_reminded';
+  };
   claim_task: { ok: boolean; coins: number; balance: number };
   redeem: {
     ok: boolean;
@@ -332,4 +344,22 @@ export type CoinResponses = {
   };
   admin_redemptions: { redemptions: CoinRedemption[]; pendingCount: number };
   review_redemption: { ok: boolean; status: CoinRedemptionStatus; bannerId?: string };
+};
+
+/**
+ * `recommend`：AI 推薦（猜你喜歡／為你推薦）。
+ *
+ * `source` 誠實回報這一次是模型排的（ai）還是規則式的退路（rules）；`reason` 是給
+ * 買家看的一句話，`cached` 表示這一次沒有再打模型。
+ */
+export type RecommendationResult = {
+  products: ProductListItem[];
+  reason: string;
+  source: 'ai' | 'rules';
+  cached: boolean;
+};
+
+export type RecommendResponses = {
+  similar: RecommendationResult;
+  for_you: RecommendationResult;
 };
