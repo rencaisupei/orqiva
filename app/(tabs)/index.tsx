@@ -18,6 +18,7 @@ import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { useCategories, useDealProducts } from '@/lib/api/catalog';
 import { useAdBanners, useHomeFeed } from '@/lib/api/home';
 import { useCartCount } from '@/lib/api/commerce';
+import { useMyStoreQuery } from '@/lib/api/seller';
 import { useUnreadNotificationCount } from '@/lib/api/social';
 import { BRAND, BRAND_COPY } from '@/lib/brand';
 import { useRecentlyViewedStore } from '@/lib/recentlyViewed';
@@ -78,6 +79,7 @@ export default function HomeScreen() {
   const { data: banners } = useAdBanners();
   const { data: deals } = useDealProducts(6);
   const { data: cartCount } = useCartCount(userId);
+  const { data: store } = useMyStoreQuery(userId);
   const { data: unread } = useUnreadNotificationCount(userId);
   const { isFavorite, onToggleFavorite } = useFavoriteToggle();
   const { refreshing, onRefresh } = usePullToRefresh();
@@ -329,25 +331,28 @@ export default function HomeScreen() {
         {/* 個人化推薦：種子是這台裝置最近看過的商品，登入時伺服器再加上購物車與收藏。 */}
         <RecommendationRail title="為你推薦" seedIds={recentlyViewed} limit={10} />
 
-        <View className="mt-1 px-4">
-          <Pressable
-            className="bg-surface flex-row items-center gap-3 rounded-2xl p-4"
-            onPress={() => router.push('/(tabs)/publish')}
-          >
-            <View className="bg-brand-orange-soft h-11 w-11 items-center justify-center rounded-xl">
-              <CategoryIcon name="Package" color={BRAND.orange} />
-            </View>
-            <View className="flex-1">
-              <Typography type="body" className="text-navy" style={{ fontWeight: '600' }}>
-                有東西想賣？
-              </Typography>
-              <Typography type="body-sm" color="muted">
-                開一間極貨網店舖，讓你的商品找到對的人
-              </Typography>
-            </View>
-            <ChevronRight size={18} color={BRAND.muted} />
-          </Pressable>
-        </View>
+        {/* 已經有店舖的人不需要這張卡：賣家功能都在賣家介面，從「我的」切換過去。 */}
+        {store ? null : (
+          <View className="mt-1 px-4">
+            <Pressable
+              className="bg-surface flex-row items-center gap-3 rounded-2xl p-4"
+              onPress={() => router.push('/seller/onboarding')}
+            >
+              <View className="bg-brand-orange-soft h-11 w-11 items-center justify-center rounded-xl">
+                <CategoryIcon name="Package" color={BRAND.orange} />
+              </View>
+              <View className="flex-1">
+                <Typography type="body" className="text-navy" style={{ fontWeight: '600' }}>
+                  有東西想賣？
+                </Typography>
+                <Typography type="body-sm" color="muted">
+                  開一間極貨網店舖，讓你的商品找到對的人
+                </Typography>
+              </View>
+              <ChevronRight size={18} color={BRAND.muted} />
+            </Pressable>
+          </View>
+        )}
 
         <View className="mt-6 items-center gap-1 px-4">
           <Typography type="body-xs" color="muted">

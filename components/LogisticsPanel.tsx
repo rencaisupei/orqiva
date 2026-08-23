@@ -5,14 +5,16 @@ import { Copy, RefreshCw, Store, Truck } from 'lucide-react-native';
 
 import {
   useCreateLogisticsOrder,
+  useLogisticsEvents,
   useLogisticsOrder,
   useSyncLogisticsOrder,
 } from '@/lib/api/logistics';
 import { BRAND } from '@/lib/brand';
-import { formatPrice } from '@/lib/format';
+import { formatDateTime, formatPrice } from '@/lib/format';
 import {
   LOGISTICS_STATUS_LABEL,
   LOGISTICS_SUB_TYPE_LABEL,
+  toLogisticsStatus,
   toLogisticsSubType,
   type LogisticsStatus,
   type Order,
@@ -21,6 +23,8 @@ import {
 type Props = {
   order: Order;
   role: 'seller' | 'buyer';
+  /** 顯示綠界回報的貨態更新紀錄。列表畫面不開，避免每張卡片各打一次查詢。 */
+  showEvents?: boolean;
 };
 
 function statusColor(status: LogisticsStatus) {
@@ -30,9 +34,10 @@ function statusColor(status: LogisticsStatus) {
 }
 
 /** 綠界超商取貨付款的門市、寄貨編號與貨態。宅配訂單不會渲染。 */
-export function LogisticsPanel({ order, role }: Props) {
+export function LogisticsPanel({ order, role, showEvents = false }: Props) {
   const { toast } = useToast();
   const { data: shipment, isLoading } = useLogisticsOrder(order.id);
+  const { data: events } = useLogisticsEvents(showEvents ? shipment?.id : undefined);
   const create = useCreateLogisticsOrder();
   const sync = useSyncLogisticsOrder();
 
@@ -114,6 +119,34 @@ export function LogisticsPanel({ order, role }: Props) {
           綠界回報：{shipment.rtn_msg}
           {shipment.rtn_code ? `（${shipment.rtn_code}）` : ''}
         </Typography>
+      ) : null}
+
+      {/* 貨態更新：最新的在最上面，時間是綠界回報的時間。 */}
+      {showEvents && events && events.length > 0 ? (
+        <View className="bg-background gap-2 rounded-xl p-3">
+          <Typography type="body-xs" color="muted">
+            貨態更新
+          </Typography>
+          {events.slice(0, 6).map((event) => {
+            const status = toLogisticsStatus(event.logistics_status);
+            return (
+              <View key={event.id} className="flex-row items-start gap-2">
+                <View
+                  className="mt-1.5 h-1.5 w-1.5 rounded-full"
+                  style={{ backgroundColor: BRAND.blue }}
+                />
+                <View className="flex-1">
+                  <Typography type="body-xs" numberOfLines={2} className="text-navy">
+                    {status ? LOGISTICS_STATUS_LABEL[status] : (event.rtn_msg ?? '狀態更新')}
+                  </Typography>
+                  <Typography type="body-xs" color="muted">
+                    {formatDateTime(event.created_at)}
+                  </Typography>
+                </View>
+              </View>
+            );
+          })}
+        </View>
       ) : null}
 
       {role === 'seller' && !shipment ? (

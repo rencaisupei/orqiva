@@ -10,6 +10,7 @@ import {
   MessageCircle,
   Package,
   Plus,
+  Repeat,
   Settings,
   Store as StoreIcon,
 } from 'lucide-react-native';
@@ -25,6 +26,7 @@ import { useCoinSummary } from '@/lib/api/coins';
 import { useMyStoreQuery, useSellerDashboard, useSellerShippingProfile } from '@/lib/api/seller';
 import { BRAND } from '@/lib/brand';
 import { formatCompact, formatNumber, formatPrice } from '@/lib/format';
+import { exitSellerMode } from '@/lib/mode';
 import { useUserId } from '@/lib/session';
 import { COIN_NAME } from '@/lib/types';
 
@@ -123,6 +125,18 @@ export default function SellerDashboardScreen() {
               {store.name} · 評價 {store.rating.toFixed(1)}（{store.rating_count}）
             </Typography>
           </View>
+          <Pressable
+            className="h-10 flex-row items-center gap-1.5 rounded-full px-3"
+            style={{ backgroundColor: BRAND.orangeSoft }}
+            accessibilityRole="button"
+            accessibilityLabel="切換回買家介面"
+            onPress={exitSellerMode}
+          >
+            <Repeat size={15} color={BRAND.orange} />
+            <Typography type="body-xs" className="text-brand-orange" style={{ fontWeight: '700' }}>
+              買家介面
+            </Typography>
+          </Pressable>
           <Pressable
             className="h-10 w-10 items-center justify-center"
             accessibilityLabel="店舖設定"
@@ -258,7 +272,7 @@ export default function SellerDashboardScreen() {
             icon={<MessageCircle size={18} color={BRAND.blue} />}
             iconBg={BRAND.blueSoft}
             label="買家訊息"
-            href="/(tabs)/messages"
+            href="/seller/messages"
           />
           <MenuRow
             icon={<Coins size={18} color={BRAND.orange} />}

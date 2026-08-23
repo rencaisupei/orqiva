@@ -17,12 +17,28 @@ import {
   useUpdateCartItem,
 } from '@/lib/api/commerce';
 import { BRAND } from '@/lib/brand';
-import { formatPrice } from '@/lib/format';
+import { formatNumber, formatPrice } from '@/lib/format';
 import { useRecentlyViewedStore } from '@/lib/recentlyViewed';
 import { useUserId } from '@/lib/session';
 import type { CartItem } from '@/lib/types';
 
 type Group = { storeId: string; storeName: string; items: CartItem[] };
+
+/** 購物車標題列：分頁沒有系統導覽列，所以標題與件數自己畫。 */
+function CartHeader({ subtitle }: { subtitle: string }) {
+  return (
+    <View className="bg-surface pt-safe px-4 pb-3">
+      <View className="pt-2">
+        <Typography type="h4" className="text-navy" style={{ fontWeight: '700' }}>
+          購物車
+        </Typography>
+        <Typography type="body-sm" color="muted">
+          {subtitle}
+        </Typography>
+      </View>
+    </View>
+  );
+}
 
 export default function CartScreen() {
   const userId = useUserId();
@@ -66,13 +82,21 @@ export default function CartScreen() {
   const allSelected = (items ?? []).length > 0 && selectedItems.length === (items ?? []).length;
 
   if (!userId) {
-    return <SignInRequired title="登入後查看購物車" description="登入即可保存購物車與訂單紀錄。" />;
+    return (
+      <View className="bg-background flex-1">
+        <CartHeader subtitle="登入後就能保存購物車" />
+        <SignInRequired title="登入後查看購物車" description="登入即可保存購物車與訂單紀錄。" />
+      </View>
+    );
   }
 
   if (isLoading) {
     return (
-      <View className="bg-background flex-1 items-center justify-center">
-        <Spinner />
+      <View className="bg-background flex-1">
+        <CartHeader subtitle="正在讀取購物車…" />
+        <View className="flex-1 items-center justify-center">
+          <Spinner />
+        </View>
       </View>
     );
   }
@@ -80,6 +104,7 @@ export default function CartScreen() {
   if ((items ?? []).length === 0) {
     return (
       <View className="bg-background flex-1">
+        <CartHeader subtitle="挑好商品就能一起結帳" />
         <ScrollView contentContainerClassName="pb-8">
           <EmptyState
             icon={<ShoppingCart size={26} color={BRAND.blue} />}
@@ -99,6 +124,10 @@ export default function CartScreen() {
 
   return (
     <View className="bg-background flex-1">
+      <CartHeader
+        subtitle={`${formatNumber((items ?? []).length)} 件商品 · 已勾選 ${formatNumber(selectedItems.length)} 件`}
+      />
+
       <ScrollView contentContainerClassName="p-4 gap-3 pb-6">
         {groups.map((group) => (
           <View key={group.storeId} className="bg-surface rounded-2xl p-3">
@@ -181,7 +210,8 @@ export default function CartScreen() {
         </View>
       </ScrollView>
 
-      <View className="border-border bg-surface pb-safe-offset-3 border-t px-4 py-3">
+      {/* 分頁列已經吃掉底部安全區，這裡只需要一般內距。 */}
+      <View className="border-border bg-surface border-t px-4 py-3">
         <View className="flex-row items-center justify-between">
           <Pressable
             className="flex-row items-center gap-2"

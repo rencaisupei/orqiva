@@ -42,7 +42,11 @@ export default function SellerOrdersScreen() {
   const setStatus = useSetOrderStatus();
 
   if (!userId) {
-    return <SignInRequired title="登入後管理訂單" />;
+    return (
+      <View className="bg-background pt-safe flex-1">
+        <SignInRequired title="登入後管理訂單" />
+      </View>
+    );
   }
 
   const all = orders ?? [];
@@ -64,6 +68,17 @@ export default function SellerOrdersScreen() {
 
   return (
     <View className="bg-background flex-1">
+      <View className="bg-surface pt-safe px-4">
+        <View className="pt-2 pb-1">
+          <Typography type="h4" className="text-navy" style={{ fontWeight: '700' }}>
+            訂單管理
+          </Typography>
+          <Typography type="body-sm" color="muted">
+            確認款項、出貨與貨態都在這裡
+          </Typography>
+        </View>
+      </View>
+
       <View className="bg-surface gap-3 px-4 py-3">
         <SegmentedControl items={FILTERS} value={filter} onChange={setFilter} size="sm" />
 

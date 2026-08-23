@@ -9,15 +9,13 @@ import {
   FileLock2,
   Heart,
   History,
-  LayoutDashboard,
   LifeBuoy,
   LogOut,
   Receipt,
   RefreshCw,
+  Repeat,
   ScrollText,
-  Settings,
   ShieldCheck,
-  ShoppingCart,
   Store as StoreIcon,
   UserX,
 } from 'lucide-react-native';
@@ -26,6 +24,7 @@ import { SignInRequired } from '@/components/SignInRequired';
 import { useMyStoreQuery } from '@/lib/api/seller';
 import { BRAND, BRAND_COPY } from '@/lib/brand';
 import { formatDate } from '@/lib/format';
+import { enterSellerMode } from '@/lib/mode';
 import { useIsAdminConsole, useSessionStore, useUserId } from '@/lib/session';
 import { useOtaUpdates } from '@/lib/updates';
 
@@ -148,11 +147,6 @@ export default function ProfileScreen() {
             onPress={() => router.push('/favorites')}
           />
           <MenuRow
-            icon={<ShoppingCart size={18} color={BRAND.blue} />}
-            title="購物車"
-            onPress={() => router.push('/cart')}
-          />
-          <MenuRow
             icon={<History size={18} color={BRAND.blue} />}
             title="最近瀏覽"
             onPress={() => router.push('/recently-viewed')}
@@ -164,35 +158,47 @@ export default function ProfileScreen() {
           />
         </View>
 
-        <View className="bg-surface mx-4 mt-3 overflow-hidden rounded-2xl">
-          {store ? (
-            <>
-              <MenuRow
-                icon={<LayoutDashboard size={18} color={BRAND.blue} />}
-                title="賣家中心"
-                onPress={() => router.push('/seller')}
-              />
-              <MenuRow
-                icon={<Settings size={18} color={BRAND.blue} />}
-                title="店舖設定"
-                onPress={() => router.push('/seller/store')}
-              />
-            </>
-          ) : (
+        {/* 買家與賣家是兩套介面：這裡只有切換入口，賣家功能全部在賣家介面裡。 */}
+        {store ? (
+          <Pressable
+            className="bg-surface mx-4 mt-3 flex-row items-center gap-3 rounded-2xl px-4 py-4"
+            onPress={() => enterSellerMode(true)}
+          >
+            <View
+              className="h-10 w-10 items-center justify-center rounded-xl"
+              style={{ backgroundColor: BRAND.orangeSoft }}
+            >
+              <Repeat size={19} color={BRAND.orange} />
+            </View>
+            <View className="flex-1">
+              <Typography type="body" className="text-navy" style={{ fontWeight: '700' }}>
+                切換到賣家介面
+              </Typography>
+              <Typography type="body-xs" color="muted" numberOfLines={1}>
+                {store.name} · 訂單、商品與推廣都在那一邊
+              </Typography>
+            </View>
+            <ChevronRight size={18} color={BRAND.muted} />
+          </Pressable>
+        ) : (
+          <View className="bg-surface mx-4 mt-3 overflow-hidden rounded-2xl">
             <MenuRow
               icon={<StoreIcon size={18} color={BRAND.blue} />}
               title="申請成為賣家"
               onPress={() => router.push('/seller/onboarding')}
             />
-          )}
-          {showAdmin ? (
+          </View>
+        )}
+
+        {showAdmin ? (
+          <View className="bg-surface mx-4 mt-3 overflow-hidden rounded-2xl">
             <MenuRow
               icon={<ShieldCheck size={18} color={BRAND.blue} />}
               title="平台管理"
               onPress={() => router.push('/admin')}
             />
-          ) : null}
-        </View>
+          </View>
+        ) : null}
 
         <View className="bg-surface mx-4 mt-3 overflow-hidden rounded-2xl">
           <MenuRow

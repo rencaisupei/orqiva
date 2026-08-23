@@ -10,6 +10,7 @@ import { useCheckinReminder } from '@/lib/api/coins';
 import { useAppSettings, useAutoCleanup, useMaintenanceState } from '@/lib/api/system';
 import { BRAND } from '@/lib/brand';
 import { durationUntil, formatDateTime } from '@/lib/format';
+import { useModeLanding } from '@/lib/mode';
 import { useIsAdmin, useIsSignedIn } from '@/lib/session';
 import { useOtaUpdates } from '@/lib/updates';
 
@@ -88,6 +89,9 @@ export function SystemGate({ children }: { children: React.ReactNode }) {
 
   // 賣家的 J幣簽到提醒：當天第一次開 App 時問伺服器一次該不該提醒。
   useCheckinReminder();
+
+  // 記住上次待在買家還是賣家介面，開 App 時直接落在那一邊。
+  useModeLanding();
 
   const [signInEscape, setSignInEscape] = useState(false);
   const [dismissedAnnouncement, setDismissedAnnouncement] = useState<string | null>(null);

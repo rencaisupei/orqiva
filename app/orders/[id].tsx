@@ -109,6 +109,10 @@ export default function OrderDetailScreen() {
               ))}
             </View>
           ) : null}
+
+          {/* 出貨動態放在最上面這一欄：門市、寄貨編號與貨態更新都在這裡，
+              不必再滑到商品下方。 */}
+          <LogisticsPanel order={order} role={isBuyer ? 'buyer' : 'seller'} showEvents />
         </View>
 
         <View className="bg-surface gap-2 rounded-2xl p-4">
@@ -137,8 +141,6 @@ export default function OrderDetailScreen() {
               備註：{order.note}
             </Typography>
           ) : null}
-
-          <LogisticsPanel order={order} role={isBuyer ? 'buyer' : 'seller'} />
         </View>
 
         <View className="bg-surface gap-3 rounded-2xl p-4">

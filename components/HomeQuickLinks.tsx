@@ -1,14 +1,7 @@
 import { Pressable, ScrollView, View } from 'react-native';
 import { Typography } from 'heroui-native';
 import { router, type Href } from 'expo-router';
-import {
-  Bell,
-  Heart,
-  Receipt,
-  ShieldCheck,
-  ShoppingCart,
-  Store as StoreIcon,
-} from 'lucide-react-native';
+import { Bell, Heart, Receipt, ShieldCheck, ShoppingCart } from 'lucide-react-native';
 
 import { BRAND } from '@/lib/brand';
 import { useIsAdminConsole } from '@/lib/session';
@@ -28,7 +21,6 @@ export function HomeQuickLinks() {
     { label: '我的收藏', href: '/favorites', icon: <Heart size={15} color={BRAND.orange} /> },
     { label: '購物車', href: '/cart', icon: <ShoppingCart size={15} color={BRAND.blue} /> },
     { label: '通知中心', href: '/notifications', icon: <Bell size={15} color={BRAND.blue} /> },
-    { label: '賣家中心', href: '/seller', icon: <StoreIcon size={15} color={BRAND.orange} /> },
   ];
 
   if (showAdmin) {

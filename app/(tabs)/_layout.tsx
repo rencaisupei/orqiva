@@ -1,45 +1,22 @@
-import { Pressable, View, type GestureResponderEvent } from 'react-native';
 import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Grid2x2, House, MessageCircle, Plus, User } from 'lucide-react-native';
+import { Grid2x2, House, MessageCircle, ShoppingCart, User } from 'lucide-react-native';
 
+import { useCartCount } from '@/lib/api/commerce';
 import { BRAND } from '@/lib/brand';
+import { useUserId } from '@/lib/session';
 
-type TabButtonProps = { onPress?: (event: GestureResponderEvent) => void };
-
-function PublishTabButton({ onPress }: TabButtonProps) {
-  return (
-    <View className="flex-1 items-center justify-center">
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="發布商品"
-        onPress={onPress}
-        className="items-center justify-center rounded-full"
-        style={{
-          width: 54,
-          height: 54,
-          marginTop: -22,
-          backgroundColor: BRAND.blue,
-          borderWidth: 4,
-          borderColor: BRAND.white,
-          shadowColor: BRAND.blue,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.3,
-          shadowRadius: 8,
-          elevation: 6,
-        }}
-      >
-        <Plus size={26} color={BRAND.white} strokeWidth={2.8} />
-      </Pressable>
-    </View>
-  );
-}
-
+/**
+ * 買家分頁列：只有買東西會用到的目的地。賣家功能全部收在賣家介面（/seller），
+ * 入口是「我的」裡的模式切換，所以這裡不再有發布商品之類的賣家動作。
+ */
 export default function TabLayout() {
   // A hard-coded tabBar height overrides React Navigation's automatic bottom
   // inset, which pushes the labels under the iOS home indicator and the Android
   // gesture bar. Add the inset back explicitly.
   const insets = useSafeAreaInsets();
+  const userId = useUserId();
+  const { data: cartCount } = useCartCount(userId);
 
   return (
     <Tabs
@@ -73,10 +50,17 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="publish"
+        name="cart"
         options={{
-          title: '發布',
-          tabBarButton: (props) => <PublishTabButton {...props} />,
+          title: '購物車',
+          tabBarBadge: cartCount && cartCount > 0 ? cartCount : undefined,
+          tabBarBadgeStyle: {
+            backgroundColor: BRAND.orange,
+            color: BRAND.white,
+            fontSize: 10,
+            fontWeight: '700',
+          },
+          tabBarIcon: ({ color, size }) => <ShoppingCart color={color} size={size ?? 22} />,
         }}
       />
       <Tabs.Screen
