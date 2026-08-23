@@ -48,6 +48,14 @@ export function ProductCard({ product, isFavorite = false, onToggleFavorite, cla
             </Typography>
           </View>
         ) : null}
+        {/* 賣家用極幣換到的曝光。標明「推廣」，買家才知道這是付費排序。 */}
+        {product.is_boosted ? (
+          <View className="bg-brand-blue absolute bottom-2 left-2 rounded-full px-2 py-0.5">
+            <Typography type="body-xs" className="text-white" style={{ fontWeight: '700' }}>
+              推廣
+            </Typography>
+          </View>
+        ) : null}
       </View>
 
       <View className="gap-1 p-3">

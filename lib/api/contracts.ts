@@ -11,6 +11,10 @@
  * module that imports backend would otherwise pull in a cycle.
  */
 import type {
+  AdBannerPlacement,
+  CoinRedemptionKind,
+  CoinRedemptionStatus,
+  CoinTxKind,
   LogisticsSettings,
   LogisticsSubType,
   LogisticsVerifyResult,
@@ -18,6 +22,7 @@ import type {
   ModerationResult,
   ReportSeverity,
   SellerVerificationStatus,
+  StoreBadgeKind,
 } from '@/lib/types';
 
 /**
@@ -169,6 +174,85 @@ export type MaintenanceStatus = {
   recentRuns: MaintenanceRun[];
 };
 
+/* ── seller-coins ────────────────────────────────────────────── */
+
+export type CoinWalletState = {
+  balance: number;
+  lifetimeEarned: number;
+  lifetimeSpent: number;
+  streak: number;
+  lastCheckinOn: string | null;
+  checkedInToday: boolean;
+  /** 今天（或下一次）簽到會拿到的極幣，含連續天數加成。 */
+  nextCheckinCoins: number;
+};
+
+export type CoinTaskKey = 'list_product' | 'ship_order' | 'reply_message' | 'complete_order';
+
+export type CoinTaskState = {
+  key: CoinTaskKey;
+  label: string;
+  hint: string;
+  coins: number;
+  /** 伺服器用真實資料判斷的完成狀態，前端無法假造。 */
+  done: boolean;
+  claimed: boolean;
+};
+
+export type CoinTransaction = {
+  id: string;
+  kind: CoinTxKind;
+  amount: number;
+  balanceAfter: number;
+  title: string;
+  detail: string | null;
+  createdAt: string;
+};
+
+export type CoinRedemption = {
+  id: string;
+  kind: CoinRedemptionKind;
+  status: CoinRedemptionStatus;
+  cost: number;
+  days: number;
+  placement: AdBannerPlacement;
+  badgeKind: StoreBadgeKind | null;
+  title: string;
+  subtitle: string;
+  imageUrl: string | null;
+  productId: string | null;
+  productTitle: string | null;
+  storeName: string | null;
+  startsAt: string | null;
+  endsAt: string | null;
+  reviewNote: string | null;
+  createdAt: string;
+};
+
+/** 價目表由伺服器回傳，畫面不自己寫價格，避免兩邊對不上。 */
+export type CoinPricing = {
+  ad: Record<AdBannerPlacement, number>;
+  adMaxDays: number;
+  boost: number;
+  boostMaxDays: number;
+  badges: { kind: StoreBadgeKind; label: string; cost: number; days: number }[];
+  checkin: { base: number; bonus: number; max: number };
+  views: { per: number; cap: number };
+  salesRate: number;
+};
+
+export type CoinSummary = {
+  hasStore: boolean;
+  storeName: string | null;
+  wallet: CoinWalletState;
+  tasks: CoinTaskState[];
+  transactions: CoinTransaction[];
+  redemptions: CoinRedemption[];
+  pricing: CoinPricing;
+  /** 台灣時區的今天，任務與簽到都以這一天為準。 */
+  today: string;
+};
+
 /* ── action → response maps ──────────────────────────────────── */
 
 export type MarketResponses = {
@@ -232,4 +316,20 @@ export type ModerationResponses = {
 export type MaintenanceResponses = {
   status: MaintenanceStatus;
   run_cleanup: CleanupRunResult;
+};
+
+export type CoinResponses = {
+  summary: CoinSummary;
+  checkin: { ok: boolean; coins: number; streak: number; balance: number };
+  claim_task: { ok: boolean; coins: number; balance: number };
+  redeem: {
+    ok: boolean;
+    status: CoinRedemptionStatus;
+    cost: number;
+    balance: number;
+    endsAt?: string;
+    redemptionId?: string;
+  };
+  admin_redemptions: { redemptions: CoinRedemption[]; pendingCount: number };
+  review_redemption: { ok: boolean; status: CoinRedemptionStatus; bannerId?: string };
 };

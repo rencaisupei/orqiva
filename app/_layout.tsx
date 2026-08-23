@@ -212,6 +212,8 @@ export default function RootLayout() {
               <Stack.Screen name="seller/new-product" options={{ title: '新增商品' }} />
               <Stack.Screen name="seller/edit/[id]" options={{ title: '編輯商品' }} />
               <Stack.Screen name="seller/orders" options={{ title: '訂單管理' }} />
+              <Stack.Screen name="seller/coins" options={{ title: '極幣中心' }} />
+              <Stack.Screen name="seller/promote" options={{ title: '兌換推廣' }} />
               <Stack.Screen name="seller/store" options={{ title: '店舖設定' }} />
               <Stack.Screen name="admin/index" options={{ title: '平台管理' }} />
               <Stack.Screen name="admin/logistics" options={{ title: '物流串接設定' }} />

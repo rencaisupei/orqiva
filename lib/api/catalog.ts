@@ -62,6 +62,21 @@ export function useCategories() {
   });
 }
 
+/**
+ * 目前正在置頂的商品 id（賣家用極幣兌換的曝光）。
+ *
+ * product_boosts 沒有任何客戶端寫入政策，只有 seller-coins 這支 edge function
+ * 進得去，所以「置頂」不可能由前端自己標上。
+ */
+async function fetchBoostedIds(): Promise<Set<string>> {
+  const { data } = await bilt
+    .from('product_boosts')
+    .select('product_id')
+    .gt('boosted_until', new Date().toISOString())
+    .returns<{ product_id: string }[]>();
+  return new Set((data ?? []).map((row) => row.product_id));
+}
+
 /** The product list read behind `useProducts`, reusable outside a hook (home feed). */
 export async function fetchProducts(filters: ProductFilters): Promise<ProductListItem[]> {
   let query = bilt.from('products').select(LIST_SELECT).eq('status', 'active');
@@ -80,13 +95,30 @@ export async function fetchProducts(filters: ProductFilters): Promise<ProductLis
     query = query.or(`title.ilike.%${term}%,description.ilike.%${term}%`);
   }
 
-  const sort = SORT_COLUMN[filters.sort ?? 'newest'];
+  const sortKey = filters.sort ?? 'newest';
+  const sort = SORT_COLUMN[sortKey];
   query = query.order(sort.column, { ascending: sort.ascending });
   if (filters.limit) query = query.limit(filters.limit);
 
-  const { data, error } = await query.returns<ProductListItem[]>();
+  const [{ data, error }, boosted] = await Promise.all([
+    query.returns<ProductListItem[]>(),
+    fetchBoostedIds(),
+  ]);
   if (error) throw new Error(error.message);
-  return data ?? [];
+
+  const marked = (data ?? []).map((product) => ({
+    ...product,
+    is_boosted: boosted.has(product.id),
+  }));
+
+  /*
+   * 置頂商品排在前面，但只在「瀏覽型」排序（最新／熱門）時這麼做：買家明確選了
+   * 價格或評價排序時，把付費曝光插到最前面等於騙人，那時只保留「推廣」標記。
+   */
+  if (sortKey === 'newest' || sortKey === 'popular') {
+    return [...marked].sort((a, b) => Number(b.is_boosted) - Number(a.is_boosted));
+  }
+  return marked;
 }
 
 export function useProducts(filters: ProductFilters) {

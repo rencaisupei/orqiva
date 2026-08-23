@@ -4,6 +4,7 @@ import { asyncStorage, createClient, webStorage } from '@biltme/backend';
 
 import type {
   AccountResponses,
+  CoinResponses,
   LogisticsNotifyResponses,
   LogisticsResponses,
   MaintenanceResponses,
@@ -178,6 +179,26 @@ export function callModeration<A extends ModerationAction>(
 }
 
 export type MaintenanceAction = keyof MaintenanceResponses;
+
+export type CoinAction = keyof CoinResponses;
+
+/**
+ * Calls the `seller-coins` edge function: 極幣 balances, daily check-in, task
+ * rewards and promotion redemptions. Every coin change is decided there with the
+ * service key — the wallet and ledger tables have no client write policy, so the
+ * app can never grant itself coins.
+ */
+export function callCoins<A extends CoinAction>(
+  action: A,
+  payload: Record<string, unknown> = {},
+): Promise<CoinResponses[A]> {
+  return invokeEdge<CoinResponses[A]>(
+    'seller-coins',
+    action,
+    payload,
+    '極幣服務暫時無法使用，請稍後再試',
+  );
+}
 
 /**
  * Calls the `maintenance` edge function: the scheduled housekeeping run that

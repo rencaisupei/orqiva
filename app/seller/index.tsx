@@ -6,6 +6,7 @@ import {
   BarChart3,
   ChevronRight,
   ClipboardList,
+  Coins,
   MessageCircle,
   Package,
   Plus,
@@ -20,10 +21,12 @@ import { SellerStatTile } from '@/components/SellerStatTile';
 import { SellerTabBar } from '@/components/SellerTabBar';
 import { SignInRequired } from '@/components/SignInRequired';
 import { LinearGradient } from '@/components/ui/primitives/LinearGradient';
+import { useCoinSummary } from '@/lib/api/coins';
 import { useMyStoreQuery, useSellerDashboard, useSellerShippingProfile } from '@/lib/api/seller';
 import { BRAND } from '@/lib/brand';
 import { formatCompact, formatNumber, formatPrice } from '@/lib/format';
 import { useUserId } from '@/lib/session';
+import { COIN_NAME } from '@/lib/types';
 
 type MenuRowProps = {
   icon: ReactNode;
@@ -72,6 +75,7 @@ export default function SellerDashboardScreen() {
   const { data: store, isLoading: storeLoading } = useMyStoreQuery(userId);
   const { data: stats, isLoading: statsLoading } = useSellerDashboard(userId, store?.id ?? null);
   const { data: shippingProfile, isLoading: shippingLoading } = useSellerShippingProfile(userId);
+  const { data: coins } = useCoinSummary(userId);
 
   if (!userId) {
     return (
@@ -204,6 +208,32 @@ export default function SellerDashboardScreen() {
           </LinearGradient>
         </Pressable>
 
+        <Pressable
+          accessibilityRole="button"
+          className="bg-surface flex-row items-center gap-3 rounded-2xl px-4 py-3.5"
+          onPress={() => router.push('/seller/coins')}
+        >
+          <View
+            className="h-10 w-10 items-center justify-center rounded-xl"
+            style={{ backgroundColor: BRAND.orangeSoft }}
+          >
+            <Coins size={19} color={BRAND.orange} />
+          </View>
+          <View className="flex-1">
+            <Typography type="body-xs" color="muted">
+              我的{COIN_NAME}
+              {coins?.wallet.checkedInToday === false ? ' · 今天還沒簽到' : ''}
+            </Typography>
+            <Typography type="h6" className="text-navy" style={{ fontWeight: '700' }}>
+              {formatNumber(coins?.wallet.balance ?? 0)}
+            </Typography>
+          </View>
+          <Typography type="body-xs" className="text-brand-orange" style={{ fontWeight: '600' }}>
+            賺幣換曝光
+          </Typography>
+          <ChevronRight size={18} color={BRAND.muted} />
+        </Pressable>
+
         <View className="gap-2.5">
           <MenuRow
             icon={<Package size={18} color={BRAND.blue} />}
@@ -229,6 +259,12 @@ export default function SellerDashboardScreen() {
             iconBg={BRAND.blueSoft}
             label="買家訊息"
             href="/(tabs)/messages"
+          />
+          <MenuRow
+            icon={<Coins size={18} color={BRAND.orange} />}
+            iconBg={BRAND.orangeSoft}
+            label={`${COIN_NAME}中心與推廣`}
+            href="/seller/coins"
           />
           <MenuRow
             icon={<StoreIcon size={18} color={BRAND.navy} />}

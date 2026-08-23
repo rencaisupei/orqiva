@@ -8,10 +8,12 @@ import { ProductCard } from '@/components/ProductCard';
 import { StarRating } from '@/components/StarRating';
 import { useFavoriteToggle } from '@/hooks/useFavoriteToggle';
 import { useProducts, useStore } from '@/lib/api/catalog';
+import { useStorePromotion } from '@/lib/api/coins';
 import { useStartConversation } from '@/lib/api/social';
 import { BRAND } from '@/lib/brand';
 import { formatDate } from '@/lib/format';
 import { useUserId } from '@/lib/session';
+import { STORE_BADGE_LABEL, toStoreBadgeKind } from '@/lib/types';
 
 export default function StoreScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -19,6 +21,7 @@ export default function StoreScreen() {
   const { toast } = useToast();
   const { data: store, isLoading } = useStore(id);
   const { data: products } = useProducts({ storeId: id, sort: 'newest' });
+  const { data: promotion } = useStorePromotion(id);
   const { isFavorite, onToggleFavorite } = useFavoriteToggle();
   const startConversation = useStartConversation();
 
@@ -37,6 +40,8 @@ export default function StoreScreen() {
       </View>
     );
   }
+
+  const badge = toStoreBadgeKind(promotion?.badge_kind);
 
   const contactSeller = () => {
     if (!userId) {
@@ -69,9 +74,28 @@ export default function StoreScreen() {
                 <Avatar.Fallback />
               </Avatar>
               <View className="flex-1">
-                <Typography type="h6" className="text-navy" style={{ fontWeight: '700' }}>
-                  {store.name}
-                </Typography>
+                <View className="flex-row items-center gap-2">
+                  <Typography
+                    type="h6"
+                    numberOfLines={1}
+                    className="text-navy shrink"
+                    style={{ fontWeight: '700' }}
+                  >
+                    {store.name}
+                  </Typography>
+                  {/* 賣家用極幣兌換的徽章。只有伺服器寫得進 store_promotions。 */}
+                  {badge ? (
+                    <View className="bg-brand-orange shrink-0 rounded-full px-2 py-0.5">
+                      <Typography
+                        type="body-xs"
+                        className="text-white"
+                        style={{ fontWeight: '700' }}
+                      >
+                        {STORE_BADGE_LABEL[badge]}
+                      </Typography>
+                    </View>
+                  ) : null}
+                </View>
                 <View className="flex-row items-center gap-2">
                   <StarRating rating={store.rating} count={store.rating_count} />
                   <View className="flex-row items-center gap-1">

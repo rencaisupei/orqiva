@@ -1,16 +1,15 @@
 import { useMemo, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, View } from 'react-native';
-import { Button, Chip, SearchField, Spinner, Typography } from 'heroui-native';
+import { Button, SearchField, Spinner, Typography } from 'heroui-native';
 import { router } from 'expo-router';
-import { Receipt, Truck } from 'lucide-react-native';
+import { Receipt } from 'lucide-react-native';
 
-import { AppImage } from '@/components/AppImage';
+import { BuyerOrderCard } from '@/components/BuyerOrderCard';
 import { EmptyState } from '@/components/EmptyState';
 import { SegmentedControl, type Segment } from '@/components/SegmentedControl';
 import { SelectPill } from '@/components/SelectPill';
 import {
   matchesShipmentFilter,
-  shipmentChipColor,
   ShipmentStatusBar,
   type ShipmentFilter,
 } from '@/components/ShipmentStatusBar';
@@ -18,18 +17,9 @@ import { SignInRequired } from '@/components/SignInRequired';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { useMyOrders } from '@/lib/api/commerce';
 import { BRAND } from '@/lib/brand';
-import { formatDateTime, formatNumber, formatPrice } from '@/lib/format';
+import { formatNumber } from '@/lib/format';
 import { useUserId } from '@/lib/session';
-import {
-  isCvsOrder,
-  LOGISTICS_STATUS_LABEL,
-  ORDER_STATUS_LABEL,
-  SHIPMENT_STAGE_LABEL,
-  shipmentStage,
-  toLogisticsStatus,
-  type Order,
-  type OrderStatus,
-} from '@/lib/types';
+import { type Order, type OrderStatus } from '@/lib/types';
 
 type StatusFilter = OrderStatus | 'all';
 type RangeKey = 'all' | '30d' | '3m';
@@ -57,21 +47,6 @@ function matchesKeyword(order: Order, keyword: string): boolean {
   if (order.order_no.toLowerCase().includes(keyword)) return true;
   if ((order.store?.name ?? '').toLowerCase().includes(keyword)) return true;
   return order.order_items.some((line) => line.title.toLowerCase().includes(keyword));
-}
-
-/** 取貨門市／寄貨編號：標籤固定寬度，多筆訂單的值上下對齊。 */
-function ShipmentDetailRow({ label, value }: { label: string; value: string | null }) {
-  if (!value) return null;
-  return (
-    <View className="flex-row items-start gap-2">
-      <Typography type="body-xs" color="muted" className="w-16 shrink-0">
-        {label}
-      </Typography>
-      <Typography type="body-xs" numberOfLines={2} className="text-navy flex-1">
-        {value}
-      </Typography>
-    </View>
-  );
 }
 
 /** 貨態徽章顏色與篩選比對搬到 ShipmentStatusBar，與賣家中心共用同一份規則。 */
@@ -196,99 +171,7 @@ export default function OrdersScreen() {
               />
             )
           }
-          renderItem={({ item }) => {
-            const logisticsStatus = toLogisticsStatus(item.logistics_status);
-            const stage = shipmentStage(logisticsStatus);
-
-            return (
-              <Pressable
-                className="bg-surface gap-3 rounded-2xl p-4"
-                onPress={() => router.push({ pathname: '/orders/[id]', params: { id: item.id } })}
-              >
-                <View className="flex-row items-center justify-between gap-3">
-                  <Typography
-                    type="body-sm"
-                    numberOfLines={1}
-                    className="text-navy flex-1"
-                    style={{ fontWeight: '600' }}
-                  >
-                    {item.store?.name ?? '極貨網賣家'}
-                  </Typography>
-                  <Chip
-                    disabled
-                    size="sm"
-                    variant="soft"
-                    color={
-                      item.status === 'cancelled'
-                        ? 'danger'
-                        : item.status === 'completed'
-                          ? 'success'
-                          : 'accent'
-                    }
-                  >
-                    {ORDER_STATUS_LABEL[item.status]}
-                  </Chip>
-                </View>
-
-                {/* 出貨狀態放在商品清單上方：進到列表最先看到的就是「貨到哪了」。 */}
-                {isCvsOrder(item) ? (
-                  <View className="bg-background gap-2 rounded-xl p-3">
-                    <View className="flex-row items-center gap-2">
-                      <Truck size={15} color={BRAND.blue} />
-                      <Typography
-                        type="body-xs"
-                        numberOfLines={1}
-                        className="text-navy flex-1"
-                        style={{ fontWeight: '600' }}
-                      >
-                        {logisticsStatus
-                          ? LOGISTICS_STATUS_LABEL[logisticsStatus]
-                          : '賣家尚未建立物流單'}
-                      </Typography>
-                      <Chip disabled size="sm" variant="soft" color={shipmentChipColor(stage)}>
-                        {SHIPMENT_STAGE_LABEL[stage]}
-                      </Chip>
-                    </View>
-                    <ShipmentDetailRow label="取貨門市" value={item.cvs_store_name} />
-                    <ShipmentDetailRow label="寄貨編號" value={item.logistics_shipment_no} />
-                  </View>
-                ) : null}
-
-                {item.order_items.slice(0, 2).map((line) => (
-                  <View key={line.id} className="flex-row items-center gap-3">
-                    <AppImage uri={line.image_url} className="h-14 w-14 rounded-xl" />
-                    <View className="flex-1">
-                      <Typography type="body-sm" numberOfLines={2} className="text-navy">
-                        {line.title}
-                      </Typography>
-                      <Typography type="body-xs" color="muted">
-                        {formatPrice(line.unit_price)} × {line.quantity}
-                      </Typography>
-                    </View>
-                  </View>
-                ))}
-                {item.order_items.length > 2 ? (
-                  <Typography type="body-xs" color="muted">
-                    以及其他 {item.order_items.length - 2} 項商品
-                  </Typography>
-                ) : null}
-
-                <View className="flex-row items-center justify-between gap-3">
-                  <Typography type="body-xs" color="muted" numberOfLines={1} className="flex-1">
-                    {item.order_no} · {formatDateTime(item.created_at)}
-                  </Typography>
-                  <Typography
-                    type="body"
-                    numberOfLines={1}
-                    className="text-brand-orange"
-                    style={{ fontWeight: '700' }}
-                  >
-                    {formatPrice(item.total)}
-                  </Typography>
-                </View>
-              </Pressable>
-            );
-          }}
+          renderItem={({ item }) => <BuyerOrderCard order={item} />}
         />
       )}
     </View>
