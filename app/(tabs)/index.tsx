@@ -8,6 +8,7 @@ import { AdCarousel } from '@/components/AdCarousel';
 import { CategoryIcon } from '@/components/CategoryIcon';
 import { HomeQuickLinks } from '@/components/HomeQuickLinks';
 import { JihuoLogo, JihuoMark } from '@/components/brand/JihuoLogo';
+import { LaunchAdModal } from '@/components/LaunchAdModal';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductRail } from '@/components/ProductRail';
 import { LinearGradient } from '@/components/ui/primitives/LinearGradient';
@@ -348,6 +349,8 @@ export default function HomeScreen() {
           </Typography>
         </View>
       </ScrollView>
+
+      <LaunchAdModal banners={banners ?? []} fallbackProducts={deals ?? []} />
     </View>
   );
 }

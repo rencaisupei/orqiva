@@ -8,10 +8,14 @@ import { AppImage } from '@/components/AppImage';
 import { LinearGradient } from '@/components/ui/primitives/LinearGradient';
 import { BRAND } from '@/lib/brand';
 import { formatPrice } from '@/lib/format';
-import type { AdBanner, ProductListItem } from '@/lib/types';
+import { isCarouselBanner, type AdBanner, type ProductListItem } from '@/lib/types';
 
-const SLIDE_HEIGHT = 156;
 const AUTO_ADVANCE_MS = 5000;
+
+/** 依實際可用寬度算高度（約 1.9:1），手機不會變成細長條，平板不會過高。 */
+function slideHeight(width: number): number {
+  return Math.round(Math.min(230, Math.max(150, width / 1.9)));
+}
 
 type Slide = {
   key: string;
@@ -82,8 +86,9 @@ export function AdCarousel({
   const scrollRef = useRef<ScrollView>(null);
 
   const slides = useMemo<Slide[]>(() => {
-    if (banners.length > 0) {
-      return banners.map((banner) => ({
+    const carouselBanners = banners.filter((banner) => isCarouselBanner(banner));
+    if (carouselBanners.length > 0) {
+      return carouselBanners.map((banner) => ({
         key: `banner-${banner.id}`,
         tag: '廣告',
         title: banner.title,
@@ -110,123 +115,125 @@ export function AdCarousel({
 
   if (slides.length === 0) return null;
 
-  return (
-    <View className="mt-4 px-4" onLayout={(event) => setWidth(event.nativeEvent.layout.width)}>
-      {width > 0 ? (
-        <>
-          <ScrollView
-            ref={scrollRef}
-            horizontal
-            pagingEnabled
-            decelerationRate="fast"
-            snapToInterval={width}
-            showsHorizontalScrollIndicator={false}
-            scrollEventThrottle={32}
-            onScroll={(event) => {
-              const next = Math.round(event.nativeEvent.contentOffset.x / width);
-              setIndex((current) => (current === next ? current : next));
-            }}
-            style={{ width, height: SLIDE_HEIGHT }}
-          >
-            {slides.map((slide) => (
-              <Pressable
-                key={slide.key}
-                disabled={!slide.onPress}
-                onPress={slide.onPress}
-                style={{ width, height: SLIDE_HEIGHT }}
-              >
-                <View
-                  className="overflow-hidden rounded-3xl"
-                  style={{ width, height: SLIDE_HEIGHT }}
-                >
-                  {slide.imageUrl ? (
-                    <AppImage uri={slide.imageUrl} style={{ width, height: SLIDE_HEIGHT }} />
-                  ) : (
-                    <LinearGradient
-                      colors={[BRAND.navy, '#0B3FA8', BRAND.blue]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={{ width, height: SLIDE_HEIGHT }}
-                    />
-                  )}
+  const height = slideHeight(width);
 
-                  {/* Text sits on a dark scrim so it stays readable on any artwork. */}
-                  <LinearGradient
-                    colors={['rgba(8,38,107,0.05)', 'rgba(8,38,107,0.82)']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 0, y: 1 }}
+  return (
+    <View className="mt-4 px-4">
+      {/* 量測寬度放在內層：外層有左右內距，量外層會多出 32px，輪播就會往右偏。 */}
+      <View onLayout={(event) => setWidth(Math.round(event.nativeEvent.layout.width))}>
+        {width > 0 ? (
+          <>
+            <ScrollView
+              ref={scrollRef}
+              horizontal
+              pagingEnabled
+              decelerationRate="fast"
+              snapToInterval={width}
+              showsHorizontalScrollIndicator={false}
+              scrollEventThrottle={32}
+              onScroll={(event) => {
+                const next = Math.round(event.nativeEvent.contentOffset.x / width);
+                setIndex((current) => (current === next ? current : next));
+              }}
+              style={{ width, height }}
+            >
+              {slides.map((slide) => (
+                <Pressable
+                  key={slide.key}
+                  disabled={!slide.onPress}
+                  onPress={slide.onPress}
+                  style={{ width, height }}
+                >
+                  <View className="overflow-hidden rounded-3xl" style={{ width, height }}>
+                    {slide.imageUrl ? (
+                      <AppImage uri={slide.imageUrl} style={{ width, height }} />
+                    ) : (
+                      <LinearGradient
+                        colors={[BRAND.navy, '#0B3FA8', BRAND.blue]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={{ width, height }}
+                      />
+                    )}
+
+                    {/* Text sits on a dark scrim so it stays readable on any artwork. */}
+                    <LinearGradient
+                      colors={['rgba(8,38,107,0.05)', 'rgba(8,38,107,0.82)']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 0, y: 1 }}
+                      style={{
+                        position: 'absolute',
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        height,
+                      }}
+                    />
+
+                    <View className="absolute top-3 left-3 flex-row items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-1">
+                      <Megaphone size={12} color={BRAND.orange} />
+                      <Typography
+                        type="body-xs"
+                        className="text-navy"
+                        numberOfLines={1}
+                        style={{ fontWeight: '700' }}
+                      >
+                        {slide.tag}
+                      </Typography>
+                    </View>
+
+                    <View className="absolute right-4 bottom-3 left-4 gap-1">
+                      <Typography
+                        type="h6"
+                        numberOfLines={2}
+                        className="text-white"
+                        style={{ fontWeight: '700' }}
+                      >
+                        {slide.title}
+                      </Typography>
+                      {slide.subtitle ? (
+                        <Typography type="body-xs" numberOfLines={2} className="text-white/85">
+                          {slide.subtitle}
+                        </Typography>
+                      ) : null}
+                      {slide.onPress ? (
+                        <View className="mt-1 flex-row items-center gap-1 self-start rounded-full bg-white px-3 py-1">
+                          <Typography
+                            type="body-xs"
+                            className="text-navy"
+                            style={{ fontWeight: '700' }}
+                          >
+                            {slide.ctaLabel}
+                          </Typography>
+                          <ChevronRight size={12} color={BRAND.navy} />
+                        </View>
+                      ) : null}
+                    </View>
+                  </View>
+                </Pressable>
+              ))}
+            </ScrollView>
+
+            {slides.length > 1 ? (
+              <View className="mt-2 flex-row items-center justify-center gap-1.5">
+                {slides.map((slide, dotIndex) => (
+                  <View
+                    key={slide.key}
                     style={{
-                      position: 'absolute',
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      height: SLIDE_HEIGHT,
+                      width: dotIndex === index ? 18 : 6,
+                      height: 6,
+                      borderRadius: 999,
+                      backgroundColor: dotIndex === index ? BRAND.orange : BRAND.border,
                     }}
                   />
-
-                  <View className="absolute top-3 left-3 flex-row items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-1">
-                    <Megaphone size={12} color={BRAND.orange} />
-                    <Typography
-                      type="body-xs"
-                      className="text-navy"
-                      numberOfLines={1}
-                      style={{ fontWeight: '700' }}
-                    >
-                      {slide.tag}
-                    </Typography>
-                  </View>
-
-                  <View className="absolute right-4 bottom-3 left-4 gap-1">
-                    <Typography
-                      type="h6"
-                      numberOfLines={2}
-                      className="text-white"
-                      style={{ fontWeight: '700' }}
-                    >
-                      {slide.title}
-                    </Typography>
-                    {slide.subtitle ? (
-                      <Typography type="body-xs" numberOfLines={2} className="text-white/85">
-                        {slide.subtitle}
-                      </Typography>
-                    ) : null}
-                    {slide.onPress ? (
-                      <View className="mt-1 flex-row items-center gap-1 self-start rounded-full bg-white px-3 py-1">
-                        <Typography
-                          type="body-xs"
-                          className="text-navy"
-                          style={{ fontWeight: '700' }}
-                        >
-                          {slide.ctaLabel}
-                        </Typography>
-                        <ChevronRight size={12} color={BRAND.navy} />
-                      </View>
-                    ) : null}
-                  </View>
-                </View>
-              </Pressable>
-            ))}
-          </ScrollView>
-
-          {slides.length > 1 ? (
-            <View className="mt-2 flex-row items-center justify-center gap-1.5">
-              {slides.map((slide, dotIndex) => (
-                <View
-                  key={slide.key}
-                  style={{
-                    width: dotIndex === index ? 18 : 6,
-                    height: 6,
-                    borderRadius: 999,
-                    backgroundColor: dotIndex === index ? BRAND.orange : BRAND.border,
-                  }}
-                />
-              ))}
-            </View>
-          ) : null}
-        </>
-      ) : (
-        <View style={{ height: SLIDE_HEIGHT }} />
-      )}
+                ))}
+              </View>
+            ) : null}
+          </>
+        ) : (
+          <View style={{ height }} />
+        )}
+      </View>
     </View>
   );
 }

@@ -870,6 +870,17 @@ export const AD_BANNER_LINK_TYPES: AdBannerLinkType[] = [
   'search',
 ];
 
+/** 廣告版位：首頁輪播、開啟 App 的彈出廣告，或兩邊都出現。 */
+export type AdBannerPlacement = 'carousel' | 'popup' | 'both';
+
+export const AD_BANNER_PLACEMENT_LABEL: Record<AdBannerPlacement, string> = {
+  carousel: '首頁輪播',
+  popup: '開啟時彈出',
+  both: '兩邊都放',
+};
+
+export const AD_BANNER_PLACEMENTS: AdBannerPlacement[] = ['carousel', 'popup', 'both'];
+
 export type AdBanner = {
   id: string;
   title: string;
@@ -878,6 +889,7 @@ export type AdBanner = {
   link_type: AdBannerLinkType;
   link_value: string | null;
   cta_label: string;
+  placement: AdBannerPlacement;
   is_active: boolean;
   sort_order: number;
   starts_at: string | null;
@@ -885,6 +897,16 @@ export type AdBanner = {
   created_at: string;
   updated_at: string;
 };
+
+/** 這張橫幅要不要出現在首頁輪播。 */
+export function isCarouselBanner(banner: AdBanner): boolean {
+  return banner.placement !== 'popup';
+}
+
+/** 這張橫幅要不要當成開啟 App 的彈出廣告。 */
+export function isPopupBanner(banner: AdBanner): boolean {
+  return banner.placement === 'popup' || banner.placement === 'both';
+}
 
 /** 上架中且在起訖時間內；買家端的 RLS 也是同一條規則。 */
 export function isBannerLive(banner: AdBanner, now = Date.now()): boolean {

@@ -191,6 +191,23 @@ export type LogisticsResponses = {
   sync: { status: string };
 };
 
+/**
+ * `logistics-notify`：出貨／到貨的補發通知。回傳說明這一次到底有沒有發出去，
+ * 沒發的原因（狀態不需要通知、已經通知過）也一併帶回來。
+ */
+export type ShipmentNoticeResult = {
+  ok: boolean;
+  notified: boolean;
+  status: string;
+  title?: string;
+  reason?: string;
+  pushed?: number;
+};
+
+export type LogisticsNotifyResponses = {
+  notify_shipment: ShipmentNoticeResult;
+};
+
 export type NotifyResponses = {
   register_token: EdgeJson;
   unregister_token: EdgeJson;

@@ -32,7 +32,7 @@ import {
 } from '@/lib/types';
 
 type StatusFilter = OrderStatus | 'all';
-type RangeKey = 'all' | '30d' | '3m' | '1y';
+type RangeKey = 'all' | '30d' | '3m';
 
 const STATUS_SEGMENTS: Segment<StatusFilter>[] = [
   { key: 'all', label: '全部' },
@@ -47,7 +47,6 @@ const RANGES: { key: RangeKey; label: string; days: number | null }[] = [
   { key: 'all', label: '全部時間', days: null },
   { key: '30d', label: '近 30 天', days: 30 },
   { key: '3m', label: '近 3 個月', days: 90 },
-  { key: '1y', label: '近 1 年', days: 365 },
 ];
 
 const DAY_MS = 86_400_000;
@@ -231,25 +230,7 @@ export default function OrdersScreen() {
                   </Chip>
                 </View>
 
-                {item.order_items.slice(0, 2).map((line) => (
-                  <View key={line.id} className="flex-row items-center gap-3">
-                    <AppImage uri={line.image_url} className="h-14 w-14 rounded-xl" />
-                    <View className="flex-1">
-                      <Typography type="body-sm" numberOfLines={2} className="text-navy">
-                        {line.title}
-                      </Typography>
-                      <Typography type="body-xs" color="muted">
-                        {formatPrice(line.unit_price)} × {line.quantity}
-                      </Typography>
-                    </View>
-                  </View>
-                ))}
-                {item.order_items.length > 2 ? (
-                  <Typography type="body-xs" color="muted">
-                    以及其他 {item.order_items.length - 2} 項商品
-                  </Typography>
-                ) : null}
-
+                {/* 出貨狀態放在商品清單上方：進到列表最先看到的就是「貨到哪了」。 */}
                 {isCvsOrder(item) ? (
                   <View className="bg-background gap-2 rounded-xl p-3">
                     <View className="flex-row items-center gap-2">
@@ -271,6 +252,25 @@ export default function OrdersScreen() {
                     <ShipmentDetailRow label="取貨門市" value={item.cvs_store_name} />
                     <ShipmentDetailRow label="寄貨編號" value={item.logistics_shipment_no} />
                   </View>
+                ) : null}
+
+                {item.order_items.slice(0, 2).map((line) => (
+                  <View key={line.id} className="flex-row items-center gap-3">
+                    <AppImage uri={line.image_url} className="h-14 w-14 rounded-xl" />
+                    <View className="flex-1">
+                      <Typography type="body-sm" numberOfLines={2} className="text-navy">
+                        {line.title}
+                      </Typography>
+                      <Typography type="body-xs" color="muted">
+                        {formatPrice(line.unit_price)} × {line.quantity}
+                      </Typography>
+                    </View>
+                  </View>
+                ))}
+                {item.order_items.length > 2 ? (
+                  <Typography type="body-xs" color="muted">
+                    以及其他 {item.order_items.length - 2} 項商品
+                  </Typography>
                 ) : null}
 
                 <View className="flex-row items-center justify-between gap-3">

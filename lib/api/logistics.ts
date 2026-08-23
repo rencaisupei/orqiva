@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { bilt, callLogistics } from '@/lib/backend';
+import { bilt, callLogistics, callLogisticsNotify } from '@/lib/backend';
 import type {
   LogisticsEvent,
   LogisticsOrder,
@@ -176,16 +176,33 @@ export function useLogisticsEvents(logisticsOrderId: string | undefined) {
   });
 }
 
+/**
+ * 出貨／到貨通知的補發：綠界的回拋只在「貨態真的變了」時才通知，賣家自己
+ * 建單那一刻（狀態已經是 created）與同步補回來的貨態都不會觸發，所以這裡
+ * 補叫一次。要不要真的發由伺服器判斷，失敗也不該影響原本的動作。
+ */
+async function notifyShipment(orderId: string): Promise<void> {
+  try {
+    await callLogisticsNotify('notify_shipment', { orderId });
+  } catch {
+    // 通知是附加動作：建單／同步本身已經成功了。
+  }
+}
+
 /** Seller: push the order to ECPay and get the 寄貨編號 back. */
 export function useCreateLogisticsOrder() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: { orderId: string; logisticsSubType?: LogisticsSubType }) =>
-      callLogistics('create', input),
+    mutationFn: async (input: { orderId: string; logisticsSubType?: LogisticsSubType }) => {
+      const result = await callLogistics('create', input);
+      await notifyShipment(input.orderId);
+      return result;
+    },
     onSuccess: (_data, input) => {
       void qc.invalidateQueries({ queryKey: ['logistics', 'order', input.orderId] });
       void qc.invalidateQueries({ queryKey: ['orders'] });
       void qc.invalidateQueries({ queryKey: ['order', input.orderId] });
+      void qc.invalidateQueries({ queryKey: ['notifications'] });
     },
   });
 }
@@ -194,11 +211,16 @@ export function useCreateLogisticsOrder() {
 export function useSyncLogisticsOrder() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (orderId: string) => callLogistics('sync', { orderId }),
+    mutationFn: async (orderId: string) => {
+      const result = await callLogistics('sync', { orderId });
+      await notifyShipment(orderId);
+      return result;
+    },
     onSuccess: (_data, orderId) => {
       void qc.invalidateQueries({ queryKey: ['logistics', 'order', orderId] });
       void qc.invalidateQueries({ queryKey: ['orders'] });
       void qc.invalidateQueries({ queryKey: ['order', orderId] });
+      void qc.invalidateQueries({ queryKey: ['notifications'] });
     },
   });
 }
@@ -219,6 +241,7 @@ export function useSyncShipments() {
       for (const orderId of orderIds) {
         try {
           await callLogistics('sync', { orderId });
+          await notifyShipment(orderId);
           synced += 1;
         } catch {
           failed += 1;
@@ -232,6 +255,7 @@ export function useSyncShipments() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['logistics'] });
       void qc.invalidateQueries({ queryKey: ['orders'] });
+      void qc.invalidateQueries({ queryKey: ['notifications'] });
     },
   });
 }

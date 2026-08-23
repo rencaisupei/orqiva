@@ -34,10 +34,13 @@ import { formatPrice } from '@/lib/format';
 import {
   AD_BANNER_LINK_LABEL,
   AD_BANNER_LINK_TYPES,
+  AD_BANNER_PLACEMENT_LABEL,
+  AD_BANNER_PLACEMENTS,
   HOME_AUTO_KIND_LABEL,
   HOME_AUTO_KINDS,
   type AdBanner,
   type AdBannerLinkType,
+  type AdBannerPlacement,
   type HomeSection,
 } from '@/lib/types';
 
@@ -48,8 +51,15 @@ const EMPTY_BANNER: AdBannerInput = {
   link_type: 'none',
   link_value: null,
   cta_label: '立即查看',
+  placement: 'carousel',
   is_active: false,
   sort_order: 10,
+};
+
+const PLACEMENT_HINT: Record<AdBannerPlacement, string> = {
+  carousel: '出現在首頁分類圖示下方的輪播。',
+  popup: '使用者打開 App 時跳出全螢幕商品廣告，同一支一天最多跳一次。',
+  both: '首頁輪播與開啟時的彈出廣告都會出現。',
 };
 
 const LINK_HINT: Record<AdBannerLinkType, string> = {
@@ -377,6 +387,7 @@ function BannerEditor({ userId }: { userId: string }) {
       link_type: banner.link_type,
       link_value: banner.link_value,
       cta_label: banner.cta_label,
+      placement: banner.placement,
       is_active: banner.is_active,
       sort_order: banner.sort_order,
     });
@@ -446,7 +457,8 @@ function BannerEditor({ userId }: { userId: string }) {
           {editingId ? '編輯廣告' : '新增廣告'}
         </Typography>
         <Typography type="body-xs" color="muted">
-          橫幅要按下「上架顯示」才會出現在首頁輪播。沒有任何上架中的橫幅時，系統會自動用降價最多的商品補位。
+          橫幅要按下「上架顯示」才會出現。版位可選首頁輪播、開啟 App
+          時的彈出廣告，或兩邊都放；沒有任何上架中的橫幅時，系統會自動用降價最多的商品補位。
         </Typography>
 
         <FormError message={error} />
@@ -528,6 +540,25 @@ function BannerEditor({ userId }: { userId: string }) {
           )}
         </View>
 
+        <View className="gap-2">
+          <Label>顯示版位</Label>
+          <View className="flex-row flex-wrap gap-2">
+            {AD_BANNER_PLACEMENTS.map((placement) => (
+              <SelectPill
+                key={placement}
+                size="sm"
+                tone="soft"
+                label={AD_BANNER_PLACEMENT_LABEL[placement]}
+                selected={values.placement === placement}
+                onPress={() => setValues((current) => ({ ...current, placement }))}
+              />
+            ))}
+          </View>
+          <Typography type="body-xs" color="muted">
+            {PLACEMENT_HINT[values.placement]}
+          </Typography>
+        </View>
+
         <View className="flex-row items-center gap-3">
           <Typography type="body-sm" className="text-navy flex-1">
             上架顯示（審核通過）
@@ -584,6 +615,7 @@ function BannerEditor({ userId }: { userId: string }) {
                 {banner.subtitle || '（沒有說明文字）'}
               </Typography>
               <Typography type="body-xs" color="muted">
+                {AD_BANNER_PLACEMENT_LABEL[banner.placement]} ·{' '}
                 {AD_BANNER_LINK_LABEL[banner.link_type]}
                 {banner.link_value ? ` · ${banner.link_value}` : ''} · 排序 {banner.sort_order}
               </Typography>
@@ -611,6 +643,7 @@ function BannerEditor({ userId }: { userId: string }) {
                       link_type: banner.link_type,
                       link_value: banner.link_value,
                       cta_label: banner.cta_label,
+                      placement: banner.placement,
                       is_active: !banner.is_active,
                       sort_order: banner.sort_order,
                     },
@@ -700,10 +733,11 @@ export function AdminHomePanel({ userId }: { userId: string }) {
 
       <View className="bg-surface gap-1 rounded-2xl p-4">
         <Typography type="body" className="text-navy" style={{ fontWeight: '700' }}>
-          首頁廣告輪播
+          首頁廣告與彈出廣告
         </Typography>
         <Typography type="body-xs" color="muted">
-          輪播出現在分類圖示下方，5 秒換一張。
+          輪播出現在分類圖示下方，5 秒換一張；彈出廣告會在使用者打開 App
+          時蓋在首頁上，同一支一天最多跳一次。兩者都只顯示審核後上架的橫幅，沒有的話由系統自動挑降價最多的商品。
         </Typography>
       </View>
 

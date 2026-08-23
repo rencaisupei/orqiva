@@ -288,6 +288,7 @@ export type AdBannerInput = Pick<
   | 'link_type'
   | 'link_value'
   | 'cta_label'
+  | 'placement'
   | 'is_active'
   | 'sort_order'
 >;

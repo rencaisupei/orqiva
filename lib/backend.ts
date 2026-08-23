@@ -4,6 +4,7 @@ import { asyncStorage, createClient, webStorage } from '@biltme/backend';
 
 import type {
   AccountResponses,
+  LogisticsNotifyResponses,
   LogisticsResponses,
   MaintenanceResponses,
   MarketResponses,
@@ -106,6 +107,26 @@ export function callLogistics<A extends LogisticsAction>(
 }
 
 export type NotifyAction = keyof NotifyResponses;
+
+export type LogisticsNotifyAction = keyof LogisticsNotifyResponses;
+
+/**
+ * Calls the `logistics-notify` edge function: sends the buyer the shipped /
+ * arrived notice when ECPay's own callback cannot (seller just created the
+ * label, or the status was recovered by a sync). It decides server-side whether
+ * a notice is actually due, so calling it after every sync is safe.
+ */
+export function callLogisticsNotify<A extends LogisticsNotifyAction>(
+  action: A,
+  payload: Record<string, unknown> = {},
+): Promise<LogisticsNotifyResponses[A]> {
+  return invokeEdge<LogisticsNotifyResponses[A]>(
+    'logistics-notify',
+    action,
+    payload,
+    '通知服務暫時無法使用，請稍後再試',
+  );
+}
 
 /**
  * Calls the `notify` edge function: device tokens, chat messages and every
