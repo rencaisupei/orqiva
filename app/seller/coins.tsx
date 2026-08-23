@@ -154,7 +154,7 @@ function LedgerRow({ row }: { row: CoinTransaction }) {
 }
 
 /**
- * 極幣中心（只有賣家看得到）。
+ * J幣中心（只有賣家看得到）。
  *
  * 所有加幣與扣幣都由 seller-coins edge function 決定，這一頁只負責顯示與觸發：
  * 打開頁面時伺服器會順手補發「昨日瀏覽回饋」與「訂單完成回饋」。
@@ -169,7 +169,7 @@ export default function SellerCoinsScreen() {
   if (!userId) {
     return (
       <View className="bg-background flex-1">
-        <SignInRequired title="登入後查看極幣" />
+        <SignInRequired title={`登入後查看${COIN_NAME}`} />
       </View>
     );
   }
@@ -187,7 +187,7 @@ export default function SellerCoinsScreen() {
       <View className="bg-background flex-1">
         <EmptyState
           icon={<Coins size={26} color={BRAND.orange} />}
-          title="暫時讀不到極幣資料"
+          title={`暫時讀不到${COIN_NAME}資料`}
           description={error instanceof Error ? error.message : '請稍後再試一次。'}
         />
       </View>
@@ -200,7 +200,7 @@ export default function SellerCoinsScreen() {
         <EmptyState
           icon={<StoreIcon size={26} color={BRAND.blue} />}
           title={`${COIN_NAME}是賣家專屬`}
-          description="建立店舖之後就能靠簽到、任務與成交累積極幣，用來換廣告曝光。"
+          description={`建立店舖之後就能靠簽到、任務與成交累積${COIN_NAME}，用來換廣告曝光。`}
           action={
             <Button onPress={() => router.push('/seller/onboarding')}>
               <Button.Label>申請成為賣家</Button.Label>
@@ -318,7 +318,10 @@ export default function SellerCoinsScreen() {
 
         {data.redemptions.length > 0 ? (
           <>
-            <SectionTitle label="我的推廣" hint="廣告版位需管理員審核，未通過會全額退回極幣" />
+            <SectionTitle
+              label="我的推廣"
+              hint={`廣告版位需管理員審核，未通過會全額退回${COIN_NAME}`}
+            />
             {data.redemptions.slice(0, 8).map((row) => (
               <RedemptionRow key={row.id} row={row} />
             ))}

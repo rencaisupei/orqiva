@@ -153,7 +153,7 @@ export type Product = {
 export type ProductListItem = Product & {
   store: StoreSummary | null;
   /**
-   * 賣家用極幣兌換的「商品置頂」。不是資料庫欄位，而是列表查詢時對照
+   * 賣家用J幣兌換的「商品置頂」。不是資料庫欄位，而是列表查詢時對照
    * product_boosts（只有伺服器寫得進去）標記出來的，所以賣家無法自己造假。
    */
   is_boosted?: boolean;
@@ -929,10 +929,10 @@ export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
   cancelled: '已取消',
 };
 
-/* ── 極幣（賣家專屬點數） ─────────────────────────────────────── */
+/* ── J幣（賣家專屬點數） ─────────────────────────────────────── */
 
 /** 幣的名字。只有賣家賺得到、也只能用在推廣，不能折抵買東西。 */
-export const COIN_NAME = '極幣';
+export const COIN_NAME = 'J幣';
 
 export type CoinTxKind = 'checkin' | 'task' | 'views' | 'sales' | 'redeem' | 'refund' | 'admin';
 
@@ -942,7 +942,7 @@ export const COIN_TX_KIND_LABEL: Record<CoinTxKind, string> = {
   views: '瀏覽回饋',
   sales: '成交回饋',
   redeem: '兌換推廣',
-  refund: '退回極幣',
+  refund: '退回J幣',
   admin: '平台調整',
 };
 

@@ -83,7 +83,7 @@ export default function StoreScreen() {
                   >
                     {store.name}
                   </Typography>
-                  {/* 賣家用極幣兌換的徽章。只有伺服器寫得進 store_promotions。 */}
+                  {/* 賣家用J幣兌換的徽章。只有伺服器寫得進 store_promotions。 */}
                   {badge ? (
                     <View className="bg-brand-orange shrink-0 rounded-full px-2 py-0.5">
                       <Typography

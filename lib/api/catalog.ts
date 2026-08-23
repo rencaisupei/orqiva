@@ -63,7 +63,7 @@ export function useCategories() {
 }
 
 /**
- * 目前正在置頂的商品 id（賣家用極幣兌換的曝光）。
+ * 目前正在置頂的商品 id（賣家用J幣兌換的曝光）。
  *
  * product_boosts 沒有任何客戶端寫入政策，只有 seller-coins 這支 edge function
  * 進得去，所以「置頂」不可能由前端自己標上。

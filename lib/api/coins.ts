@@ -9,7 +9,7 @@ import type {
   StorePromotion,
 } from '@/lib/types';
 
-/** 極幣錢包 + 今日任務 + 明細。開這一頁時伺服器會順手補發被動獎勵。 */
+/** J幣錢包 + 今日任務 + 明細。開這一頁時伺服器會順手補發被動獎勵。 */
 export function useCoinSummary(userId: string | null) {
   return useQuery({
     enabled: !!userId,

@@ -183,7 +183,7 @@ export type CoinWalletState = {
   streak: number;
   lastCheckinOn: string | null;
   checkedInToday: boolean;
-  /** 今天（或下一次）簽到會拿到的極幣，含連續天數加成。 */
+  /** 今天（或下一次）簽到會拿到的J幣，含連續天數加成。 */
   nextCheckinCoins: number;
 };
 

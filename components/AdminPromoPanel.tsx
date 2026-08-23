@@ -139,10 +139,10 @@ function RedemptionCard({ row }: { row: CoinRedemption }) {
 }
 
 /**
- * 推廣審核：賣家用極幣兌換的廣告版位在這裡核准或退回。
+ * 推廣審核：賣家用J幣兌換的廣告版位在這裡核准或退回。
  *
  * 核准時由 seller-coins 建立 ad_banners 那一列（起訖時間依兌換天數），退回時把
- * 極幣全額退還並通知賣家 —— 兩邊都在伺服器端完成，後台只送出決定。
+ * J幣全額退還並通知賣家 —— 兩邊都在伺服器端完成，後台只送出決定。
  */
 export function AdminPromoPanel() {
   const [filter, setFilter] = useState<Filter>('pending');
