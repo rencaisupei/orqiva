@@ -15,6 +15,7 @@ import {
 import { router, useLocalSearchParams } from 'expo-router';
 import { ChevronRight, ShieldAlert, ShieldCheck, Truck, Wrench } from 'lucide-react-native';
 
+import { AdminHomePanel } from '@/components/AdminHomePanel';
 import { AppImage } from '@/components/AppImage';
 import { CleanupPanel } from '@/components/CleanupPanel';
 import { EmptyState } from '@/components/EmptyState';
@@ -74,6 +75,7 @@ import {
 
 type TabKey =
   | 'overview'
+  | 'home'
   | 'moderation'
   | 'users'
   | 'products'
@@ -84,6 +86,7 @@ type TabKey =
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'overview', label: '總覽' },
+  { key: 'home', label: '首頁內容' },
   { key: 'moderation', label: 'AI 審核' },
   { key: 'users', label: '會員與權限' },
   { key: 'products', label: '商品' },
@@ -94,7 +97,7 @@ const TABS: { key: TabKey; label: string }[] = [
 ];
 
 /** Bumped whenever this screen changes, so a stale cached bundle is obvious. */
-const CONSOLE_BUILD = '後台 build 0822-e';
+const CONSOLE_BUILD = '後台 build 0823-a';
 
 function isTabKey(value: unknown): value is TabKey {
   return typeof value === 'string' && TABS.some((item) => item.key === value);
@@ -822,6 +825,8 @@ export default function AdminScreen() {
             <CleanupPanel />
           </>
         ) : null}
+
+        {tab === 'home' ? <AdminHomePanel userId={userId} /> : null}
 
         {tab === 'moderation' ? (
           <>

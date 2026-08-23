@@ -19,6 +19,7 @@ export function SelectPill({
   disabled = false,
   size = 'md',
   tone = 'solid',
+  block = false,
   onPress,
   className,
 }: {
@@ -27,6 +28,8 @@ export function SelectPill({
   disabled?: boolean;
   size?: 'sm' | 'md';
   tone?: SelectPillTone;
+  /** Fills the parent's width so pills laid out in columns line up. */
+  block?: boolean;
   onPress: () => void;
   className?: string;
 }) {
@@ -58,8 +61,8 @@ export function SelectPill({
       onPress={onPress}
       style={style}
       className={`flex-row items-center justify-center rounded-full border ${padding} ${container} ${
-        className ?? ''
-      }`}
+        block ? 'w-full' : ''
+      } ${className ?? ''}`}
     >
       <Typography type={textType} numberOfLines={1} className={text} style={{ fontWeight: '600' }}>
         {label}

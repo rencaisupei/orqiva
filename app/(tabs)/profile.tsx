@@ -8,6 +8,7 @@ import {
   ChevronRight,
   FileLock2,
   Heart,
+  History,
   LayoutDashboard,
   LifeBuoy,
   LogOut,
@@ -150,6 +151,11 @@ export default function ProfileScreen() {
             icon={<ShoppingCart size={18} color={BRAND.blue} />}
             title="購物車"
             onPress={() => router.push('/cart')}
+          />
+          <MenuRow
+            icon={<History size={18} color={BRAND.blue} />}
+            title="最近瀏覽"
+            onPress={() => router.push('/recently-viewed')}
           />
           <MenuRow
             icon={<Bell size={18} color={BRAND.blue} />}

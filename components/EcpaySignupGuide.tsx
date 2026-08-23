@@ -111,15 +111,19 @@ export function EcpaySignupGuide({ showBackfillGuide = true }: { showBackfillGui
           </View>
           <Typography type="body-xs" color="muted" className="leading-5">
             💡
-            註冊驗證通過後（約需2-3個工作日），請登入綠界廠商後台，至「系統開發管理」➔「系統介面設定」找到物流區塊的
-            HashKey 與 HashIV，商店代號（MerchantID）在後台首頁或帳戶資訊即可看到，
+            註冊驗證通過後（約需2-3個工作日），請登入綠界廠商後台，至「系統開發管理」➔「系統介面設定」找到
+            <Typography type="body-xs" className="text-navy" style={{ fontWeight: '700' }}>
+              物流
+            </Typography>
+            區塊的 HashKey 與 HashIV（注意：金流／全方位金流也有一組，兩組不一樣，貼錯會驗證失敗），
+            商店代號（MerchantID）在後台首頁或帳戶資訊即可看到，
             再把下面五個欄位填回極貨網，才會正式開通超商貨到付款。
           </Typography>
         </View>
       ) : (
         <Typography type="body-xs" color="muted" className="leading-5">
-          💡 註冊驗證通過後（約需2-3個工作日），到「賣家中心 →
-          店舖設定」把綠界商店代號、HashKey、HashIV 填回極貨網，就會開通超商貨到付款。
+          💡 註冊驗證通過後（約需2-3個工作日），到「賣家中心 → 店舖設定」把綠界商店代號與「物流」的
+          HashKey、HashIV（不是金流那一組）填回極貨網，就會開通超商貨到付款。
         </Typography>
       )}
     </View>

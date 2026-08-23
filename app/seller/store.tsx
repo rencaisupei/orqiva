@@ -137,7 +137,7 @@ export default function StoreSettingsScreen() {
         return;
       }
       if (!hasStoredKeys && (hashKey.trim().length < 8 || hashIv.trim().length < 8)) {
-        setError('請填寫綠界 HashKey 與 HashIV（各 8 個字元以上）');
+        setError('請填寫綠界「物流」的 HashKey 與 HashIV（各 8 個字元以上），不要填金流那一組');
         return;
       }
     }
@@ -267,6 +267,21 @@ export default function StoreSettingsScreen() {
             金鑰只會存在伺服器端，存好之後不會再回傳給任何裝置，連你自己也只看得到「已設定」。
           </Typography>
 
+          {/* 綠界後台有兩組金鑰：金流（全方位金流）與物流。貼錯是最常見的開通失敗原因。 */}
+          <View
+            className="gap-1 rounded-2xl border p-3"
+            style={{ borderColor: BRAND.orange, backgroundColor: BRAND.orangeSoft }}
+          >
+            <Typography type="body-xs" className="text-navy" style={{ fontWeight: '700' }}>
+              ⚠️ 一定要填「物流」那一組 HashKey／HashIV
+            </Typography>
+            <Typography type="body-xs" color="muted" className="leading-5">
+              綠界後台有兩組金鑰：金流（全方位金流）與物流，長度看起來一樣但內容不同。極貨網的超商取貨走的是物流
+              API，請到「系統開發管理 → 系統介面設定」找物流區塊的 HashKey 與
+              HashIV；填成金流那一組會一直驗證失敗，開通狀態會停在失敗。
+            </Typography>
+          </View>
+
           <View>
             <Label isRequired>綠界商店代號（MerchantID）</Label>
             <Input
@@ -280,25 +295,31 @@ export default function StoreSettingsScreen() {
           </View>
 
           <View>
-            <Label isRequired={!hasStoredKeys}>HashKey</Label>
+            <Label isRequired={!hasStoredKeys}>HashKey（物流專用）</Label>
             <Input
-              placeholder={hasStoredKeys ? '已設定，留空表示不變更' : '綠界後台提供的 HashKey'}
+              placeholder={
+                hasStoredKeys ? '已設定，留空表示不變更' : '綠界後台「物流」區塊的 HashKey'
+              }
               autoCapitalize="none"
               autoCorrect={false}
               value={hashKey}
               onChangeText={setHashKey}
             />
+            <Description>物流的 HashKey，不是金流（全方位金流）的那一組。</Description>
           </View>
 
           <View>
-            <Label isRequired={!hasStoredKeys}>HashIV</Label>
+            <Label isRequired={!hasStoredKeys}>HashIV（物流專用）</Label>
             <Input
-              placeholder={hasStoredKeys ? '已設定，留空表示不變更' : '綠界後台提供的 HashIV'}
+              placeholder={
+                hasStoredKeys ? '已設定，留空表示不變更' : '綠界後台「物流」區塊的 HashIV'
+              }
               autoCapitalize="none"
               autoCorrect={false}
               value={hashIv}
               onChangeText={setHashIv}
             />
+            <Description>與上面的 HashKey 必須來自同一個物流區塊。</Description>
           </View>
 
           <Typography type="body-xs" color="muted">

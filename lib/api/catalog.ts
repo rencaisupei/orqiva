@@ -12,7 +12,10 @@ import type {
   Store,
 } from '@/lib/types';
 
-const LIST_SELECT = '*, store:stores(id, name, logo_url, rating, rating_count, location)';
+export const PRODUCT_LIST_SELECT =
+  '*, store:stores(id, name, logo_url, rating, rating_count, location)';
+
+const LIST_SELECT = PRODUCT_LIST_SELECT;
 
 /** Sort key → the column and direction PostgREST should order by. */
 const SORT_COLUMN: Record<SortKey, { column: string; ascending: boolean }> = {
@@ -59,69 +62,74 @@ export function useCategories() {
   });
 }
 
+/** The product list read behind `useProducts`, reusable outside a hook (home feed). */
+export async function fetchProducts(filters: ProductFilters): Promise<ProductListItem[]> {
+  let query = bilt.from('products').select(LIST_SELECT).eq('status', 'active');
+
+  if (filters.categoryId) query = query.eq('category_id', filters.categoryId);
+  if (filters.storeId) query = query.eq('store_id', filters.storeId);
+  if (filters.sellerId) query = query.eq('seller_id', filters.sellerId);
+  if (filters.condition) query = query.eq('condition', filters.condition);
+  if (filters.location) query = query.eq('location', filters.location);
+  if (typeof filters.minPrice === 'number') query = query.gte('price', filters.minPrice);
+  if (typeof filters.maxPrice === 'number') query = query.lte('price', filters.maxPrice);
+  if (typeof filters.minRating === 'number') query = query.gte('rating', filters.minRating);
+  if (filters.shipping) query = query.contains('shipping_methods', [filters.shipping]);
+  if (filters.q?.trim()) {
+    const term = filters.q.trim().replaceAll(',', ' ');
+    query = query.or(`title.ilike.%${term}%,description.ilike.%${term}%`);
+  }
+
+  const sort = SORT_COLUMN[filters.sort ?? 'newest'];
+  query = query.order(sort.column, { ascending: sort.ascending });
+  if (filters.limit) query = query.limit(filters.limit);
+
+  const { data, error } = await query.returns<ProductListItem[]>();
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
 export function useProducts(filters: ProductFilters) {
   return useQuery({
     queryKey: ['products', filters],
-    queryFn: async (): Promise<ProductListItem[]> => {
-      let query = bilt.from('products').select(LIST_SELECT).eq('status', 'active');
-
-      if (filters.categoryId) query = query.eq('category_id', filters.categoryId);
-      if (filters.storeId) query = query.eq('store_id', filters.storeId);
-      if (filters.sellerId) query = query.eq('seller_id', filters.sellerId);
-      if (filters.condition) query = query.eq('condition', filters.condition);
-      if (filters.location) query = query.eq('location', filters.location);
-      if (typeof filters.minPrice === 'number') query = query.gte('price', filters.minPrice);
-      if (typeof filters.maxPrice === 'number') query = query.lte('price', filters.maxPrice);
-      if (typeof filters.minRating === 'number') query = query.gte('rating', filters.minRating);
-      if (filters.shipping) query = query.contains('shipping_methods', [filters.shipping]);
-      if (filters.q?.trim()) {
-        const term = filters.q.trim().replaceAll(',', ' ');
-        query = query.or(`title.ilike.%${term}%,description.ilike.%${term}%`);
-      }
-
-      const sort = SORT_COLUMN[filters.sort ?? 'newest'];
-      query = query.order(sort.column, { ascending: sort.ascending });
-      if (filters.limit) query = query.limit(filters.limit);
-
-      const { data, error } = await query;
-      if (error) throw new Error(error.message);
-      return data ?? [];
-    },
+    queryFn: () => fetchProducts(filters),
   });
 }
 
 /**
- * Discounted products for the home 限時特賣 rail.
+ * Discounted products for the 限時特賣 rail.
  *
  * PostgREST cannot compare two columns, so the query only narrows to rows that
  * carry an `original_price` and the "is it actually cheaper" test plus the
  * biggest-saving ordering happen here.
  */
+export async function fetchDealProducts(limit = 10): Promise<ProductListItem[]> {
+  const { data, error } = await bilt
+    .from('products')
+    .select(LIST_SELECT)
+    .eq('status', 'active')
+    .not('original_price', 'is', null)
+    .gt('stock', 0)
+    .order('created_at', { ascending: false })
+    .limit(60)
+    .returns<ProductListItem[]>();
+  if (error) throw new Error(error.message);
+
+  return (data ?? [])
+    .filter((product) => (product.original_price ?? 0) > product.price)
+    .map((product) => ({
+      product,
+      saving: (product.original_price ?? 0) - product.price,
+    }))
+    .sort((a, b) => b.saving - a.saving)
+    .slice(0, limit)
+    .map((entry) => entry.product);
+}
+
 export function useDealProducts(limit = 10) {
   return useQuery({
     queryKey: ['products', 'deals', limit],
-    queryFn: async (): Promise<ProductListItem[]> => {
-      const { data, error } = await bilt
-        .from('products')
-        .select(LIST_SELECT)
-        .eq('status', 'active')
-        .not('original_price', 'is', null)
-        .gt('stock', 0)
-        .order('created_at', { ascending: false })
-        .limit(60)
-        .returns<ProductListItem[]>();
-      if (error) throw new Error(error.message);
-
-      return (data ?? [])
-        .filter((product) => (product.original_price ?? 0) > product.price)
-        .map((product) => ({
-          product,
-          saving: (product.original_price ?? 0) - product.price,
-        }))
-        .sort((a, b) => b.saving - a.saving)
-        .slice(0, limit)
-        .map((entry) => entry.product);
-    },
+    queryFn: () => fetchDealProducts(limit),
     staleTime: 60_000,
   });
 }

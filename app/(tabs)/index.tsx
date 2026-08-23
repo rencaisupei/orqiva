@@ -4,6 +4,7 @@ import { Button, SearchField, Typography } from 'heroui-native';
 import { router } from 'expo-router';
 import { Bell, ChevronRight, LayoutGrid, ShoppingCart } from 'lucide-react-native';
 
+import { AdCarousel } from '@/components/AdCarousel';
 import { CategoryIcon } from '@/components/CategoryIcon';
 import { HomeQuickLinks } from '@/components/HomeQuickLinks';
 import { JihuoLogo, JihuoMark } from '@/components/brand/JihuoLogo';
@@ -12,12 +13,13 @@ import { ProductRail } from '@/components/ProductRail';
 import { LinearGradient } from '@/components/ui/primitives/LinearGradient';
 import { useFavoriteToggle } from '@/hooks/useFavoriteToggle';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
-import { useCategories, useDealProducts, useProducts, useProductsByIds } from '@/lib/api/catalog';
+import { useCategories, useDealProducts } from '@/lib/api/catalog';
+import { useAdBanners, useHomeFeed } from '@/lib/api/home';
 import { useCartCount } from '@/lib/api/commerce';
 import { useUnreadNotificationCount } from '@/lib/api/social';
 import { BRAND, BRAND_COPY } from '@/lib/brand';
-import { useRecentlyViewedStore } from '@/lib/recentlyViewed';
 import { useUserId } from '@/lib/session';
+import { HOME_AUTO_SORT } from '@/lib/types';
 
 function Badge({ count }: { count: number }) {
   if (count <= 0) return null;
@@ -69,14 +71,9 @@ export default function HomeScreen() {
   const [query, setQuery] = useState('');
   const userId = useUserId();
   const { data: categories } = useCategories();
-  const { data: popular } = useProducts({ sort: 'popular', limit: 4 });
-  const { data: newest } = useProducts({ sort: 'newest', limit: 6 });
-  const { data: deals } = useDealProducts(10);
-  const { data: topRated } = useProducts({ sort: 'rating', minRating: 4, limit: 10 });
-  const { data: budget } = useProducts({ sort: 'price_asc', limit: 10 });
-  const recentIds = useRecentlyViewedStore((s) => s.ids);
-  const clearRecentlyViewed = useRecentlyViewedStore((s) => s.clear);
-  const { data: recentlyViewed } = useProductsByIds(recentIds.slice(0, 12));
+  const { data: feed } = useHomeFeed();
+  const { data: banners } = useAdBanners();
+  const { data: deals } = useDealProducts(6);
   const { data: cartCount } = useCartCount(userId);
   const { data: unread } = useUnreadNotificationCount(userId);
   const { isFavorite, onToggleFavorite } = useFavoriteToggle();
@@ -269,112 +266,61 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {(deals ?? []).length > 0 ? (
-          <View className="mt-3">
-            <View className="px-4">
-              <SectionHeader
-                title="限時特賣"
-                subtitle="賣家自訂原價的降價商品，省最多的排前面"
-                onAction={() => router.push({ pathname: '/products', params: { sort: 'newest' } })}
-              />
-            </View>
-            <ProductRail
-              products={deals ?? []}
-              isFavorite={isFavorite}
-              onToggleFavorite={onToggleFavorite}
-            />
-          </View>
-        ) : null}
+        <AdCarousel banners={banners ?? []} fallbackProducts={deals ?? []} />
 
-        <View className="mt-3 px-4">
-          <SectionHeader
-            title="熱門推薦"
-            onAction={() => router.push({ pathname: '/products', params: { sort: 'popular' } })}
-          />
-          <View className="flex-row flex-wrap justify-between">
-            {(popular ?? []).map((product) => (
-              <View key={product.id} className="mb-3 w-[48.5%]">
-                <ProductCard
-                  product={product}
-                  isFavorite={isFavorite(product.id)}
-                  onToggleFavorite={onToggleFavorite}
+        {/* 每一區的標題、順序、是否顯示，以及內容是系統自動或管理員挑選，
+            都由後台的「首頁內容」決定；沒有商品的區塊自動隱藏。 */}
+        {(feed ?? []).map(({ section, products }) => {
+          if (products.length === 0) return null;
+          const onAction =
+            section.source === 'auto'
+              ? () =>
+                  router.push({
+                    pathname: '/products',
+                    params: { sort: HOME_AUTO_SORT[section.auto_kind] },
+                  })
+              : undefined;
+
+          if (section.layout === 'grid') {
+            return (
+              <View key={section.key} className="mt-3 px-4">
+                <SectionHeader
+                  title={section.title}
+                  subtitle={section.subtitle || undefined}
+                  onAction={onAction}
+                />
+                <View className="flex-row flex-wrap justify-between">
+                  {products.map((product) => (
+                    <View key={product.id} className="mb-3 w-[48.5%]">
+                      <ProductCard
+                        product={product}
+                        isFavorite={isFavorite(product.id)}
+                        onToggleFavorite={onToggleFavorite}
+                      />
+                    </View>
+                  ))}
+                </View>
+              </View>
+            );
+          }
+
+          return (
+            <View key={section.key} className="mt-3">
+              <View className="px-4">
+                <SectionHeader
+                  title={section.title}
+                  subtitle={section.subtitle || undefined}
+                  onAction={onAction}
                 />
               </View>
-            ))}
-          </View>
-        </View>
-
-        {(recentlyViewed ?? []).length > 0 ? (
-          <View className="mt-1">
-            <View className="px-4">
-              <SectionHeader
-                title="最近瀏覽"
-                subtitle="只保存在這台裝置上"
-                actionLabel="清除紀錄"
-                onAction={clearRecentlyViewed}
+              <ProductRail
+                products={products}
+                isFavorite={isFavorite}
+                onToggleFavorite={onToggleFavorite}
               />
             </View>
-            <ProductRail
-              products={recentlyViewed ?? []}
-              isFavorite={isFavorite}
-              onToggleFavorite={onToggleFavorite}
-            />
-          </View>
-        ) : null}
-
-        {(topRated ?? []).length > 0 ? (
-          <View className="mt-2">
-            <View className="px-4">
-              <SectionHeader
-                title="好評推薦"
-                subtitle="買家評價 4 星以上"
-                onAction={() => router.push({ pathname: '/products', params: { sort: 'rating' } })}
-              />
-            </View>
-            <ProductRail
-              products={topRated ?? []}
-              isFavorite={isFavorite}
-              onToggleFavorite={onToggleFavorite}
-            />
-          </View>
-        ) : null}
-
-        <View className="mt-2 px-4">
-          <SectionHeader
-            title="最新上架"
-            onAction={() => router.push({ pathname: '/products', params: { sort: 'newest' } })}
-          />
-          <View className="flex-row flex-wrap justify-between">
-            {(newest ?? []).map((product) => (
-              <View key={product.id} className="mb-3 w-[48.5%]">
-                <ProductCard
-                  product={product}
-                  isFavorite={isFavorite(product.id)}
-                  onToggleFavorite={onToggleFavorite}
-                />
-              </View>
-            ))}
-          </View>
-        </View>
-
-        {(budget ?? []).length > 0 ? (
-          <View className="mt-1">
-            <View className="px-4">
-              <SectionHeader
-                title="小資精選"
-                subtitle="價格由低到高，省錢也能挑好物"
-                onAction={() =>
-                  router.push({ pathname: '/products', params: { sort: 'price_asc' } })
-                }
-              />
-            </View>
-            <ProductRail
-              products={budget ?? []}
-              isFavorite={isFavorite}
-              onToggleFavorite={onToggleFavorite}
-            />
-          </View>
-        ) : null}
+          );
+        })}
 
         <View className="mt-1 px-4">
           <Pressable

@@ -199,6 +199,7 @@ export default function RootLayout() {
               <Stack.Screen name="favorites" options={{ title: '我的收藏' }} />
               <Stack.Screen name="orders/index" options={{ title: '我的訂單' }} />
               <Stack.Screen name="orders/[id]" options={{ title: '訂單詳情' }} />
+              <Stack.Screen name="recently-viewed" options={{ title: '最近瀏覽' }} />
               <Stack.Screen name="review/[productId]" options={{ title: '評價商品' }} />
               <Stack.Screen name="notifications" options={{ title: '通知中心' }} />
               <Stack.Screen name="messages/[id]" options={{ title: '聊天' }} />

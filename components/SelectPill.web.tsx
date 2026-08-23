@@ -16,6 +16,7 @@ export function SelectPill({
   disabled = false,
   size = 'md',
   tone = 'solid',
+  block = false,
   onPress,
 }: {
   label: string;
@@ -23,6 +24,8 @@ export function SelectPill({
   disabled?: boolean;
   size?: 'sm' | 'md';
   tone?: SelectPillTone;
+  /** Fills the parent's width so pills laid out in columns line up. */
+  block?: boolean;
   onPress: () => void;
   className?: string;
 }) {
@@ -41,7 +44,8 @@ export function SelectPill({
       onClick={() => onPress()}
       style={{
         appearance: 'none',
-        display: 'inline-flex',
+        display: block ? 'flex' : 'inline-flex',
+        width: block ? '100%' : undefined,
         alignItems: 'center',
         justifyContent: 'center',
         boxSizing: 'border-box',
@@ -58,6 +62,8 @@ export function SelectPill({
         fontWeight: 600,
         lineHeight: 1.4,
         whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
         cursor: disabled ? 'default' : 'pointer',
         opacity: disabled ? 0.45 : 1,
         transition: 'background-color 150ms ease, border-color 150ms ease, color 150ms ease',

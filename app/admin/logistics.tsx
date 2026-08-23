@@ -322,6 +322,10 @@ export default function AdminLogisticsScreen() {
               檢查碼演算法：{query.data?.checkMacAlgorithm ?? 'MD5'}
               （物流 API 規格，不送 EncryptType；SHA256 只用於金流 AIO API）
             </Typography>
+            <Typography type="body-xs" color="muted">
+              環境變數要放綠界後台「物流」區塊的 HashKey／HashIV；金流（全方位金流）也有一組，
+              兩組不同，填錯會一直出現 CheckMacValue 錯誤。
+            </Typography>
           </View>
 
           <Button variant="secondary" isDisabled={verify.isPending} onPress={runVerify}>

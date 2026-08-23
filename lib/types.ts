@@ -515,7 +515,21 @@ export function isCvsOrder(order: Pick<Order, 'shipping_provider' | 'cvs_store_i
   return order.shipping_provider === 'ecpay' || !!order.cvs_store_id;
 }
 
-/** 還在運送途中、值得再向綠界查一次的貨態。 */
+/**
+ * 出貨之後才值得自動向綠界查貨態：必須是超商取貨、已經拿到寄貨編號
+ * （代表賣家真的建了物流單），而且貨還在途中。
+ */
+export function isAutoSyncableShipment(
+  order: Pick<
+    Order,
+    'shipping_provider' | 'cvs_store_id' | 'logistics_shipment_no' | 'logistics_status'
+  >,
+): boolean {
+  if (!isCvsOrder(order)) return false;
+  if (!order.logistics_shipment_no) return false;
+  return isTrackableShipment(toLogisticsStatus(order.logistics_status));
+}
+
 export function isTrackableShipment(status: LogisticsStatus | null): boolean {
   return (
     status === 'requested' ||
@@ -773,6 +787,112 @@ export const LOCATIONS = [
   '連江縣',
   '其他',
 ] as const;
+
+/* ─────────────────────────────────────────────────────────────
+ * 首頁欄位（限時特賣／熱門推薦／好評推薦…）與廣告輪播
+ *
+ * 每個欄位都由 home_sections 這一列決定：要不要顯示、標題、順序，
+ * 以及內容是「系統自動」（auto_kind 決定排序規則）或「管理員挑選」
+ * （home_section_items 裡審核過的商品）。
+ * ───────────────────────────────────────────────────────────── */
+
+export type HomeSectionSource = 'auto' | 'manual';
+export type HomeAutoKind = 'deals' | 'popular' | 'rating' | 'newest' | 'price_asc';
+export type HomeSectionLayout = 'rail' | 'grid';
+
+export type HomeSection = {
+  key: string;
+  title: string;
+  subtitle: string;
+  source: HomeSectionSource;
+  auto_kind: HomeAutoKind;
+  layout: HomeSectionLayout;
+  item_limit: number;
+  is_visible: boolean;
+  sort_order: number;
+  updated_at: string;
+  updated_by: string | null;
+};
+
+export const HOME_SOURCE_LABEL: Record<HomeSectionSource, string> = {
+  auto: '系統自動',
+  manual: '管理員挑選',
+};
+
+export const HOME_AUTO_KIND_LABEL: Record<HomeAutoKind, string> = {
+  deals: '降價最多',
+  popular: '賣最好',
+  rating: '評價 4 星以上',
+  newest: '最新上架',
+  price_asc: '價格由低到高',
+};
+
+export const HOME_AUTO_KINDS: HomeAutoKind[] = [
+  'deals',
+  'popular',
+  'rating',
+  'newest',
+  'price_asc',
+];
+
+/** 自動欄位的「查看全部」要帶哪個排序；人工挑選的欄位沒有對應排序。 */
+export const HOME_AUTO_SORT: Record<HomeAutoKind, SortKey> = {
+  deals: 'newest',
+  popular: 'popular',
+  rating: 'rating',
+  newest: 'newest',
+  price_asc: 'price_asc',
+};
+
+export type HomeSectionItem = {
+  id: string;
+  section_key: string;
+  product_id: string;
+  sort_order: number;
+  created_at: string;
+};
+
+export type AdBannerLinkType = 'none' | 'product' | 'store' | 'category' | 'search';
+
+export const AD_BANNER_LINK_LABEL: Record<AdBannerLinkType, string> = {
+  none: '不連結',
+  product: '商品',
+  store: '店舖',
+  category: '分類',
+  search: '搜尋關鍵字',
+};
+
+export const AD_BANNER_LINK_TYPES: AdBannerLinkType[] = [
+  'none',
+  'product',
+  'store',
+  'category',
+  'search',
+];
+
+export type AdBanner = {
+  id: string;
+  title: string;
+  subtitle: string;
+  image_url: string | null;
+  link_type: AdBannerLinkType;
+  link_value: string | null;
+  cta_label: string;
+  is_active: boolean;
+  sort_order: number;
+  starts_at: string | null;
+  ends_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+/** 上架中且在起訖時間內；買家端的 RLS 也是同一條規則。 */
+export function isBannerLive(banner: AdBanner, now = Date.now()): boolean {
+  if (!banner.is_active) return false;
+  if (banner.starts_at && new Date(banner.starts_at).getTime() > now) return false;
+  if (banner.ends_at && new Date(banner.ends_at).getTime() < now) return false;
+  return true;
+}
 
 export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
   pending: '待付款',

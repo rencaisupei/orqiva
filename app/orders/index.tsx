@@ -60,6 +60,21 @@ function matchesKeyword(order: Order, keyword: string): boolean {
   return order.order_items.some((line) => line.title.toLowerCase().includes(keyword));
 }
 
+/** 取貨門市／寄貨編號：標籤固定寬度，多筆訂單的值上下對齊。 */
+function ShipmentDetailRow({ label, value }: { label: string; value: string | null }) {
+  if (!value) return null;
+  return (
+    <View className="flex-row items-start gap-2">
+      <Typography type="body-xs" color="muted" className="w-16 shrink-0">
+        {label}
+      </Typography>
+      <Typography type="body-xs" numberOfLines={2} className="text-navy flex-1">
+        {value}
+      </Typography>
+    </View>
+  );
+}
+
 /** 貨態徽章顏色與篩選比對搬到 ShipmentStatusBar，與賣家中心共用同一份規則。 */
 export default function OrdersScreen() {
   const userId = useUserId();
@@ -185,12 +200,6 @@ export default function OrdersScreen() {
           renderItem={({ item }) => {
             const logisticsStatus = toLogisticsStatus(item.logistics_status);
             const stage = shipmentStage(logisticsStatus);
-            const shipmentDetail = [
-              item.cvs_store_name,
-              item.logistics_shipment_no ? `寄貨編號 ${item.logistics_shipment_no}` : null,
-            ]
-              .filter((part): part is string => !!part)
-              .join(' · ');
 
             return (
               <Pressable
@@ -242,27 +251,25 @@ export default function OrdersScreen() {
                 ) : null}
 
                 {isCvsOrder(item) ? (
-                  <View className="bg-background flex-row items-center gap-2 rounded-xl p-3">
-                    <Truck size={15} color={BRAND.blue} />
-                    <View className="flex-1">
+                  <View className="bg-background gap-2 rounded-xl p-3">
+                    <View className="flex-row items-center gap-2">
+                      <Truck size={15} color={BRAND.blue} />
                       <Typography
                         type="body-xs"
-                        className="text-navy"
+                        numberOfLines={1}
+                        className="text-navy flex-1"
                         style={{ fontWeight: '600' }}
                       >
                         {logisticsStatus
                           ? LOGISTICS_STATUS_LABEL[logisticsStatus]
                           : '賣家尚未建立物流單'}
                       </Typography>
-                      {shipmentDetail ? (
-                        <Typography type="body-xs" color="muted" numberOfLines={1}>
-                          {shipmentDetail}
-                        </Typography>
-                      ) : null}
+                      <Chip disabled size="sm" variant="soft" color={shipmentChipColor(stage)}>
+                        {SHIPMENT_STAGE_LABEL[stage]}
+                      </Chip>
                     </View>
-                    <Chip disabled size="sm" variant="soft" color={shipmentChipColor(stage)}>
-                      {SHIPMENT_STAGE_LABEL[stage]}
-                    </Chip>
+                    <ShipmentDetailRow label="取貨門市" value={item.cvs_store_name} />
+                    <ShipmentDetailRow label="寄貨編號" value={item.logistics_shipment_no} />
                   </View>
                 ) : null}
 
