@@ -5,6 +5,7 @@ import { MessagesSquare } from 'lucide-react-native';
 
 import { AppImage } from '@/components/AppImage';
 import { EmptyState } from '@/components/EmptyState';
+import { protectBrand } from '@/components/brand/BrandText';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import type { ConversationRow } from '@/lib/api/social';
 import { BRAND } from '@/lib/brand';
@@ -84,7 +85,7 @@ export function ConversationList({
                   className="text-navy flex-1"
                   style={{ fontWeight: '600' }}
                 >
-                  {title}
+                  {protectBrand(title)}
                 </Typography>
                 <Typography type="body-xs" color="muted" numberOfLines={1}>
                   {relativeTime(item.last_message_at)}

@@ -8,6 +8,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { LogisticsPanel } from '@/components/LogisticsPanel';
 import { ShipmentMap } from '@/components/ShipmentMap';
 import { useOrder, useReorder, useSetOrderStatus } from '@/lib/api/commerce';
+import { protectBrand } from '@/components/brand/BrandText';
 import { BRAND } from '@/lib/brand';
 import { deliveryEstimate, formatDateTime, formatPrice } from '@/lib/format';
 import { useUserId } from '@/lib/session';
@@ -149,7 +150,7 @@ export default function OrderDetailScreen() {
           <View className="flex-row items-center gap-2">
             <Package size={15} color={BRAND.blue} />
             <Typography type="body" className="text-navy" style={{ fontWeight: '600' }}>
-              {order.store?.name ?? '極貨網賣家'}
+              {protectBrand(order.store?.name ?? '極貨網賣家')}
             </Typography>
           </View>
           {order.order_items.map((line) => (

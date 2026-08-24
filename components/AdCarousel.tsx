@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import { ChevronRight, Megaphone } from 'lucide-react-native';
 
 import { AppImage } from '@/components/AppImage';
+import { protectBrand } from '@/components/brand/BrandText';
 import { LinearGradient } from '@/components/ui/primitives/LinearGradient';
 import { BRAND } from '@/lib/brand';
 import { formatPrice } from '@/lib/format';
@@ -193,7 +194,7 @@ export function AdCarousel({
                       </Typography>
                       {slide.subtitle ? (
                         <Typography type="body-xs" numberOfLines={2} className="text-white/85">
-                          {slide.subtitle}
+                          {protectBrand(slide.subtitle)}
                         </Typography>
                       ) : null}
                       {slide.onPress ? (

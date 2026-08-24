@@ -3,6 +3,7 @@ import { Button, Typography } from 'heroui-native';
 import { router } from 'expo-router';
 import { LockKeyhole } from 'lucide-react-native';
 
+import { protectBrand } from '@/components/brand/BrandText';
 import { BRAND, BRAND_COPY } from '@/lib/brand';
 
 type Props = {
@@ -20,10 +21,10 @@ export function SignInRequired({
         <LockKeyhole size={26} color={BRAND.blue} />
       </View>
       <Typography type="h5" align="center" className="text-navy">
-        {title}
+        {protectBrand(title)}
       </Typography>
       <Typography type="body-sm" align="center" color="muted">
-        {description}
+        {protectBrand(description)}
       </Typography>
       <Button className="mt-2 w-full" onPress={() => router.push('/auth/sign-in')}>
         <Button.Label>登入 / 註冊</Button.Label>

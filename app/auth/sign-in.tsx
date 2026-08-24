@@ -7,6 +7,7 @@ import { Eye, EyeOff } from 'lucide-react-native';
 import { FormError } from '@/components/FormError';
 import { JihuoArtwork } from '@/components/brand/JihuoLogo';
 import { bilt } from '@/lib/backend';
+import { BrandText } from '@/components/brand/BrandText';
 import { BRAND } from '@/lib/brand';
 import { goBackOrReplace } from '@/lib/navigation';
 import { useSessionStore } from '@/lib/session';
@@ -263,9 +264,9 @@ export default function SignInScreen() {
       >
         <View className="items-center gap-2">
           <JihuoArtwork width={104} />
-          <Typography type="body-xs" align="center" color="muted">
+          <BrandText type="body-xs" align="center" color="muted">
             一組極貨網帳號，買賣都通
-          </Typography>
+          </BrandText>
         </View>
 
         <View className="bg-surface mt-6 gap-4 rounded-3xl p-5">

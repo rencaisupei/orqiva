@@ -8,6 +8,7 @@ import { AdCarousel } from '@/components/AdCarousel';
 import { CategoryIcon } from '@/components/CategoryIcon';
 import { HomeQuickLinks } from '@/components/HomeQuickLinks';
 import { JihuoLogo, JihuoMark } from '@/components/brand/JihuoLogo';
+import { BrandText } from '@/components/brand/BrandText';
 import { LaunchAdModal } from '@/components/LaunchAdModal';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductRail } from '@/components/ProductRail';
@@ -359,9 +360,9 @@ export function MarketHome({ showLaunchAd = true }: Props) {
                 <Typography type="body" className="text-navy" style={{ fontWeight: '600' }}>
                   有東西想賣？
                 </Typography>
-                <Typography type="body-sm" color="muted">
+                <BrandText type="body-sm" color="muted">
                   開一間極貨網店舖，讓你的商品找到對的人
-                </Typography>
+                </BrandText>
               </View>
               <ChevronRight size={18} color={BRAND.muted} />
             </Pressable>

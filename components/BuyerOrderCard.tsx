@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { ChevronRight, Store as StoreIcon } from 'lucide-react-native';
 
 import { AppImage } from '@/components/AppImage';
+import { protectBrand } from '@/components/brand/BrandText';
 import { useReorder, useSetOrderStatus } from '@/lib/api/commerce';
 import { useStartConversation } from '@/lib/api/social';
 import { BRAND } from '@/lib/brand';
@@ -118,7 +119,7 @@ export function BuyerOrderCard({ order }: { order: Order }) {
             className="text-navy shrink"
             style={{ fontWeight: '700' }}
           >
-            {order.store?.name ?? '極貨網賣家'}
+            {protectBrand(order.store?.name ?? '極貨網賣家')}
           </Typography>
           <ChevronRight size={14} color={BRAND.muted} />
           <View className="flex-1" />

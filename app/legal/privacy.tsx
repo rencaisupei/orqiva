@@ -2,6 +2,8 @@ import { ScrollView, View } from 'react-native';
 import { Button, Separator, Typography } from 'heroui-native';
 import { router } from 'expo-router';
 
+import { protectBrand } from '@/components/brand/BrandText';
+import { NoTranslate } from '@/components/brand/NoTranslate';
 import { BRAND_COPY } from '@/lib/brand';
 
 const UPDATED_AT = '2026 年 8 月 21 日';
@@ -90,7 +92,8 @@ export default function PrivacyPolicyScreen() {
             最後更新：{UPDATED_AT}
           </Typography>
           <Typography type="body-sm" color="muted">
-            {BRAND_COPY.nameZh}重視你的隱私。以下內容說明我們如何處理你的個人資料。
+            <NoTranslate>{BRAND_COPY.nameZh}</NoTranslate>
+            重視你的隱私。以下內容說明我們如何處理你的個人資料。
           </Typography>
         </View>
 
@@ -101,7 +104,7 @@ export default function PrivacyPolicyScreen() {
             </Typography>
             {section.paragraphs.map((paragraph) => (
               <Typography key={paragraph} type="body-sm" color="muted">
-                {paragraph}
+                {protectBrand(paragraph)}
               </Typography>
             ))}
             {section.bullets ? (
@@ -110,7 +113,7 @@ export default function PrivacyPolicyScreen() {
                   <View key={bullet} className="flex-row gap-2">
                     <View className="bg-brand-orange mt-2 h-1.5 w-1.5 shrink-0 rounded-full" />
                     <Typography type="body-sm" color="muted" className="flex-1">
-                      {bullet}
+                      {protectBrand(bullet)}
                     </Typography>
                   </View>
                 ))}

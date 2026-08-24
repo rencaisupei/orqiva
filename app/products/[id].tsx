@@ -27,6 +27,7 @@ import { useProduct, useTrackProductView } from '@/lib/api/catalog';
 import { useAddToCart } from '@/lib/api/commerce';
 import { useSellerLogisticsStatuses } from '@/lib/api/logistics';
 import { useStartConversation } from '@/lib/api/social';
+import { protectBrand } from '@/components/brand/BrandText';
 import { BRAND } from '@/lib/brand';
 import { deliveryEstimate, discountPercent, formatCompact, formatPrice } from '@/lib/format';
 import { useContentWidth } from '@/lib/layout';
@@ -354,7 +355,7 @@ export default function ProductDetailScreen() {
                   className="text-navy flex-1"
                   style={{ fontWeight: '600' }}
                 >
-                  {product.store?.name ?? '極貨網賣家'}
+                  {protectBrand(product.store?.name ?? '極貨網賣家')}
                 </Typography>
                 <ShieldCheck size={14} color={BRAND.blue} />
               </View>

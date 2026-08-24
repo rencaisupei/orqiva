@@ -22,6 +22,8 @@ import {
 
 import { SignInRequired } from '@/components/SignInRequired';
 import { useMyStoreQuery } from '@/lib/api/seller';
+import { protectBrand } from '@/components/brand/BrandText';
+import { NoTranslate } from '@/components/brand/NoTranslate';
 import { BRAND, BRAND_COPY } from '@/lib/brand';
 import { formatDate } from '@/lib/format';
 import { enterSellerMode } from '@/lib/mode';
@@ -96,7 +98,7 @@ export default function ProfileScreen() {
             </Avatar>
             <View className="flex-1">
               <Typography type="h5" className="text-navy" style={{ fontWeight: '700' }}>
-                {profile?.display_name ?? '極貨網用戶'}
+                {protectBrand(profile?.display_name ?? '極貨網用戶')}
               </Typography>
               <Typography type="body-sm" color="muted">
                 {account?.email ?? ''}
@@ -248,7 +250,10 @@ export default function ProfileScreen() {
 
         <View className="mt-6 items-center gap-1">
           <Typography type="body-xs" color="muted">
-            {BRAND_COPY.nameZh} {BRAND_COPY.name} · {BRAND_COPY.slogan}
+            <NoTranslate>
+              {BRAND_COPY.nameZh} {BRAND_COPY.name}
+            </NoTranslate>{' '}
+            · {BRAND_COPY.slogan}
           </Typography>
           <Typography type="body-xs" color="muted">
             版本 {Constants.expoConfig?.version ?? '1.0.0'}

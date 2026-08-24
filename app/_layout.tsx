@@ -32,6 +32,7 @@ import { AppShell } from '@/components/AppShell';
 import { InstallPrompt } from '@/components/InstallPrompt';
 import { SystemGate } from '@/components/SystemGate';
 import { BackButton } from '@/components/BackButton';
+import { BrandText } from '@/components/brand/BrandText';
 import { BRAND } from '@/lib/brand';
 import { usePushNotifications } from '@/lib/push';
 import { useSessionStore } from '@/lib/session';
@@ -209,7 +210,21 @@ export default function RootLayout() {
                 <Stack.Screen name="profile/delete" options={{ title: '刪除帳號' }} />
                 <Stack.Screen name="seller/index" options={{ headerShown: false }} />
                 <Stack.Screen name="seller/market" options={{ headerShown: false }} />
-                <Stack.Screen name="seller/onboarding" options={{ title: '成為極貨網賣家' }} />
+                <Stack.Screen
+                  name="seller/onboarding"
+                  options={{
+                    title: '成為極貨網賣家',
+                    // 品牌名不能被瀏覽器翻譯，所以標題自己畫（沿用 headerTitleStyle 的樣式）。
+                    headerTitle: () => (
+                      <BrandText
+                        numberOfLines={1}
+                        style={{ fontSize: 17, fontWeight: '600', color: BRAND.navy }}
+                      >
+                        成為極貨網賣家
+                      </BrandText>
+                    ),
+                  }}
+                />
                 <Stack.Screen name="seller/products" options={{ title: '商品管理' }} />
                 <Stack.Screen name="seller/analytics" options={{ title: '銷售分析' }} />
                 <Stack.Screen name="seller/reviews" options={{ headerShown: false }} />

@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import { Megaphone, X } from 'lucide-react-native';
 
 import { AppImage } from '@/components/AppImage';
+import { protectBrand } from '@/components/brand/BrandText';
 import { LinearGradient } from '@/components/ui/primitives/LinearGradient';
 import { BRAND } from '@/lib/brand';
 import { formatPrice } from '@/lib/format';
@@ -195,7 +196,7 @@ export function LaunchAdModal({
             </Typography>
             {ad.subtitle ? (
               <Typography type="body-sm" color="muted" numberOfLines={3}>
-                {ad.subtitle}
+                {protectBrand(ad.subtitle)}
               </Typography>
             ) : null}
 

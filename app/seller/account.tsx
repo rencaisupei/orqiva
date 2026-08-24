@@ -22,6 +22,7 @@ import { SellerTabBar } from '@/components/SellerTabBar';
 import { SignInRequired } from '@/components/SignInRequired';
 import { useCoinSummary } from '@/lib/api/coins';
 import { useMyStoreQuery } from '@/lib/api/seller';
+import { protectBrand } from '@/components/brand/BrandText';
 import { BRAND } from '@/lib/brand';
 import { formatNumber } from '@/lib/format';
 import { exitSellerMode } from '@/lib/mode';
@@ -204,7 +205,7 @@ export default function SellerAccountScreen() {
                 className="text-navy"
                 style={{ fontWeight: '600' }}
               >
-                {profile?.display_name ?? '極貨網用戶'}
+                {protectBrand(profile?.display_name ?? '極貨網用戶')}
               </Typography>
               <Typography type="body-xs" color="muted" numberOfLines={1}>
                 {account?.email ?? ''}

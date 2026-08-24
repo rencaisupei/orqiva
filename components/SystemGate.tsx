@@ -5,6 +5,7 @@ import { Button, Typography } from 'heroui-native';
 import { router } from 'expo-router';
 import { CalendarClock, Megaphone, RefreshCw, Wrench } from 'lucide-react-native';
 
+import { protectBrand } from '@/components/brand/BrandText';
 import { JihuoLogo } from '@/components/brand/JihuoLogo';
 import { useCheckinReminder } from '@/lib/api/coins';
 import { useAutoModeration } from '@/lib/api/moderation';
@@ -44,10 +45,10 @@ function MaintenanceScreen({
       </View>
       <View className="gap-2">
         <Typography type="h4" className="text-navy text-center" style={{ fontWeight: '700' }}>
-          {title}
+          {protectBrand(title)}
         </Typography>
         <Typography type="body-sm" color="muted" className="text-center">
-          {message}
+          {protectBrand(message)}
         </Typography>
         {eta ? (
           <View className="bg-surface mt-1 flex-row items-center justify-center gap-2 rounded-2xl px-3 py-2">
@@ -191,7 +192,7 @@ export function SystemGate({ children }: { children: React.ReactNode }) {
             <View className="border-border bg-surface flex-row items-center gap-3 rounded-2xl border p-3 shadow-lg">
               <Megaphone size={18} color={BRAND.blue} />
               <Typography type="body-xs" className="text-navy flex-1">
-                {announcement}
+                {protectBrand(announcement)}
               </Typography>
               <Button
                 size="sm"

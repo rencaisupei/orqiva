@@ -16,6 +16,7 @@ import {
   useSendMessage,
   useUnblockUser,
 } from '@/lib/api/social';
+import { protectBrand } from '@/components/brand/BrandText';
 import { BRAND } from '@/lib/brand';
 import { formatPrice, relativeTime } from '@/lib/format';
 import { useUserId } from '@/lib/session';
@@ -140,7 +141,7 @@ export default function ChatScreen() {
             className="text-navy flex-1"
             style={{ fontWeight: '600' }}
           >
-            {counterpartName}
+            {protectBrand(counterpartName)}
           </Typography>
           <Pressable
             className="bg-surface-secondary h-8 shrink-0 flex-row items-center gap-1 rounded-full px-2.5"
@@ -243,7 +244,7 @@ export default function ChatScreen() {
               >
                 <ShieldAlert size={16} color={BRAND.orange} />
                 <Typography type="body-xs" className="text-navy flex-1">
-                  {riskNotice}
+                  {protectBrand(riskNotice)}
                 </Typography>
               </Pressable>
             ) : null}

@@ -16,6 +16,7 @@ import { LifeBuoy, ShieldCheck } from 'lucide-react-native';
 import { FormError } from '@/components/FormError';
 import { OptionSelect, type SelectOption } from '@/components/OptionSelect';
 import { useCreateSupportTicket, useMySupportTickets } from '@/lib/api/support';
+import { NoTranslate } from '@/components/brand/NoTranslate';
 import { BRAND, BRAND_COPY } from '@/lib/brand';
 import { formatDate } from '@/lib/format';
 import { useSessionStore, useUserId } from '@/lib/session';
@@ -107,7 +108,7 @@ export default function ContactScreen() {
             </View>
             <View className="flex-1">
               <Typography type="body" className="text-navy" style={{ fontWeight: '600' }}>
-                聯絡{BRAND_COPY.nameZh}客服
+                聯絡<NoTranslate>{BRAND_COPY.nameZh}</NoTranslate>客服
               </Typography>
               <Typography type="body-xs" color="muted">
                 訂單、付款、物流、帳號問題都可以在這裡提出

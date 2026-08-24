@@ -3,6 +3,8 @@ import { Button, Separator, Typography } from 'heroui-native';
 import * as WebBrowser from 'expo-web-browser';
 import { ExternalLink, Info, ShieldAlert } from 'lucide-react-native';
 
+import { BrandText, protectBrand } from '@/components/brand/BrandText';
+import { NoTranslate } from '@/components/brand/NoTranslate';
 import { BRAND } from '@/lib/brand';
 
 /** 綠界廠商註冊（官方唯一入口）。 */
@@ -52,9 +54,9 @@ export function EcpaySignupGuide({ showBackfillGuide = true }: { showBackfillGui
           第一步：註冊綠界物流帳號
         </Typography>
       </View>
-      <Typography type="body-xs" color="muted" className="leading-5">
+      <BrandText type="body-xs" color="muted" className="leading-5">
         超商取貨付款由綠界科技（ECPay）提供。請先在綠界完成個人實名認證，才能在極貨網開通取貨付款。
-      </Typography>
+      </BrandText>
 
       <Separator />
 
@@ -93,9 +95,11 @@ export function EcpaySignupGuide({ showBackfillGuide = true }: { showBackfillGui
         <Button.Label>前往綠界註冊（官方網站）</Button.Label>
       </Button>
       <Typography type="body-xs" color="muted" className="leading-5">
-        {Platform.OS === 'web'
-          ? '綠界官方註冊頁會在新分頁開啟，註冊完關掉分頁即可回到極貨網。'
-          : '綠界官方註冊頁會在 App 內瀏覽器開啟，完成後按左上角「關閉」就回到這一頁。'}
+        {protectBrand(
+          Platform.OS === 'web'
+            ? '綠界官方註冊頁會在新分頁開啟，註冊完關掉分頁即可回到極貨網。'
+            : '綠界官方註冊頁會在 App 內瀏覽器開啟，完成後按左上角「關閉」就回到這一頁。',
+        )}
       </Typography>
 
       {showBackfillGuide ? (
@@ -116,15 +120,15 @@ export function EcpaySignupGuide({ showBackfillGuide = true }: { showBackfillGui
               物流
             </Typography>
             區塊的 HashKey 與 HashIV（注意：金流／全方位金流也有一組，兩組不一樣，貼錯會驗證失敗），
-            商店代號（MerchantID）在後台首頁或帳戶資訊即可看到，
-            再把下面五個欄位填回極貨網，才會正式開通超商貨到付款。
+            商店代號（MerchantID）在後台首頁或帳戶資訊即可看到， 再把下面五個欄位填回
+            <NoTranslate>極貨網</NoTranslate>，才會正式開通超商貨到付款。
           </Typography>
         </View>
       ) : (
-        <Typography type="body-xs" color="muted" className="leading-5">
+        <BrandText type="body-xs" color="muted" className="leading-5">
           💡 註冊驗證通過後（約需2-3個工作日），到「賣家中心 → 店舖設定」把綠界商店代號與「物流」的
           HashKey、HashIV（不是金流那一組）填回極貨網，就會開通超商貨到付款。
-        </Typography>
+        </BrandText>
       )}
     </View>
   );

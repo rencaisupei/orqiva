@@ -20,6 +20,7 @@ import { SelectPill } from '@/components/SelectPill';
 import { SignInRequired } from '@/components/SignInRequired';
 import { useCreateStore, useMyStoreQuery } from '@/lib/api/seller';
 import { pickImages, uploadImage } from '@/lib/api/upload';
+import { BrandText } from '@/components/brand/BrandText';
 import { BRAND } from '@/lib/brand';
 import { useUserId } from '@/lib/session';
 import { LOCATIONS, validateSenderCellPhone, validateSenderName } from '@/lib/types';
@@ -47,9 +48,9 @@ export default function SellerOnboardingScreen() {
     return (
       <View className="bg-background flex-1 items-center justify-center gap-4 px-8">
         <ShieldCheck size={40} color={BRAND.blue} />
-        <Typography type="h5" align="center" className="text-navy">
+        <BrandText type="h5" align="center" className="text-navy">
           你已經有極貨網店舖
-        </Typography>
+        </BrandText>
         <Typography type="body-sm" align="center" color="muted">
           {existingStore.name}
         </Typography>
@@ -117,9 +118,9 @@ export default function SellerOnboardingScreen() {
     >
       <ScrollView contentContainerClassName="p-4 gap-3 pb-8" keyboardShouldPersistTaps="handled">
         <View className="bg-surface gap-2 rounded-2xl p-4">
-          <Typography type="h5" className="text-navy" style={{ fontWeight: '700' }}>
+          <BrandText type="h5" className="text-navy" style={{ fontWeight: '700' }}>
             成為極貨網賣家
-          </Typography>
+          </BrandText>
           <Typography type="body-sm" color="muted">
             買賣，不只是交易。是讓價值找到彼此。
           </Typography>

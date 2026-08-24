@@ -15,6 +15,7 @@ import { ArrowDown, ArrowUp, ImagePlus, Minus, Plus, Trash2 } from 'lucide-react
 import { AppImage } from '@/components/AppImage';
 import { FormError } from '@/components/FormError';
 import { SelectPill } from '@/components/SelectPill';
+import { protectBrand } from '@/components/brand/BrandText';
 import { useProducts } from '@/lib/api/catalog';
 import {
   useAddHomeSectionItem,
@@ -289,7 +290,7 @@ function SectionEditor({
                   {product.title}
                 </Typography>
                 <Typography type="body-xs" color="muted">
-                  {formatPrice(product.price)} · {product.store?.name ?? '極貨網賣家'}
+                  {formatPrice(product.price)} · {protectBrand(product.store?.name ?? '極貨網賣家')}
                 </Typography>
               </View>
               <SelectPill

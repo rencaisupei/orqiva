@@ -26,6 +26,7 @@ import { SignInRequired } from '@/components/SignInRequired';
 import { useSellerEcpaySettings } from '@/lib/api/logistics';
 import { useMyStoreQuery, useSellerShippingProfile, useUpdateStore } from '@/lib/api/seller';
 import { pickImages, uploadImage } from '@/lib/api/upload';
+import { BrandText } from '@/components/brand/BrandText';
 import { BRAND } from '@/lib/brand';
 import { useUserId } from '@/lib/session';
 import {
@@ -355,11 +356,11 @@ export default function StoreSettingsScreen() {
             <Typography type="body-xs" className="text-navy" style={{ fontWeight: '700' }}>
               ⚠️ 一定要填「物流」那一組 HashKey／HashIV
             </Typography>
-            <Typography type="body-xs" color="muted" className="leading-5">
+            <BrandText type="body-xs" color="muted" className="leading-5">
               綠界後台有兩組金鑰：金流（全方位金流）與物流，長度看起來一樣但內容不同。極貨網的超商取貨走的是物流
               API，請到「系統開發管理 → 系統介面設定」找物流區塊的 HashKey 與
               HashIV；填成金流那一組會一直驗證失敗，開通狀態會停在失敗。
-            </Typography>
+            </BrandText>
           </View>
 
           <View>

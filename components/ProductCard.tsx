@@ -5,6 +5,7 @@ import { Heart, MapPin } from 'lucide-react-native';
 
 import { AppImage } from '@/components/AppImage';
 import { StarRating } from '@/components/StarRating';
+import { protectBrand } from '@/components/brand/BrandText';
 import { BRAND } from '@/lib/brand';
 import { discountPercent, formatCompact, formatPrice } from '@/lib/format';
 import type { ProductListItem } from '@/lib/types';
@@ -98,7 +99,7 @@ export function ProductCard({ product, isFavorite = false, onToggleFavorite, cla
         <View className="flex-row items-center gap-1">
           <MapPin size={11} color={BRAND.muted} />
           <Typography type="body-xs" color="muted" numberOfLines={1} className="flex-1">
-            {product.location} · {product.store?.name ?? '極貨網賣家'}
+            {product.location} · {protectBrand(product.store?.name ?? '極貨網賣家')}
           </Typography>
         </View>
       </View>

@@ -52,6 +52,7 @@ import {
   useAdminSupportTickets,
 } from '@/lib/api/support';
 import { useAppSettings, useMaintenanceState, useSaveAppSettings } from '@/lib/api/system';
+import { BrandText } from '@/components/brand/BrandText';
 import { BRAND } from '@/lib/brand';
 import {
   durationUntil,
@@ -783,9 +784,9 @@ export default function AdminScreen() {
               <Stat label="未結案工單" value={String(ticketCount.data ?? 0)} />
             </View>
             <View className="bg-surface rounded-2xl p-4">
-              <Typography type="body-sm" color="muted">
+              <BrandText type="body-sm" color="muted">
                 極貨網平台統計即時來自資料庫，包含所有買家與賣家的交易紀錄。
-              </Typography>
+              </BrandText>
             </View>
 
             <Pressable

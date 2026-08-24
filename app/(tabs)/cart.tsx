@@ -17,6 +17,7 @@ import {
   useSetAllSelected,
   useUpdateCartItem,
 } from '@/lib/api/commerce';
+import { protectBrand } from '@/components/brand/BrandText';
 import { BRAND } from '@/lib/brand';
 import { formatNumber, formatPrice } from '@/lib/format';
 import { useRecentlyViewedStore } from '@/lib/recentlyViewed';
@@ -148,7 +149,7 @@ export default function CartScreen() {
             >
               <StoreIcon size={15} color={BRAND.navy} />
               <Typography type="body-sm" className="text-navy" style={{ fontWeight: '600' }}>
-                {group.storeName}
+                {protectBrand(group.storeName)}
               </Typography>
               <Typography type="body-xs" color="muted">
                 （{group.items.length} 件）

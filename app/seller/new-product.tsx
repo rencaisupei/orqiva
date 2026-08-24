@@ -23,6 +23,7 @@ import { SignInRequired } from '@/components/SignInRequired';
 import { useCategories } from '@/lib/api/catalog';
 import { useCreateProduct, useMyStoreQuery, type ProductDraft } from '@/lib/api/seller';
 import { pickImages, uploadImage } from '@/lib/api/upload';
+import { BrandText, protectBrand } from '@/components/brand/BrandText';
 import { BRAND } from '@/lib/brand';
 import { formatPrice } from '@/lib/format';
 import { useUserId } from '@/lib/session';
@@ -145,7 +146,7 @@ export default function NewProductScreen() {
           {heading}
         </Typography>
         <Typography type="body-sm" align="center" color="muted">
-          {detail}
+          {protectBrand(detail)}
         </Typography>
         {moderation && moderation.labels.length > 0 ? (
           <View className="flex-row flex-wrap justify-center gap-1.5">
@@ -373,9 +374,9 @@ export default function NewProductScreen() {
                 value={categoryId}
                 onChange={setCategoryId}
               />
-              <Typography type="body-xs" color="muted">
+              <BrandText type="body-xs" color="muted">
                 極貨網只開放實體商品。序號、點數、帳號、軟體授權等數位虛擬商品禁止上架，相關分類已停用。
-              </Typography>
+              </BrandText>
             </>
           ) : null}
 
