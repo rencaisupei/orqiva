@@ -4,6 +4,7 @@ import { Typography } from 'heroui-native';
 import Svg, { Defs, LinearGradient as SvgGradient, Path, Polygon, Stop } from 'react-native-svg';
 
 import { LinearGradient } from '@/components/ui/primitives/LinearGradient';
+import { NoTranslate } from '@/components/brand/NoTranslate';
 import { BRAND, BRAND_COPY } from '@/lib/brand';
 import { cn } from '@/lib/utils';
 
@@ -102,22 +103,24 @@ export function JihuoArtwork({
       <View style={{ width: width * 0.52, height: width * 0.52, flexShrink: 0 }}>
         <JihuoMark size={width * 0.52} />
       </View>
-      <Typography
-        className="text-navy"
-        style={{ fontSize: width * 0.2, lineHeight: width * 0.28, fontWeight: '700' }}
-      >
-        {BRAND_COPY.nameZh}
-      </Typography>
-      <Typography
-        className="text-brand-blue"
-        style={{
-          fontSize: width * 0.085,
-          letterSpacing: width * 0.028,
-          fontWeight: '600',
-        }}
-      >
-        {BRAND_COPY.name}
-      </Typography>
+      <NoTranslate>
+        <Typography
+          className="text-navy"
+          style={{ fontSize: width * 0.2, lineHeight: width * 0.28, fontWeight: '700' }}
+        >
+          {BRAND_COPY.nameZh}
+        </Typography>
+        <Typography
+          className="text-brand-blue"
+          style={{
+            fontSize: width * 0.085,
+            letterSpacing: width * 0.028,
+            fontWeight: '600',
+          }}
+        >
+          {BRAND_COPY.name}
+        </Typography>
+      </NoTranslate>
       {showTagline ? (
         <Typography color="muted" align="center" style={{ fontSize: width * 0.075 }}>
           {BRAND_COPY.tagline}
@@ -150,23 +153,25 @@ export function JihuoLogo({ size = 30, showEn = true, className, onLight = true 
         )}
       </View>
       <View className="shrink">
-        <Typography
-          type="h5"
-          numberOfLines={1}
-          className={cn(onLight ? 'text-navy' : 'text-white')}
-          style={{ fontWeight: '700' }}
-        >
-          {BRAND_COPY.nameZh}
-        </Typography>
-        {showEn ? (
+        <NoTranslate>
           <Typography
-            type="body-xs"
+            type="h5"
             numberOfLines={1}
-            className={cn('tracking-[1px]', onLight ? 'text-muted' : 'text-white/70')}
+            className={cn(onLight ? 'text-navy' : 'text-white')}
+            style={{ fontWeight: '700' }}
           >
-            {BRAND_COPY.name}
+            {BRAND_COPY.nameZh}
           </Typography>
-        ) : null}
+          {showEn ? (
+            <Typography
+              type="body-xs"
+              numberOfLines={1}
+              className={cn('tracking-[1px]', onLight ? 'text-muted' : 'text-white/70')}
+            >
+              {BRAND_COPY.name}
+            </Typography>
+          ) : null}
+        </NoTranslate>
       </View>
     </View>
   );

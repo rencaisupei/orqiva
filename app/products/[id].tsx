@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 import { Avatar, Button, Chip, Spinner, Typography, useToast } from 'heroui-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import {
@@ -29,6 +29,7 @@ import { useSellerLogisticsStatuses } from '@/lib/api/logistics';
 import { useStartConversation } from '@/lib/api/social';
 import { BRAND } from '@/lib/brand';
 import { deliveryEstimate, discountPercent, formatCompact, formatPrice } from '@/lib/format';
+import { useContentWidth } from '@/lib/layout';
 import { useRecentlyViewedStore } from '@/lib/recentlyViewed';
 import { useUserId } from '@/lib/session';
 import { shareProduct } from '@/lib/share';
@@ -36,7 +37,7 @@ import { CVS_SELLER_INACTIVE_HINT, CVS_SHIPPING_METHOD } from '@/lib/types';
 
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { width } = useWindowDimensions();
+  const width = useContentWidth();
   const userId = useUserId();
   const { toast } = useToast();
 
