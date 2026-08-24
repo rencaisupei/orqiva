@@ -5,6 +5,7 @@ import { asyncStorage, createClient, webStorage } from '@biltme/backend';
 import type {
   AccountResponses,
   CoinResponses,
+  GeocodeHit,
   LogisticsNotifyResponses,
   LogisticsResponses,
   MaintenanceResponses,
@@ -216,6 +217,19 @@ export function callMaintenance<A extends MaintenanceAction>(
     action,
     payload,
     '維護服務暫時無法使用，請稍後再試',
+  );
+}
+
+/**
+ * Calls the `geocode` edge function: 地址 → 座標，結果在伺服器端快取。
+ * 候選地址由精確到粗略排序（完整地址 → 行政區 → 縣市），第一個查到的就回傳。
+ */
+export function callGeocode(queries: string[]): Promise<GeocodeHit> {
+  return invokeEdge<GeocodeHit>(
+    'geocode',
+    'lookup',
+    { queries },
+    '地圖服務暫時無法使用，請稍後再試',
   );
 }
 

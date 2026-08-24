@@ -11,6 +11,7 @@ import { FormError } from '@/components/FormError';
 import { SelectPill } from '@/components/SelectPill';
 import { SignInRequired } from '@/components/SignInRequired';
 import type { CouponPreview } from '@/lib/api/contracts';
+import { useBulkTiers } from '@/lib/api/bulk';
 import {
   SHIPPING_FEE,
   useCart,
@@ -22,6 +23,7 @@ import { useLogisticsConfig, useSellerLogisticsStatuses } from '@/lib/api/logist
 import { formatPrice } from '@/lib/format';
 import { useSessionStore, useUserId } from '@/lib/session';
 import {
+  bulkDiscountFor,
   COD_OPTION_LABEL,
   CVS_COD_RANGE_HINT,
   CVS_SELLER_INACTIVE_HINT,
@@ -79,6 +81,9 @@ export default function CheckoutScreen() {
     return source.filter((item) => item.selected);
   }, [cartItems, productId]);
 
+  /* 階梯式數量折扣：伺服器下單時會重算，這裡只是讓買家看到一致的金額。 */
+  const { data: tierMap } = useBulkTiers(lines.map((item) => item.product_id));
+
   /*
    * 貨到付款只能賣給「物流已開通」的賣家。這一筆結帳裡只要有一位賣家未開通，
    * 整張訂單就不能走綠界（訂單依店舖拆單，但收件資料是共用的）。
@@ -105,28 +110,35 @@ export default function CheckoutScreen() {
   const subtotal = lines.reduce((sum, item) => sum + (item.product?.price ?? 0) * item.quantity, 0);
   const storeCount = new Set(lines.map((item) => item.product?.store_id)).size;
   const shipping = storeCount * SHIPPING_FEE;
+  /* 數量折扣：與 market edge function 同一份規則，先折它再套折扣碼。 */
+  const bulkOf = (item: (typeof lines)[number]) =>
+    bulkDiscountFor(item.product?.price ?? 0, item.quantity, tierMap?.get(item.product_id) ?? []);
+  const bulkDiscount = lines.reduce((sum, item) => sum + bulkOf(item), 0);
   const discount = coupon?.discount ?? 0;
-  const total = Math.max(0, subtotal + shipping - discount);
+  const total = Math.max(0, subtotal + shipping - bulkDiscount - discount);
 
   /*
    * 代收金額的上下限是「每一張物流單」各自計算的：購物車跨店時每間店舖會拆成
    * 一筆訂單，所以這裡也逐筆算出應付金額，和伺服器的檢查完全一致。
    */
   const orderTotals = useMemo(() => {
-    const subtotalByStore = new Map<string, number>();
+    const netByStore = new Map<string, number>();
     for (const item of lines) {
       const storeId = item.product?.store_id;
       if (!storeId) continue;
-      const current = subtotalByStore.get(storeId) ?? 0;
-      subtotalByStore.set(storeId, current + (item.product?.price ?? 0) * item.quantity);
+      const price = item.product?.price ?? 0;
+      const net =
+        price * item.quantity -
+        bulkDiscountFor(price, item.quantity, tierMap?.get(item.product_id) ?? []);
+      netByStore.set(storeId, (netByStore.get(storeId) ?? 0) + net);
     }
-    return [...subtotalByStore.entries()].map(([storeId, storeSubtotal]) =>
+    return [...netByStore.entries()].map(([storeId, storeNet]) =>
       Math.max(
         0,
-        storeSubtotal + SHIPPING_FEE - (coupon?.store_id === storeId ? (coupon?.discount ?? 0) : 0),
+        storeNet + SHIPPING_FEE - (coupon?.store_id === storeId ? (coupon?.discount ?? 0) : 0),
       ),
     );
-  }, [lines, coupon]);
+  }, [lines, coupon, tierMap]);
 
   /** 這個貨到付款方式在這筆結帳的金額限制內嗎？回傳第一個擋住的原因。 */
   const codError = (subType: LogisticsSubType): string | null =>
@@ -427,22 +439,31 @@ export default function CheckoutScreen() {
           <Typography type="body" className="text-navy" style={{ fontWeight: '600' }}>
             商品明細
           </Typography>
-          {lines.map((item) => (
-            <View key={item.id} className="flex-row items-center gap-3">
-              <AppImage uri={item.product?.cover_url} className="h-14 w-14 rounded-xl" />
-              <View className="flex-1">
-                <Typography type="body-sm" numberOfLines={2} className="text-navy">
-                  {item.product?.title}
-                </Typography>
-                <Typography type="body-xs" color="muted">
-                  {item.product?.store?.name} · x{item.quantity}
+          {lines.map((item) => {
+            const price = item.product?.price ?? 0;
+            const lineDiscount = bulkOf(item);
+            return (
+              <View key={item.id} className="flex-row items-center gap-3">
+                <AppImage uri={item.product?.cover_url} className="h-14 w-14 rounded-xl" />
+                <View className="flex-1">
+                  <Typography type="body-sm" numberOfLines={2} className="text-navy">
+                    {item.product?.title}
+                  </Typography>
+                  <Typography type="body-xs" color="muted">
+                    {item.product?.store?.name} · x{item.quantity}
+                  </Typography>
+                  {lineDiscount > 0 ? (
+                    <Typography type="body-xs" className="text-brand-orange">
+                      數量折扣 -{formatPrice(lineDiscount)}
+                    </Typography>
+                  ) : null}
+                </View>
+                <Typography type="body-sm" className="text-navy" style={{ fontWeight: '600' }}>
+                  {formatPrice(price * item.quantity - lineDiscount)}
                 </Typography>
               </View>
-              <Typography type="body-sm" className="text-navy" style={{ fontWeight: '600' }}>
-                {formatPrice((item.product?.price ?? 0) * item.quantity)}
-              </Typography>
-            </View>
-          ))}
+            );
+          })}
         </View>
 
         <CouponInput
@@ -470,6 +491,16 @@ export default function CheckoutScreen() {
               {formatPrice(shipping)}
             </Typography>
           </View>
+          {bulkDiscount > 0 ? (
+            <View className="flex-row justify-between">
+              <Typography type="body-sm" color="muted">
+                數量折扣
+              </Typography>
+              <Typography type="body-sm" className="text-brand-orange">
+                -{formatPrice(bulkDiscount)}
+              </Typography>
+            </View>
+          ) : null}
           {discount > 0 && coupon ? (
             <View className="flex-row justify-between">
               <Typography type="body-sm" color="muted">

@@ -6,6 +6,7 @@ import { MapPin, Package, Truck } from 'lucide-react-native';
 import { AppImage } from '@/components/AppImage';
 import { EmptyState } from '@/components/EmptyState';
 import { LogisticsPanel } from '@/components/LogisticsPanel';
+import { ShipmentMap } from '@/components/ShipmentMap';
 import { useOrder, useReorder, useSetOrderStatus } from '@/lib/api/commerce';
 import { BRAND } from '@/lib/brand';
 import { deliveryEstimate, formatDateTime, formatPrice } from '@/lib/format';
@@ -113,6 +114,7 @@ export default function OrderDetailScreen() {
           {/* 出貨動態放在最上面這一欄：門市、寄貨編號與貨態更新都在這裡，
               不必再滑到商品下方。 */}
           <LogisticsPanel order={order} role={isBuyer ? 'buyer' : 'seller'} showEvents />
+          <ShipmentMap order={order} />
         </View>
 
         <View className="bg-surface gap-2 rounded-2xl p-4">
@@ -160,6 +162,11 @@ export default function OrderDetailScreen() {
                 <Typography type="body-xs" color="muted">
                   {formatPrice(line.unit_price)} × {line.quantity}
                 </Typography>
+                {line.discount > 0 ? (
+                  <Typography type="body-xs" className="text-brand-orange">
+                    數量折扣 -{formatPrice(line.discount)}
+                  </Typography>
+                ) : null}
               </View>
               {isBuyer && order.status === 'completed' && line.product_id && !line.reviewed ? (
                 <Button
@@ -205,6 +212,16 @@ export default function OrderDetailScreen() {
               {formatPrice(order.shipping_fee)}
             </Typography>
           </View>
+          {order.bulk_discount > 0 ? (
+            <View className="flex-row justify-between">
+              <Typography type="body-sm" color="muted">
+                數量折扣
+              </Typography>
+              <Typography type="body-sm" className="text-brand-orange">
+                -{formatPrice(order.bulk_discount)}
+              </Typography>
+            </View>
+          ) : null}
           {order.discount > 0 ? (
             <View className="flex-row justify-between">
               <Typography type="body-sm" color="muted">

@@ -60,7 +60,12 @@ function TaskRow({
         <Sparkles size={17} color={task.claimed ? BRAND.blue : BRAND.orange} />
       </View>
       <View className="flex-1">
-        <Typography type="body-sm" className="text-navy" style={{ fontWeight: '600' }}>
+        <Typography
+          type="body-sm"
+          numberOfLines={1}
+          className="text-navy"
+          style={{ fontWeight: '600' }}
+        >
           {task.label}
         </Typography>
         <Typography type="body-xs" color="muted" numberOfLines={2}>
@@ -235,14 +240,19 @@ export default function SellerCoinsScreen() {
         >
           <View className="flex-row items-center gap-2">
             <Coins size={18} color={BRAND.yellow} />
-            <Typography type="body-sm" className="text-white" style={{ fontWeight: '600' }}>
+            <Typography
+              type="body-sm"
+              numberOfLines={1}
+              className="flex-1 text-white"
+              style={{ fontWeight: '600' }}
+            >
               {data.storeName ?? '我的店舖'}的{COIN_NAME}
             </Typography>
           </View>
           <Typography type="h2" className="text-white" style={{ fontWeight: '700' }}>
             {formatNumber(wallet.balance)}
           </Typography>
-          <View className="flex-row gap-4">
+          <View className="flex-row flex-wrap gap-x-4 gap-y-1">
             <Typography type="body-xs" className="text-white/80">
               累積獲得 {formatNumber(wallet.lifetimeEarned)}
             </Typography>
@@ -251,10 +261,12 @@ export default function SellerCoinsScreen() {
             </Typography>
           </View>
 
-          <View className="flex-row items-center gap-2">
+          {/* 窄螢幕會把按鈕標籤與說明擠在一起，所以兩者分成上下兩行。 */}
+          <View className="gap-2">
             <Button
               size="sm"
               variant="tertiary"
+              className="self-start"
               isDisabled={wallet.checkedInToday || checkin.isPending}
               onPress={doCheckin}
             >
@@ -264,9 +276,9 @@ export default function SellerCoinsScreen() {
                   : `簽到領 ${wallet.nextCheckinCoins} ${COIN_NAME}`}
               </Button.Label>
             </Button>
-            <View className="flex-row items-center gap-1">
+            <View className="flex-row items-start gap-1">
               <CalendarCheck size={13} color={BRAND.white} />
-              <Typography type="body-xs" className="text-white/80">
+              <Typography type="body-xs" numberOfLines={2} className="flex-1 text-white/80">
                 連續簽到每天多 {pricing.checkin.bonus}，最高 {pricing.checkin.max}
               </Typography>
             </View>

@@ -48,14 +48,137 @@ export type Store = {
   owner_id: string | null;
   name: string;
   logo_url: string | null;
+  /** 店舖頁最上方的橫幅圖片（store-assets bucket）。 */
+  banner_url: string | null;
   description: string | null;
   location: string;
+  /** 營業時間，jsonb。格式由 parseBusinessHours 保證，舊資料為 null。 */
+  business_hours: BusinessHours | null;
   rating: number;
   rating_count: number;
   is_active: boolean;
   created_at: string;
   updated_at: string;
 };
+
+/* ── 店舖營業時間 ────────────────────────────────────────────── */
+
+/** 一天的營業時段。from / to 為 24 小時制的 'HH:MM'。 */
+export type BusinessHoursDay = { open: boolean; from: string; to: string };
+
+/**
+ * 營業時間。days 固定 7 筆，index 0 = 週日（與 Date.getDay() 對齊），
+ * 顯示時用 WEEKDAY_ORDER 換成週一開頭。mode 'always' = 24 小時營業。
+ */
+export type BusinessHours = {
+  mode: 'always' | 'weekly';
+  days: BusinessHoursDay[];
+  note: string;
+};
+
+/** index 0 = 週日，與 Date.getDay() 相同。 */
+export const WEEKDAY_LABEL = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
+/** 顯示順序：週一開頭。 */
+export const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
+
+export const DEFAULT_BUSINESS_HOURS: BusinessHours = {
+  mode: 'always',
+  days: Array.from({ length: 7 }, () => ({ open: true, from: '09:00', to: '21:00' })),
+  note: '',
+};
+
+const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+function toMinutes(value: string) {
+  const [h, m] = value.split(':');
+  return Number(h) * 60 + Number(m);
+}
+
+/** jsonb → BusinessHours。格式不對就回 null，畫面一律當成「未設定」。 */
+export function parseBusinessHours(value: unknown): BusinessHours | null {
+  if (!value || typeof value !== 'object') return null;
+  const raw = value as Partial<BusinessHours>;
+  const mode = raw.mode === 'weekly' ? 'weekly' : raw.mode === 'always' ? 'always' : null;
+  if (!mode) return null;
+  const days = Array.isArray(raw.days) ? raw.days : [];
+  if (days.length !== 7) return null;
+  const parsed: BusinessHoursDay[] = [];
+  for (const day of days) {
+    const from = typeof day?.from === 'string' && TIME_RE.test(day.from) ? day.from : '09:00';
+    const to = typeof day?.to === 'string' && TIME_RE.test(day.to) ? day.to : '21:00';
+    parsed.push({ open: day?.open, from, to });
+  }
+  return { mode, days: parsed, note: typeof raw.note === 'string' ? raw.note.slice(0, 120) : '' };
+}
+
+/** 今天是否營業中，以及一句顯示用的說明。跨午夜（例如 18:00–02:00）也算得對。 */
+export function businessHoursStatus(
+  hours: BusinessHours | null,
+  now = new Date(),
+): { open: boolean; label: string } | null {
+  if (!hours) return null;
+  if (hours.mode === 'always') return { open: true, label: '24 小時營業' };
+
+  const minutes = now.getHours() * 60 + now.getMinutes();
+  const todayIndex = now.getDay();
+  const today = hours.days[todayIndex];
+  const yesterday = hours.days[(todayIndex + 6) % 7];
+
+  const inRange = (day: BusinessHoursDay, at: number) => {
+    if (!day.open) return false;
+    const from = toMinutes(day.from);
+    const to = toMinutes(day.to);
+    return to > from ? at >= from && at < to : at >= from;
+  };
+  /* 昨天的時段跨過午夜時，凌晨仍算營業中。 */
+  const spillOver = (day: BusinessHoursDay, at: number) => {
+    if (!day.open) return false;
+    const from = toMinutes(day.from);
+    const to = toMinutes(day.to);
+    return to <= from && at < to;
+  };
+
+  if (inRange(today, minutes) || spillOver(yesterday, minutes)) {
+    return { open: true, label: `營業中 · 今日 ${today.from}–${today.to}` };
+  }
+  if (today.open && minutes < toMinutes(today.from)) {
+    return { open: false, label: `休息中 · 今日 ${today.from} 開始營業` };
+  }
+  for (let step = 1; step <= 7; step++) {
+    const day = hours.days[(todayIndex + step) % 7];
+    if (day.open) {
+      const label = step === 1 ? '明天' : WEEKDAY_LABEL[(todayIndex + step) % 7];
+      return { open: false, label: `休息中 · ${label} ${day.from} 開始營業` };
+    }
+  }
+  return { open: false, label: '暫停營業' };
+}
+
+/** 兩天的營業時段是否相同（同開／同關且時段一致），用於把連續同時段的天數合併成一行。 */
+function sameBusinessHoursDay(a: BusinessHoursDay, b: BusinessHoursDay): boolean {
+  return a.open === b.open && (!a.open || (a.from === b.from && a.to === b.to));
+}
+
+/** 把 7 天壓成幾行，例如「週一至週五 09:00–18:00」「週六 休息」。 */
+export function businessHoursLines(hours: BusinessHours | null): string[] {
+  if (!hours) return [];
+  if (hours.mode === 'always') return ['每天 24 小時營業'];
+
+  const lines: string[] = [];
+  let start = 0;
+
+  for (let i = 0; i < WEEKDAY_ORDER.length; i++) {
+    const current = hours.days[WEEKDAY_ORDER[i]];
+    const next = i + 1 < WEEKDAY_ORDER.length ? hours.days[WEEKDAY_ORDER[i + 1]] : null;
+    if (next && sameBusinessHoursDay(current, next)) continue;
+    const startLabel = WEEKDAY_LABEL[WEEKDAY_ORDER[start]];
+    const endLabel = WEEKDAY_LABEL[WEEKDAY_ORDER[i]];
+    const range = start === i ? startLabel : `${startLabel}至${endLabel}`;
+    lines.push(current.open ? `${range} ${current.from}–${current.to}` : `${range} 休息`);
+    start = i + 1;
+  }
+  return lines;
+}
 
 export type StoreSummary = Pick<
   Store,
@@ -207,6 +330,8 @@ export type OrderItem = {
   title: string;
   unit_price: number;
   quantity: number;
+  /** 這一列的數量折扣（階梯式批量折扣），由伺服器計算。 */
+  discount: number;
   image_url: string | null;
   reviewed: boolean;
 };
@@ -220,6 +345,9 @@ export type Order = {
   status: OrderStatus;
   subtotal: number;
   shipping_fee: number;
+  /** 數量折扣（階梯式批量折扣）合計。 */
+  bulk_discount: number;
+  /** 折扣碼折抵金額。 */
   discount: number;
   coupon_id: string | null;
   coupon_code: string | null;
@@ -252,6 +380,76 @@ export type Order = {
   store: Pick<Store, 'id' | 'name' | 'logo_url'> | null;
   order_items: OrderItem[];
 };
+
+/* ── 階梯式批量折扣 ──────────────────────────────────────────── */
+
+/** 一個數量門檻。percent 是整列金額的折扣百分比（1~90），與 DB check 相同。 */
+export type BulkTier = {
+  id?: string;
+  product_id?: string;
+  min_quantity: number;
+  percent: number;
+};
+
+export const MAX_BULK_TIERS = 4;
+export const MIN_BULK_QUANTITY = 2;
+export const MAX_BULK_QUANTITY = 999;
+export const MIN_BULK_PERCENT = 1;
+export const MAX_BULK_PERCENT = 90;
+
+/** 由大到小排序，方便取「目前命中的門檻」。 */
+export function sortBulkTiers(tiers: BulkTier[]): BulkTier[] {
+  return [...tiers].sort((a, b) => b.min_quantity - a.min_quantity);
+}
+
+/** 目前數量命中的門檻，沒有就 null。 */
+export function activeBulkTier(tiers: BulkTier[], quantity: number): BulkTier | null {
+  return sortBulkTiers(tiers).find((tier) => quantity >= tier.min_quantity) ?? null;
+}
+
+/** 再多買幾件就能進下一階；已在最高階回 null。 */
+export function nextBulkTier(tiers: BulkTier[], quantity: number): BulkTier | null {
+  const ascending = [...tiers].sort((a, b) => a.min_quantity - b.min_quantity);
+  return ascending.find((tier) => quantity < tier.min_quantity) ?? null;
+}
+
+/**
+ * 這一列的折扣金額。與 market edge function 的 bulkDiscountFor 必須一致
+ * （整列金額乘上百分比後向下取整），否則畫面與訂單金額會差一元。
+ */
+export function bulkDiscountFor(price: number, quantity: number, tiers: BulkTier[]): number {
+  const tier = activeBulkTier(tiers, quantity);
+  if (!tier) return 0;
+  const discount = Math.floor((price * quantity * tier.percent) / 100);
+  return Math.max(0, Math.min(discount, price * quantity));
+}
+
+/** 賣家設定階梯時的檢查，回傳錯誤訊息或 null。 */
+export function validateBulkTiers(tiers: BulkTier[]): string | null {
+  if (tiers.length > MAX_BULK_TIERS) return `最多只能設定 ${MAX_BULK_TIERS} 個數量門檻。`;
+  const seen = new Set<number>();
+  for (const tier of tiers) {
+    if (
+      !Number.isInteger(tier.min_quantity) ||
+      tier.min_quantity < MIN_BULK_QUANTITY ||
+      tier.min_quantity > MAX_BULK_QUANTITY
+    ) {
+      return `數量門檻需為 ${MIN_BULK_QUANTITY}~${MAX_BULK_QUANTITY} 件的整數。`;
+    }
+    if (tier.percent < MIN_BULK_PERCENT || tier.percent > MAX_BULK_PERCENT) {
+      return `折扣需在 ${MIN_BULK_PERCENT}~${MAX_BULK_PERCENT}% 之間。`;
+    }
+    if (seen.has(tier.min_quantity)) return '同一個數量門檻只能設定一次。';
+    seen.add(tier.min_quantity);
+  }
+  const ascending = [...tiers].sort((a, b) => a.min_quantity - b.min_quantity);
+  for (let i = 1; i < ascending.length; i++) {
+    if (ascending[i].percent <= ascending[i - 1].percent) {
+      return '買越多要折越多：數量門檻越高的折扣百分比必須更大。';
+    }
+  }
+  return null;
+}
 
 /* ── 賣家優惠券 ──────────────────────────────────────────────── */
 

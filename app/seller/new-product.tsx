@@ -14,6 +14,7 @@ import { router } from 'expo-router';
 import { CheckCircle2, ImagePlus, Plus, ShieldAlert, Trash2, X } from 'lucide-react-native';
 
 import { AppImage } from '@/components/AppImage';
+import { BulkTierEditor } from '@/components/BulkTierEditor';
 import { EmptyState } from '@/components/EmptyState';
 import { FormError } from '@/components/FormError';
 import { OptionSelect, type SelectOption } from '@/components/OptionSelect';
@@ -28,6 +29,8 @@ import { useUserId } from '@/lib/session';
 import {
   LOCATIONS,
   SHIPPING_METHODS,
+  validateBulkTiers,
+  type BulkTier,
   type ModerationResult,
   type ProductCondition,
 } from '@/lib/types';
@@ -66,6 +69,7 @@ export default function NewProductScreen() {
   const [originalPrice, setOriginalPrice] = useState('');
   const [stock, setStock] = useState('1');
   const [specs, setSpecs] = useState<SpecRow[]>([newSpecRow()]);
+  const [bulkTiers, setBulkTiers] = useState<BulkTier[]>([]);
   const [shipping, setShipping] = useState<string[]>(['宅配']);
   const [condition, setCondition] = useState<ProductCondition>('new');
   const [location, setLocation] = useState<string>(LOCATIONS[0]);
@@ -211,7 +215,7 @@ export default function NewProductScreen() {
         const value = Number(price);
         if (!price || Number.isNaN(value) || value <= 0) return '請填寫有效的售價';
         if (originalPrice && Number(originalPrice) < value) return '原價不可低於售價';
-        return null;
+        return validateBulkTiers(bulkTiers);
       }
       case 5:
         return Number(stock) >= 0 && stock !== '' ? null : '請填寫庫存數量';
@@ -251,6 +255,7 @@ export default function NewProductScreen() {
       specs: specMap,
       images,
       status: 'active',
+      bulkTiers,
     };
 
     createProduct.mutate(
@@ -398,6 +403,12 @@ export default function NewProductScreen() {
                 keyboardType="numeric"
                 value={originalPrice}
                 onChangeText={(v) => setOriginalPrice(v.replace(/\D/g, ''))}
+              />
+              <Separator className="my-1" />
+              <BulkTierEditor
+                tiers={bulkTiers}
+                onChange={setBulkTiers}
+                price={Number(price) || 0}
               />
             </>
           ) : null}

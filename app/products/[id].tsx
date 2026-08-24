@@ -13,6 +13,7 @@ import {
 } from 'lucide-react-native';
 
 import { AppImage } from '@/components/AppImage';
+import { BulkTierInfo } from '@/components/BulkTierInfo';
 import { EmptyState } from '@/components/EmptyState';
 import { ProductReviews } from '@/components/ProductReviews';
 import { QuantityStepper } from '@/components/QuantityStepper';
@@ -283,6 +284,8 @@ export default function ProductDetailScreen() {
             </Typography>
           </View>
         </View>
+
+        <BulkTierInfo productId={product.id} price={product.price} />
 
         <StoreCoupons storeId={product.store_id} productId={product.id} />
 

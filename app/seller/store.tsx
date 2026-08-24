@@ -15,6 +15,8 @@ import {
 import { router } from 'expo-router';
 import { Camera, KeyRound, Truck } from 'lucide-react-native';
 
+import { AppImage } from '@/components/AppImage';
+import { BusinessHoursEditor } from '@/components/BusinessHoursEditor';
 import { EcpaySignupGuide } from '@/components/EcpaySignupGuide';
 import { EmptyState } from '@/components/EmptyState';
 import { FormError } from '@/components/FormError';
@@ -26,7 +28,13 @@ import { useMyStoreQuery, useSellerShippingProfile, useUpdateStore } from '@/lib
 import { pickImages, uploadImage } from '@/lib/api/upload';
 import { BRAND } from '@/lib/brand';
 import { useUserId } from '@/lib/session';
-import { LOCATIONS, validateSenderCellPhone, validateSenderName } from '@/lib/types';
+import {
+  LOCATIONS,
+  parseBusinessHours,
+  validateSenderCellPhone,
+  validateSenderName,
+  type BusinessHours,
+} from '@/lib/types';
 
 export default function StoreSettingsScreen() {
   const userId = useUserId();
@@ -40,6 +48,8 @@ export default function StoreSettingsScreen() {
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState<string>(LOCATIONS[0]);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [bannerUrl, setBannerUrl] = useState<string | null>(null);
+  const [businessHours, setBusinessHours] = useState<BusinessHours | null>(null);
   const [senderName, setSenderName] = useState('');
   const [senderCellPhone, setSenderCellPhone] = useState('');
   const [senderZipCode, setSenderZipCode] = useState('');
@@ -47,7 +57,7 @@ export default function StoreSettingsScreen() {
   const [merchantId, setMerchantId] = useState('');
   const [hashKey, setHashKey] = useState('');
   const [hashIv, setHashIv] = useState('');
-  const [uploading, setUploading] = useState(false);
+  const [uploading, setUploading] = useState<'logo' | 'banner' | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -56,6 +66,8 @@ export default function StoreSettingsScreen() {
       setDescription(store.description ?? '');
       setLocation(store.location);
       setLogoUrl(store.logo_url);
+      setBannerUrl(store.banner_url);
+      setBusinessHours(parseBusinessHours(store.business_hours));
     }
   }, [store]);
 
@@ -101,17 +113,18 @@ export default function StoreSettingsScreen() {
     );
   }
 
-  const uploadLogo = async () => {
+  const uploadAsset = async (kind: 'logo' | 'banner') => {
     try {
-      setUploading(true);
+      setUploading(kind);
       const picked = await pickImages(1);
       if (picked.length === 0) return;
       const url = await uploadImage('store-assets', userId, picked[0]);
-      setLogoUrl(url);
+      if (kind === 'logo') setLogoUrl(url);
+      else setBannerUrl(url);
     } catch (err) {
       setError(err instanceof Error ? err.message : '上傳失敗');
     } finally {
-      setUploading(false);
+      setUploading(null);
     }
   };
 
@@ -161,6 +174,8 @@ export default function StoreSettingsScreen() {
         description: description.trim(),
         location,
         logoUrl,
+        bannerUrl,
+        businessHours,
         senderName,
         senderCellPhone,
         senderZipCode,
@@ -196,14 +211,37 @@ export default function StoreSettingsScreen() {
             </Avatar>
             <Pressable
               className="flex-row items-center gap-1.5"
-              disabled={uploading}
-              onPress={() => void uploadLogo()}
+              disabled={uploading !== null}
+              onPress={() => void uploadAsset('logo')}
             >
               <Camera size={14} color={BRAND.blue} />
               <Typography type="body-sm" className="text-brand-blue">
-                {uploading ? '上傳中…' : '更換店舖 Logo'}
+                {uploading === 'logo' ? '上傳中…' : '更換店舖 Logo'}
               </Typography>
             </Pressable>
+          </View>
+
+          <View className="gap-2">
+            <Label>店舖橫幅</Label>
+            <AppImage uri={bannerUrl} className="h-32 w-full rounded-2xl" placeholderSize={26} />
+            <View className="flex-row gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                isDisabled={uploading !== null}
+                onPress={() => void uploadAsset('banner')}
+              >
+                <Button.Label>
+                  {uploading === 'banner' ? '上傳中…' : bannerUrl ? '更換橫幅' : '上傳橫幅'}
+                </Button.Label>
+              </Button>
+              {bannerUrl ? (
+                <Button variant="tertiary" size="sm" onPress={() => setBannerUrl(null)}>
+                  <Button.Label>移除</Button.Label>
+                </Button>
+              ) : null}
+            </View>
+            <Description>顯示在店舖頁最上方，建議用橫式圖片（例如 1200 × 480）。</Description>
           </View>
 
           <View>
@@ -214,6 +252,7 @@ export default function StoreSettingsScreen() {
           <View>
             <Label>店舖介紹</Label>
             <TextArea value={description} onChangeText={setDescription} numberOfLines={4} />
+            <Description>會顯示在店舖頁，寫下你賣什麼、出貨速度與售後服務。</Description>
           </View>
 
           <View className="gap-2">
@@ -231,6 +270,8 @@ export default function StoreSettingsScreen() {
             </View>
           </View>
         </View>
+
+        <BusinessHoursEditor value={businessHours} onChange={setBusinessHours} />
 
         <EcpaySignupGuide />
 

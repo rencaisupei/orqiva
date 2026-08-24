@@ -328,7 +328,19 @@ export type CouponPreview = {
   value: number;
   store_id: string;
   discount: number;
+  /** 伺服器同一次試算算出的階梯數量折扣合計，App 用來對帳。 */
+  bulk_discount: number;
 };
+
+/* ── geocode ─────────────────────────────────────────────────── */
+
+/**
+ * 地址 → 座標。查不到時 found 為 false（而不是丟錯），因為訂單頁只是少一張地圖，
+ * 其餘配送資訊照樣顯示。
+ */
+export type GeocodeHit =
+  | { found: true; latitude: number; longitude: number; label: string | null; matched?: string }
+  | { found: false };
 
 /* ── action → response maps ──────────────────────────────────── */
 

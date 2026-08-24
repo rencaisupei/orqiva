@@ -4,16 +4,24 @@ import { Button, Input, Label, Spinner, TextArea, useToast } from 'heroui-native
 import { router, useLocalSearchParams } from 'expo-router';
 
 import { AppImage } from '@/components/AppImage';
+import { BulkTierEditor } from '@/components/BulkTierEditor';
 import { EmptyState } from '@/components/EmptyState';
 import { FormError } from '@/components/FormError';
 import { OptionSelect, type SelectOption } from '@/components/OptionSelect';
 import { SelectPill } from '@/components/SelectPill';
 import { SignInRequired } from '@/components/SignInRequired';
+import { useProductBulkTiers, useSaveBulkTiers } from '@/lib/api/bulk';
 import { useCategories, useProduct } from '@/lib/api/catalog';
 import { useDeleteProduct, useUpdateProduct } from '@/lib/api/seller';
 import { goBackOrReplace } from '@/lib/navigation';
 import { useUserId } from '@/lib/session';
-import { LOCATIONS, SHIPPING_METHODS, type ProductCondition } from '@/lib/types';
+import {
+  LOCATIONS,
+  SHIPPING_METHODS,
+  validateBulkTiers,
+  type BulkTier,
+  type ProductCondition,
+} from '@/lib/types';
 
 export default function EditProductScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -23,6 +31,8 @@ export default function EditProductScreen() {
   const { data: categories } = useCategories();
   const updateProduct = useUpdateProduct();
   const deleteProduct = useDeleteProduct();
+  const { data: savedTiers } = useProductBulkTiers(id);
+  const saveTiers = useSaveBulkTiers();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -33,6 +43,7 @@ export default function EditProductScreen() {
   const [condition, setCondition] = useState<ProductCondition>('new');
   const [location, setLocation] = useState<string>(LOCATIONS[0]);
   const [shipping, setShipping] = useState<string[]>([]);
+  const [bulkTiers, setBulkTiers] = useState<BulkTier[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const categoryOptions = useMemo<SelectOption[]>(
@@ -57,6 +68,11 @@ export default function EditProductScreen() {
     setLocation(product.location);
     setShipping(product.shipping_methods);
   }, [product]);
+
+  /* 階梯是另一張表，載到之後才灌進表單狀態（沿用商品的載入時機即可）。 */
+  useEffect(() => {
+    if (savedTiers) setBulkTiers(savedTiers);
+  }, [savedTiers]);
 
   if (!userId) {
     return <SignInRequired title="登入後編輯商品" />;
@@ -104,6 +120,11 @@ export default function EditProductScreen() {
       setError('請至少選擇一種配送方式');
       return;
     }
+    const tierError = validateBulkTiers(bulkTiers);
+    if (tierError) {
+      setError(tierError);
+      return;
+    }
     setError(null);
 
     updateProduct.mutate(
@@ -122,7 +143,15 @@ export default function EditProductScreen() {
         },
       },
       {
-        onSuccess: () => toast.show({ variant: 'success', label: '商品已更新' }),
+        onSuccess: () => {
+          saveTiers.mutate(
+            { productId: product.id, tiers: bulkTiers },
+            {
+              onSuccess: () => toast.show({ variant: 'success', label: '商品已更新' }),
+              onError: (err: Error) => setError(err.message),
+            },
+          );
+        },
         onError: (err: Error) => setError(err.message),
       },
     );
@@ -175,6 +204,8 @@ export default function EditProductScreen() {
               />
             </View>
           </View>
+
+          <BulkTierEditor tiers={bulkTiers} onChange={setBulkTiers} price={Number(price) || 0} />
 
           <OptionSelect
             label="商品分類"
@@ -237,8 +268,10 @@ export default function EditProductScreen() {
 
           <FormError message={error} />
 
-          <Button isDisabled={updateProduct.isPending} onPress={save}>
-            <Button.Label>{updateProduct.isPending ? '儲存中…' : '儲存變更'}</Button.Label>
+          <Button isDisabled={updateProduct.isPending || saveTiers.isPending} onPress={save}>
+            <Button.Label>
+              {updateProduct.isPending || saveTiers.isPending ? '儲存中…' : '儲存變更'}
+            </Button.Label>
           </Button>
           <Button
             variant="danger-soft"

@@ -3,6 +3,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { bilt, callLogistics, callModeration } from '@/lib/backend';
 import { addRole } from '@/lib/session';
 import type {
+  BulkTier,
+  BusinessHours,
   ModerationResult,
   Order,
   OrderStatus,
@@ -184,6 +186,10 @@ export function useUpdateStore() {
       description: string;
       location: string;
       logoUrl: string | null;
+      /** 店舖頁橫幅。null = 移除。 */
+      bannerUrl: string | null;
+      /** 營業時間。null = 未設定（店舖頁不顯示營業時間）。 */
+      businessHours: BusinessHours | null;
       senderName: string;
       senderCellPhone: string;
       /** 黑貓宅急便建單用的寄件地址。省略 = 不動既有值。 */
@@ -199,6 +205,8 @@ export function useUpdateStore() {
           description: input.description,
           location: input.location,
           logo_url: input.logoUrl,
+          banner_url: input.bannerUrl,
+          business_hours: input.businessHours,
           updated_at: new Date().toISOString(),
         })
         .eq('id', input.storeId);
@@ -255,6 +263,8 @@ export type ProductDraft = {
   specs: Record<string, string>;
   images: string[];
   status: 'active' | 'draft';
+  /** 階梯式批量折扣，空陣列＝沒有數量折扣。 */
+  bulkTiers: BulkTier[];
 };
 
 export function useCreateProduct() {
@@ -297,6 +307,17 @@ export function useCreateProduct() {
             draft.images.map((url, index) => ({ product_id: productId, url, sort_order: index })),
           );
         if (imgError) throw new Error(imgError.message);
+      }
+
+      if (draft.bulkTiers.length > 0) {
+        const { error: tierError } = await bilt.from('product_bulk_tiers').insert(
+          draft.bulkTiers.map((tier) => ({
+            product_id: productId,
+            min_quantity: tier.min_quantity,
+            percent: tier.percent,
+          })),
+        );
+        if (tierError) throw new Error(tierError.message);
       }
 
       // AI 驗證審核：通過才會對買家公開，結果與通知都由審核函式寫入。
@@ -539,6 +560,8 @@ type ReportOrderLine = {
   title: string;
   quantity: number;
   unit_price: number;
+  /** 這一列的數量折扣，熱門商品的營收要扣掉才會跟訂單金額一致。 */
+  discount: number;
   image_url: string | null;
 };
 
@@ -645,7 +668,7 @@ export function useSellerSalesReport(
         bilt
           .from('orders')
           .select(
-            'id, created_at, status, total, order_items(product_id, title, quantity, unit_price, image_url)',
+            'id, created_at, status, total, order_items(product_id, title, quantity, unit_price, discount, image_url)',
           )
           .eq('seller_id', userId!)
           .gte('created_at', prevStart.toISOString())
@@ -711,7 +734,7 @@ export function useSellerSalesReport(
                 revenue: 0,
               };
               entry.quantity += line.quantity;
-              entry.revenue += line.unit_price * line.quantity;
+              entry.revenue += line.unit_price * line.quantity - (line.discount ?? 0);
               topMap.set(key, entry);
             }
           }

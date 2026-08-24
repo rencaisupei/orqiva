@@ -9,6 +9,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { QuantityStepper } from '@/components/QuantityStepper';
 import { RecommendationRail } from '@/components/RecommendationRail';
 import { SignInRequired } from '@/components/SignInRequired';
+import { useBulkTiers } from '@/lib/api/bulk';
 import {
   SHIPPING_FEE,
   useCart,
@@ -20,7 +21,7 @@ import { BRAND } from '@/lib/brand';
 import { formatNumber, formatPrice } from '@/lib/format';
 import { useRecentlyViewedStore } from '@/lib/recentlyViewed';
 import { useUserId } from '@/lib/session';
-import type { CartItem } from '@/lib/types';
+import { activeBulkTier, bulkDiscountFor, nextBulkTier, type CartItem } from '@/lib/types';
 
 type Group = { storeId: string; storeName: string; items: CartItem[] };
 
@@ -48,6 +49,7 @@ export default function CartScreen() {
   const removeItem = useRemoveCartItem();
   const setAllSelected = useSetAllSelected();
   const recentlyViewed = useRecentlyViewedStore((s) => s.ids);
+  const { data: tierMap } = useBulkTiers((items ?? []).map((item) => item.product_id));
 
   /* 推薦的種子：購物車裡的商品最能代表現在想買什麼，空車時退回最近瀏覽。 */
   const cartSeeds = useMemo(
@@ -75,6 +77,13 @@ export default function CartScreen() {
   const selectedItems = (items ?? []).filter((item) => item.selected && item.product);
   const subtotal = selectedItems.reduce(
     (sum, item) => sum + (item.product?.price ?? 0) * item.quantity,
+    0,
+  );
+  /* 數量折扣：規則與 market edge function 同一份（lib/types.ts 的 bulkDiscountFor）。 */
+  const bulkDiscount = selectedItems.reduce(
+    (sum, item) =>
+      sum +
+      bulkDiscountFor(item.product?.price ?? 0, item.quantity, tierMap?.get(item.product_id) ?? []),
     0,
   );
   const storeCount = new Set(selectedItems.map((item) => item.product?.store_id)).size;
@@ -147,59 +156,84 @@ export default function CartScreen() {
             </Pressable>
             <Separator />
 
-            {group.items.map((item) => (
-              <View key={item.id} className="flex-row items-start gap-3 pt-3">
-                <View className="pt-6">
-                  <Checkbox
-                    isSelected={item.selected}
-                    onSelectedChange={(selected) => updateItem.mutate({ id: item.id, selected })}
-                  />
-                </View>
-                <Pressable
-                  onPress={() =>
-                    router.push({ pathname: '/products/[id]', params: { id: item.product_id } })
-                  }
-                >
-                  <AppImage uri={item.product?.cover_url} className="h-20 w-20 rounded-xl" />
-                </Pressable>
-                <View className="flex-1 gap-1">
-                  <Typography type="body-sm" numberOfLines={2} className="text-navy">
-                    {item.product?.title ?? '商品已下架'}
-                  </Typography>
-                  <View className="flex-row items-center gap-2">
-                    <Chip size="sm" variant="tertiary">
-                      {item.shipping_method}
-                    </Chip>
-                    <Typography type="body-xs" color="muted">
-                      庫存 {item.product?.stock ?? 0}
-                    </Typography>
+            {group.items.map((item) => {
+              const price = item.product?.price ?? 0;
+              const tiers = tierMap?.get(item.product_id) ?? [];
+              const itemDiscount = bulkDiscountFor(price, item.quantity, tiers);
+              const tier = activeBulkTier(tiers, item.quantity);
+              const upcoming = nextBulkTier(tiers, item.quantity);
+              return (
+                <View key={item.id} className="flex-row items-start gap-3 pt-3">
+                  <View className="pt-6">
+                    <Checkbox
+                      isSelected={item.selected}
+                      onSelectedChange={(selected) => updateItem.mutate({ id: item.id, selected })}
+                    />
                   </View>
-                  <View className="flex-row items-center justify-between">
-                    <Typography
-                      type="body"
-                      className="text-brand-orange"
-                      style={{ fontWeight: '700' }}
-                    >
-                      {formatPrice((item.product?.price ?? 0) * item.quantity)}
+                  <Pressable
+                    onPress={() =>
+                      router.push({ pathname: '/products/[id]', params: { id: item.product_id } })
+                    }
+                  >
+                    <AppImage uri={item.product?.cover_url} className="h-20 w-20 rounded-xl" />
+                  </Pressable>
+                  <View className="flex-1 gap-1">
+                    <Typography type="body-sm" numberOfLines={2} className="text-navy">
+                      {item.product?.title ?? '商品已下架'}
                     </Typography>
                     <View className="flex-row items-center gap-2">
-                      <QuantityStepper
-                        value={item.quantity}
-                        max={Math.max(1, item.product?.stock ?? 1)}
-                        onChange={(quantity) => updateItem.mutate({ id: item.id, quantity })}
-                      />
-                      <Pressable
-                        className="h-8 w-8 items-center justify-center"
-                        onPress={() => removeItem.mutate(item.id)}
-                        accessibilityLabel="刪除商品"
-                      >
-                        <Trash2 size={16} color={BRAND.muted} />
-                      </Pressable>
+                      <Chip size="sm" variant="tertiary">
+                        {item.shipping_method}
+                      </Chip>
+                      <Typography type="body-xs" color="muted">
+                        庫存 {item.product?.stock ?? 0}
+                      </Typography>
+                    </View>
+                    {/* 數量折扣：達標就直接折在這一列的金額上，沒達標就提示還差幾件。 */}
+                    {tier ? (
+                      <Typography type="body-xs" className="text-brand-orange">
+                        滿 {tier.min_quantity} 件折 {tier.percent}%，已省{' '}
+                        {formatPrice(itemDiscount)}
+                      </Typography>
+                    ) : upcoming ? (
+                      <Typography type="body-xs" color="muted">
+                        再買 {upcoming.min_quantity - item.quantity} 件可折 {upcoming.percent}%
+                      </Typography>
+                    ) : null}
+                    <View className="flex-row items-center justify-between">
+                      <View>
+                        {itemDiscount > 0 ? (
+                          <Typography type="body-xs" color="muted" className="line-through">
+                            {formatPrice(price * item.quantity)}
+                          </Typography>
+                        ) : null}
+                        <Typography
+                          type="body"
+                          className="text-brand-orange"
+                          style={{ fontWeight: '700' }}
+                        >
+                          {formatPrice(price * item.quantity - itemDiscount)}
+                        </Typography>
+                      </View>
+                      <View className="flex-row items-center gap-2">
+                        <QuantityStepper
+                          value={item.quantity}
+                          max={Math.max(1, item.product?.stock ?? 1)}
+                          onChange={(quantity) => updateItem.mutate({ id: item.id, quantity })}
+                        />
+                        <Pressable
+                          className="h-8 w-8 items-center justify-center"
+                          onPress={() => removeItem.mutate(item.id)}
+                          accessibilityLabel="刪除商品"
+                        >
+                          <Trash2 size={16} color={BRAND.muted} />
+                        </Pressable>
+                      </View>
                     </View>
                   </View>
                 </View>
-              </View>
-            ))}
+              );
+            })}
           </View>
         ))}
 
@@ -226,11 +260,16 @@ export default function CartScreen() {
             </Typography>
           </Pressable>
           <View className="items-end">
+            {bulkDiscount > 0 ? (
+              <Typography type="body-xs" className="text-brand-orange">
+                數量折扣 -{formatPrice(bulkDiscount)}
+              </Typography>
+            ) : null}
             <Typography type="body-xs" color="muted">
-              商品 {formatPrice(subtotal)} + 運費 {formatPrice(shipping)}
+              商品 {formatPrice(subtotal - bulkDiscount)} + 運費 {formatPrice(shipping)}
             </Typography>
             <Typography type="h5" className="text-brand-orange" style={{ fontWeight: '700' }}>
-              {formatPrice(subtotal + shipping)}
+              {formatPrice(subtotal - bulkDiscount + shipping)}
             </Typography>
           </View>
         </View>
