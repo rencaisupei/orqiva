@@ -19,7 +19,14 @@ import { useMyOrders } from '@/lib/api/commerce';
 import { BRAND } from '@/lib/brand';
 import { formatNumber } from '@/lib/format';
 import { useUserId } from '@/lib/session';
-import { type Order, type OrderStatus } from '@/lib/types';
+import {
+  isCvsOrder,
+  shipmentStage,
+  toLogisticsStatus,
+  type Order,
+  type OrderStatus,
+  type ShipmentStage,
+} from '@/lib/types';
 
 type StatusFilter = OrderStatus | 'all';
 type RangeKey = 'all' | '30d' | '3m';
@@ -62,22 +69,38 @@ export default function OrdersScreen() {
   const keyword = search.trim().toLowerCase();
   const rangeDays = RANGES.find((item) => item.key === range)?.days ?? null;
 
-  /* 出貨狀態只屬於「全部」這一頁：切到待付款等分頁時同時把貨態條件收回，
-     否則使用者看到的筆數會被一個看不到的篩選條件影響。 */
+  /* 換分頁時把貨態條件收回「全部」：每個分頁的階段不同，留著上一頁選的階段
+     會出現「看得到膠囊卻沒有訂單」的狀況。 */
   const changeStatus = (next: StatusFilter) => {
     setStatus(next);
-    if (next !== 'all') setShipment('all');
+    setShipment('all');
   };
 
-  const filtered = useMemo(() => {
+  /* 這個分頁的訂單（還沒套用貨態條件）：出貨狀態區塊的筆數與階段都由它決定，
+     所以待付款分頁只會看到待付款訂單的貨態。 */
+  const scoped = useMemo(() => {
     const cutoff = rangeDays ? Date.now() - rangeDays * DAY_MS : null;
     return (orders ?? []).filter((order) => {
       if (status !== 'all' && order.status !== status) return false;
-      if (!matchesShipmentFilter(order, shipment)) return false;
       if (cutoff && new Date(order.created_at).getTime() < cutoff) return false;
       return matchesKeyword(order, keyword);
     });
-  }, [orders, status, shipment, rangeDays, keyword]);
+  }, [orders, status, rangeDays, keyword]);
+
+  const filtered = useMemo(
+    () => scoped.filter((order) => matchesShipmentFilter(order, shipment)),
+    [scoped, shipment],
+  );
+
+  /* 只留這個分頁真的有訂單的階段，例如備貨中分頁通常只有「待出貨／已建單」。 */
+  const stages = useMemo(() => {
+    const present = new Set<ShipmentStage>();
+    for (const order of scoped) {
+      if (!isCvsOrder(order)) continue;
+      present.add(shipmentStage(toLogisticsStatus(order.logistics_status)));
+    }
+    return Array.from(present);
+  }, [scoped]);
 
   if (!userId) {
     return <SignInRequired title="登入後查看訂單" />;
@@ -92,6 +115,8 @@ export default function OrdersScreen() {
     setRange('all');
     setSearch('');
   };
+
+  const statusLabel = STATUS_SEGMENTS.find((item) => item.key === status)?.label ?? '全部';
 
   return (
     <View className="bg-background flex-1">
@@ -111,9 +136,14 @@ export default function OrdersScreen() {
           size="sm"
         />
 
-        {status === 'all' ? (
-          <ShipmentStatusBar orders={orders ?? []} value={shipment} onChange={setShipment} />
-        ) : null}
+        {/* 出貨動態跟著分頁走：每一頁都看得到，但只統計、只篩選這一頁的訂單。 */}
+        <ShipmentStatusBar
+          orders={scoped}
+          value={shipment}
+          onChange={setShipment}
+          stages={stages}
+          title={status === 'all' ? '超商取貨出貨狀態' : `${statusLabel}的出貨動態`}
+        />
 
         <View className="flex-row flex-wrap gap-2">
           {RANGES.map((item) => (

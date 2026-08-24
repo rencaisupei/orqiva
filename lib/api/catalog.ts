@@ -262,6 +262,8 @@ export function useCreateReview() {
       userId: string;
       rating: number;
       comment: string;
+      /** 已上傳到 `review-images` 的公開網址。 */
+      images: string[];
     }) => {
       const { error } = await bilt.from('reviews').insert({
         product_id: input.productId,
@@ -269,6 +271,7 @@ export function useCreateReview() {
         user_id: input.userId,
         rating: input.rating,
         comment: input.comment,
+        images: input.images,
       });
       if (error) throw new Error(error.message);
 

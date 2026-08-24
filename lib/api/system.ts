@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { bilt, callMaintenance } from '@/lib/backend';
+import { bilt, callMaintenance, callPriceWatch } from '@/lib/backend';
 import type { AppSettings } from '@/lib/types';
 
 const DEFAULTS: AppSettings = {
@@ -31,6 +31,12 @@ const DEFAULTS: AppSettings = {
   auto_review_last_run_at: null,
   auto_review_running_since: null,
   auto_review_last_total: 0,
+  price_watch_enabled: true,
+  price_watch_interval_hours: 6,
+  price_watch_min_drop_percent: 3,
+  price_watch_last_run_at: null,
+  price_watch_running_since: null,
+  price_watch_last_total: 0,
   updated_at: new Date(0).toISOString(),
   updated_by: null,
 };
@@ -225,4 +231,48 @@ export function useRunCleanup() {
       void qc.invalidateQueries({ queryKey: ['notifications'] });
     },
   });
+}
+
+/* ── 收藏降價巡邏 ─────────────────────────────────────────────── */
+
+/** 下一次降價巡邏到期的時間；沒跑過就是「現在」。 */
+function priceWatchDueAt(settings: AppSettings): number {
+  if (!settings.price_watch_last_run_at) return 0;
+  const last = Date.parse(settings.price_watch_last_run_at);
+  if (Number.isNaN(last)) return 0;
+  return last + Math.max(1, settings.price_watch_interval_hours) * 3_600_000;
+}
+
+export function isPriceWatchDue(settings: AppSettings, now = Date.now()): boolean {
+  return settings.price_watch_enabled && now >= priceWatchDueAt(settings);
+}
+
+/**
+ * 收藏降價巡邏的觸發器（與自動清理、自動審核同一套做法）。
+ *
+ * 到期判斷放在人人都讀得到的 app_settings 上，所以只有真的到期時 App 才會發一次
+ * 請求；函式本身還會再檢查一次到期與併發鎖，多台裝置同時到期也只有一支會執行。
+ */
+export function useAutoPriceWatch() {
+  const { data } = useAppSettings();
+  const qc = useQueryClient();
+  const fired = useRef(false);
+
+  useEffect(() => {
+    if (!data || fired.current) return;
+    if (!isPriceWatchDue(data)) return;
+    fired.current = true;
+    callPriceWatch('run')
+      .then((result) => {
+        if (!result.ran) return;
+        void qc.invalidateQueries({ queryKey: ['system'] });
+        if (result.notified > 0) {
+          void qc.invalidateQueries({ queryKey: ['notifications'] });
+          void qc.invalidateQueries({ queryKey: ['favorites'] });
+        }
+      })
+      .catch(() => {
+        // 降價通知失敗不影響使用者；下一次啟動時會再試。
+      });
+  }, [data, qc]);
 }

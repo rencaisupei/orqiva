@@ -5,11 +5,13 @@ import { addRole } from '@/lib/session';
 import type {
   ModerationResult,
   Order,
+  OrderStatus,
   Product,
   ProductCondition,
   SellerShippingProfile,
   SellerStatistic,
   Store,
+  StoreReview,
 } from '@/lib/types';
 
 /**
@@ -457,11 +459,276 @@ export function useSellerDashboard(userId: string | null, storeId: string | null
   });
 }
 
+/* ── 銷售儀表板（日／週／月 + 日期範圍） ───────────────────────── */
+
+export type SalesGrain = 'day' | 'week' | 'month';
+
+/** 一個時間區間（grain 決定寬度，count 決定看幾個區間）。 */
+export type SalesRange = { grain: SalesGrain; count: number };
+
+export type SalesBucket = {
+  key: string;
+  /** 圖表下方的短標籤（08/24、8/18、8月）。 */
+  label: string;
+  revenue: number;
+  orders: number;
+  views: number;
+};
+
+export type SalesTopProduct = {
+  productId: string | null;
+  title: string;
+  imageUrl: string | null;
+  quantity: number;
+  revenue: number;
+};
+
+export type SalesReport = {
+  buckets: SalesBucket[];
+  revenue: number;
+  orders: number;
+  views: number;
+  /** 與前一個等長期間相比的百分比；前期沒有資料時 null。 */
+  revenueDelta: number | null;
+  ordersDelta: number | null;
+  viewsDelta: number | null;
+  /** 平均客單價（已排除取消的訂單）。 */
+  avgOrderValue: number;
+  statusCounts: Record<OrderStatus, number>;
+  topProducts: SalesTopProduct[];
+  /** 「2026/07/26 ~ 2026/08/24」，讓賣家確認自己在看哪一段。 */
+  rangeLabel: string;
+  startsAt: string;
+};
+
+type ReportOrderLine = {
+  product_id: string | null;
+  title: string;
+  quantity: number;
+  unit_price: number;
+  image_url: string | null;
+};
+
+type ReportOrder = {
+  id: string;
+  created_at: string;
+  status: OrderStatus;
+  total: number;
+  order_items: ReportOrderLine[];
+};
+
+const DAY_MS = 86_400_000;
+
+function startOfDay(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+/** 週一為一週的開始（台灣的習慣）。 */
+function startOfWeek(d: Date): Date {
+  const day = startOfDay(d);
+  const weekday = (day.getDay() + 6) % 7;
+  return new Date(day.getFullYear(), day.getMonth(), day.getDate() - weekday);
+}
+
+function startOfMonth(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), 1);
+}
+
+function pad(value: number): string {
+  return value < 10 ? `0${value}` : String(value);
+}
+
+/** 本地日期的 YYYY-MM-DD（不要用 toISOString，那是 UTC，會把晚上的訂單算到隔天）。 */
+function localDate(d: Date): string {
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/** 這個時間屬於哪一個區間，以及那個區間的起點。 */
+function bucketStart(date: Date, grain: SalesGrain): Date {
+  if (grain === 'week') return startOfWeek(date);
+  if (grain === 'month') return startOfMonth(date);
+  return startOfDay(date);
+}
+
+function bucketKey(date: Date, grain: SalesGrain): string {
+  const start = bucketStart(date, grain);
+  return grain === 'month'
+    ? `${start.getFullYear()}-${pad(start.getMonth() + 1)}`
+    : localDate(start);
+}
+
+function bucketLabel(start: Date, grain: SalesGrain): string {
+  if (grain === 'month') return `${start.getMonth() + 1}月`;
+  return `${pad(start.getMonth() + 1)}/${pad(start.getDate())}`;
+}
+
+/** 往前推 n 個區間的起點。 */
+function shiftBucket(start: Date, grain: SalesGrain, steps: number): Date {
+  if (grain === 'month') {
+    return new Date(start.getFullYear(), start.getMonth() + steps, 1);
+  }
+  const days = grain === 'week' ? steps * 7 : steps;
+  return new Date(start.getTime() + days * DAY_MS);
+}
+
+function periodStart(range: SalesRange, now: Date): Date {
+  return shiftBucket(bucketStart(now, range.grain), range.grain, -(range.count - 1));
+}
+
+function formatRangeLabel(from: Date, to: Date): string {
+  const show = (d: Date) => `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())}`;
+  return `${show(from)} ~ ${show(to)}`;
+}
+
+const EMPTY_STATUS_COUNTS: Record<OrderStatus, number> = {
+  pending: 0,
+  paid: 0,
+  shipped: 0,
+  completed: 0,
+  cancelled: 0,
+};
+
+/**
+ * 銷售報表：日／週／月的訂單數與營收、期間熱門商品、訂單狀態分佈。
+ *
+ * 營收與訂單數一律從 orders 算（排除已取消），不用 seller_statistics 的彙總值，
+ * 這樣圖表上的數字與賣家自己在訂單頁看到的一致；seller_statistics 只用來取瀏覽數。
+ * 為了算「與前期相比」，查詢範圍是兩倍期間，前半段只算總計、不畫進圖表。
+ */
+export function useSellerSalesReport(
+  userId: string | null,
+  storeId: string | null,
+  range: SalesRange,
+) {
+  return useQuery({
+    enabled: !!userId && !!storeId,
+    queryKey: ['seller-stats', 'report', storeId, range.grain, range.count],
+    queryFn: async (): Promise<SalesReport> => {
+      const now = new Date();
+      const start = periodStart(range, now);
+      const prevStart = shiftBucket(start, range.grain, -range.count);
+
+      const [ordersRes, statsRes] = await Promise.all([
+        bilt
+          .from('orders')
+          .select(
+            'id, created_at, status, total, order_items(product_id, title, quantity, unit_price, image_url)',
+          )
+          .eq('seller_id', userId!)
+          .gte('created_at', prevStart.toISOString())
+          .order('created_at', { ascending: true })
+          .returns<ReportOrder[]>(),
+        bilt
+          .from('seller_statistics')
+          .select('*')
+          .eq('store_id', storeId!)
+          .gte('stat_date', localDate(prevStart))
+          .order('stat_date')
+          .returns<SellerStatistic[]>(),
+      ]);
+
+      const orders = ordersRes.data ?? [];
+      const stats = statsRes.data ?? [];
+
+      /* 圖表的空桶先鋪好，沒有訂單的那一天也要留位置。 */
+      const buckets: SalesBucket[] = [];
+      const index = new Map<string, SalesBucket>();
+      for (let i = 0; i < range.count; i += 1) {
+        const bucketDate = shiftBucket(start, range.grain, i);
+        const bucket: SalesBucket = {
+          key: bucketKey(bucketDate, range.grain),
+          label: bucketLabel(bucketDate, range.grain),
+          revenue: 0,
+          orders: 0,
+          views: 0,
+        };
+        buckets.push(bucket);
+        index.set(bucket.key, bucket);
+      }
+
+      const statusCounts = { ...EMPTY_STATUS_COUNTS };
+      const topMap = new Map<string, SalesTopProduct>();
+      let revenue = 0;
+      let orderCount = 0;
+      let prevRevenue = 0;
+      let prevOrders = 0;
+
+      for (const order of orders) {
+        const created = new Date(order.created_at);
+        const current = created >= start;
+        const counts = order.status !== 'cancelled';
+
+        if (current) {
+          statusCounts[order.status] += 1;
+          if (counts) {
+            revenue += order.total;
+            orderCount += 1;
+            const bucket = index.get(bucketKey(created, range.grain));
+            if (bucket) {
+              bucket.revenue += order.total;
+              bucket.orders += 1;
+            }
+            for (const line of order.order_items ?? []) {
+              const key = line.product_id ?? line.title;
+              const entry = topMap.get(key) ?? {
+                productId: line.product_id,
+                title: line.title,
+                imageUrl: line.image_url,
+                quantity: 0,
+                revenue: 0,
+              };
+              entry.quantity += line.quantity;
+              entry.revenue += line.unit_price * line.quantity;
+              topMap.set(key, entry);
+            }
+          }
+        } else if (counts) {
+          prevRevenue += order.total;
+          prevOrders += 1;
+        }
+      }
+
+      /* 瀏覽數只有 seller_statistics 有（每天一列）。 */
+      let views = 0;
+      let prevViews = 0;
+      const startKey = localDate(start);
+      for (const row of stats) {
+        if (row.stat_date >= startKey) {
+          views += row.views;
+          const bucket = index.get(bucketKey(new Date(`${row.stat_date}T00:00:00`), range.grain));
+          if (bucket) bucket.views += row.views;
+        } else {
+          prevViews += row.views;
+        }
+      }
+
+      const topProducts = Array.from(topMap.values())
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 5);
+
+      return {
+        buckets,
+        revenue,
+        orders: orderCount,
+        views,
+        revenueDelta: deltaPercent(revenue, prevRevenue),
+        ordersDelta: deltaPercent(orderCount, prevOrders),
+        viewsDelta: deltaPercent(views, prevViews),
+        avgOrderValue: orderCount > 0 ? Math.round(revenue / orderCount) : 0,
+        statusCounts,
+        topProducts,
+        rangeLabel: formatRangeLabel(start, now),
+        startsAt: start.toISOString(),
+      };
+    },
+  });
+}
+
 export function useStoreReviews(storeId: string | null) {
   return useQuery({
     enabled: !!storeId,
     queryKey: ['store-reviews', storeId],
-    queryFn: async () => {
+    queryFn: async (): Promise<StoreReview[]> => {
       const { data: products } = await bilt
         .from('products')
         .select('id')
@@ -471,9 +738,13 @@ export function useStoreReviews(storeId: string | null) {
       if (ids.length === 0) return [];
       const { data, error } = await bilt
         .from('reviews')
-        .select('*, profile:profiles!reviews_user_profile_fkey(id, display_name, avatar_url)')
+        .select(
+          '*, profile:profiles!reviews_user_profile_fkey(id, display_name, avatar_url), product:products(id, title, cover_url)',
+        )
         .in('product_id', ids)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(200)
+        .returns<StoreReview[]>();
       if (error) throw new Error(error.message);
       return data ?? [];
     },

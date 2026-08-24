@@ -12,6 +12,7 @@ import {
   Settings2,
   ShieldCheck,
   Store as StoreIcon,
+  TrendingDown,
   Truck,
 } from 'lucide-react-native';
 
@@ -52,6 +53,8 @@ function iconFor(type: NotificationType) {
       return <CheckCircle2 size={18} color={BRAND.blue} />;
     case 'product_published':
       return <Megaphone size={18} color={BRAND.blue} />;
+    case 'price_drop':
+      return <TrendingDown size={18} color={BRAND.orange} />;
     default:
       return <BellRing size={18} color={BRAND.blue} />;
   }
@@ -66,6 +69,7 @@ const PREF_ROWS: { key: keyof NotificationPrefs; label: string; hint: string }[]
     label: `${COIN_NAME}簽到`,
     hint: `每天提醒領${COIN_NAME}、入帳時通知（賣家）`,
   },
+  { key: 'notify_price_drop', label: '收藏降價', hint: '收藏清單裡的商品降價時通知' },
 ];
 
 export default function NotificationsScreen() {

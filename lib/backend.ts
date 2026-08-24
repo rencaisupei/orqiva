@@ -11,6 +11,7 @@ import type {
   MarketResponses,
   ModerationResponses,
   NotifyResponses,
+  PriceWatchResponses,
   RecommendResponses,
 } from '@/lib/api/contracts';
 
@@ -219,6 +220,26 @@ export function callMaintenance<A extends MaintenanceAction>(
 }
 
 export type RecommendAction = keyof RecommendResponses;
+
+export type PriceWatchAction = keyof PriceWatchResponses;
+
+/**
+ * Calls the `price-watch` edge function: the 收藏降價 patrol that compares every
+ * wishlist row against the price it was saved at and notifies the buyer. Like
+ * the cleanup run it is throttled server-side, so calling it when it is not due
+ * is a cheap no-op.
+ */
+export function callPriceWatch<A extends PriceWatchAction>(
+  action: A,
+  payload: Record<string, unknown> = {},
+): Promise<PriceWatchResponses[A]> {
+  return invokeEdge<PriceWatchResponses[A]>(
+    'price-watch',
+    action,
+    payload,
+    '降價通知服務暫時無法使用，請稍後再試',
+  );
+}
 
 /**
  * Calls the `recommend` edge function: 「猜你喜歡」/「為你推薦」. The OpenAI key and

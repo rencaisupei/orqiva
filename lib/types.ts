@@ -10,13 +10,15 @@ export type UserAccount = {
   notify_moderation: boolean;
   /** 賣家的 J幣簽到提醒與入帳通知。 */
   notify_coins: boolean;
+  /** 收藏商品降價時通知買家。 */
+  notify_price_drop: boolean;
   created_at: string;
   updated_at: string;
 };
 
 export type NotificationPrefs = Pick<
   UserAccount,
-  'notify_messages' | 'notify_orders' | 'notify_moderation' | 'notify_coins'
+  'notify_messages' | 'notify_orders' | 'notify_moderation' | 'notify_coins' | 'notify_price_drop'
 >;
 
 export type Profile = {
@@ -176,6 +178,26 @@ export type CartItem = {
   product: ProductListItem | null;
 };
 
+/**
+ * 願望清單的一列。`watch_price` 是收藏當下（或上一次通知後）的價格，
+ * 降價巡邏就是拿它跟現價比；null 代表巡邏還沒建立基準價。
+ */
+export type FavoriteItem = {
+  product: ProductListItem;
+  watch_price: number | null;
+  price_notified_at: string | null;
+  created_at: string;
+};
+
+export type PriceDrop = { amount: number; percent: number };
+
+/** 現價比基準價低多少。沒有基準價或沒有降價時回 null。 */
+export function priceDrop(price: number, watchPrice: number | null): PriceDrop | null {
+  if (watchPrice === null || watchPrice <= 0 || price >= watchPrice) return null;
+  const amount = watchPrice - price;
+  return { amount, percent: Math.round((amount / watchPrice) * 100) };
+}
+
 export type OrderStatus = 'pending' | 'paid' | 'shipped' | 'completed' | 'cancelled';
 
 export type OrderItem = {
@@ -228,9 +250,28 @@ export type Review = {
   user_id: string;
   rating: number;
   comment: string;
+  /** 買家上傳的實拍照片（public bucket `review-images` 的網址）。 */
+  images: string[];
   created_at: string;
   profile: Pick<Profile, 'id' | 'display_name' | 'avatar_url'> | null;
 };
+
+/** 賣家分析頁用的評價：多帶商品資訊，因為一間店有很多商品。 */
+export type StoreReview = Review & {
+  product: Pick<Product, 'id' | 'title' | 'cover_url'> | null;
+};
+
+/** 一到五星各有幾筆，用來畫評價分佈。 */
+export function ratingBreakdown(reviews: Pick<Review, 'rating'>[]): number[] {
+  const buckets = [0, 0, 0, 0, 0];
+  for (const review of reviews) {
+    const index = Math.min(5, Math.max(1, Math.round(review.rating))) - 1;
+    buckets[index] += 1;
+  }
+  return buckets;
+}
+
+export const MAX_REVIEW_IMAGES = 5;
 
 export type Conversation = {
   id: string;
@@ -263,7 +304,8 @@ export type NotificationType =
   | 'message'
   | 'moderation'
   | 'support'
-  | 'logistics';
+  | 'logistics'
+  | 'price_drop';
 
 export type AppNotification = {
   id: string;
@@ -586,6 +628,16 @@ export type AppSettings = {
   /** 有值代表某一次自動巡邏正在進行（5 分鐘後視為逾時可接手）。 */
   auto_review_running_since: string | null;
   auto_review_last_total: number;
+  /** 收藏降價巡邏：關閉後買家不會再收到收藏商品的降價通知。 */
+  price_watch_enabled: boolean;
+  /** 兩次降價巡邏最短間隔（小時，1~168）。 */
+  price_watch_interval_hours: number;
+  /** 至少跌這個百分比才通知（1~90），避免一塊錢也發推播。 */
+  price_watch_min_drop_percent: number;
+  price_watch_last_run_at: string | null;
+  /** 有值代表某一次巡邏正在進行（5 分鐘後視為逾時可接手）。 */
+  price_watch_running_since: string | null;
+  price_watch_last_total: number;
   updated_at: string;
   updated_by: string | null;
 };

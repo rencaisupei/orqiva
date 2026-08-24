@@ -84,7 +84,7 @@ async function toUploadBody(image: PickedImage): Promise<Blob | ArrayBuffer> {
 
 /** Uploads a picked image into a public bucket under `<userId>/...` and returns its public URL. */
 export async function uploadImage(
-  bucket: 'product-images' | 'store-assets',
+  bucket: 'product-images' | 'store-assets' | 'review-images',
   userId: string,
   image: PickedImage,
 ): Promise<string> {

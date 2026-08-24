@@ -215,7 +215,7 @@ export function useUpdateProfile() {
   });
 }
 
-/** 推播偏好：訊息 / 訂單 / 審核三類可分開關閉。 */
+/** 推播偏好：訊息 / 訂單 / 審核 / J幣 / 收藏降價可分開關閉。 */
 export function useNotificationPrefs(userId: string | null) {
   return useQuery({
     enabled: !!userId,
@@ -223,7 +223,9 @@ export function useNotificationPrefs(userId: string | null) {
     queryFn: async (): Promise<NotificationPrefs> => {
       const { data, error } = await bilt
         .from('users')
-        .select('notify_messages, notify_orders, notify_moderation, notify_coins')
+        .select(
+          'notify_messages, notify_orders, notify_moderation, notify_coins, notify_price_drop',
+        )
         .eq('id', userId!)
         .maybeSingle();
       if (error) throw new Error(error.message);
@@ -233,6 +235,7 @@ export function useNotificationPrefs(userId: string | null) {
           notify_orders: true,
           notify_moderation: true,
           notify_coins: true,
+          notify_price_drop: true,
         }
       );
     },

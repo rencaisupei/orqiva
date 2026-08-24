@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
-import { Avatar, Button, Chip, Separator, Spinner, Typography, useToast } from 'heroui-native';
+import { Avatar, Button, Chip, Spinner, Typography, useToast } from 'heroui-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import {
   Flag,
@@ -14,24 +14,19 @@ import {
 
 import { AppImage } from '@/components/AppImage';
 import { EmptyState } from '@/components/EmptyState';
+import { ProductReviews } from '@/components/ProductReviews';
 import { QuantityStepper } from '@/components/QuantityStepper';
 import { RecommendationRail } from '@/components/RecommendationRail';
 import { SelectPill } from '@/components/SelectPill';
 import { StarRating } from '@/components/StarRating';
 import { useFavoriteToggle } from '@/hooks/useFavoriteToggle';
 import { useCreateReport } from '@/lib/api/admin';
-import { useProduct, useProductReviews, useTrackProductView } from '@/lib/api/catalog';
+import { useProduct, useTrackProductView } from '@/lib/api/catalog';
 import { useAddToCart } from '@/lib/api/commerce';
 import { useSellerLogisticsStatuses } from '@/lib/api/logistics';
 import { useStartConversation } from '@/lib/api/social';
 import { BRAND } from '@/lib/brand';
-import {
-  deliveryEstimate,
-  discountPercent,
-  formatCompact,
-  formatDate,
-  formatPrice,
-} from '@/lib/format';
+import { deliveryEstimate, discountPercent, formatCompact, formatPrice } from '@/lib/format';
 import { useRecentlyViewedStore } from '@/lib/recentlyViewed';
 import { useUserId } from '@/lib/session';
 import { shareProduct } from '@/lib/share';
@@ -44,7 +39,6 @@ export default function ProductDetailScreen() {
   const { toast } = useToast();
 
   const { data: product, isLoading } = useProduct(id);
-  const { data: reviews } = useProductReviews(id);
   const { isFavorite, onToggleFavorite } = useFavoriteToggle();
   const addToCart = useAddToCart();
   const startConversation = useStartConversation();
@@ -396,37 +390,12 @@ export default function ProductDetailScreen() {
           </View>
         ) : null}
 
-        <View className="bg-surface mt-3 gap-3 p-4">
-          <View className="flex-row items-center justify-between">
-            <Typography type="body" className="text-navy" style={{ fontWeight: '600' }}>
-              商品評價
-            </Typography>
-            <StarRating rating={product.rating} count={product.rating_count} />
-          </View>
-          {(reviews ?? []).length === 0 ? (
-            <Typography type="body-sm" color="muted">
-              目前還沒有買家評價，完成訂單後即可留下評價。
-            </Typography>
-          ) : (
-            (reviews ?? []).map((review) => (
-              <View key={review.id} className="gap-1">
-                <Separator />
-                <View className="flex-row items-center justify-between pt-2">
-                  <Typography type="body-sm" className="text-navy" style={{ fontWeight: '600' }}>
-                    {review.profile?.display_name ?? '買家'}
-                  </Typography>
-                  <StarRating rating={review.rating} showCount={false} />
-                </View>
-                <Typography type="body-sm" color="muted">
-                  {review.comment || '（未填寫評語）'}
-                </Typography>
-                <Typography type="body-xs" color="muted">
-                  {formatDate(review.created_at)}
-                </Typography>
-              </View>
-            ))
-          )}
-        </View>
+        {/* 評價區塊（平均分、星等分佈、實拍照片）抽成共用元件。 */}
+        <ProductReviews
+          productId={product.id}
+          rating={product.rating}
+          ratingCount={product.rating_count}
+        />
 
         {/* AI 推薦：同分類與可搭配的商品，由伺服器排序並快取。 */}
         <RecommendationRail title="猜你喜歡" productId={product.id} limit={10} />

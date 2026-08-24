@@ -8,7 +8,12 @@ import { CalendarClock, Megaphone, RefreshCw, Wrench } from 'lucide-react-native
 import { JihuoLogo } from '@/components/brand/JihuoLogo';
 import { useCheckinReminder } from '@/lib/api/coins';
 import { useAutoModeration } from '@/lib/api/moderation';
-import { useAppSettings, useAutoCleanup, useMaintenanceState } from '@/lib/api/system';
+import {
+  useAppSettings,
+  useAutoCleanup,
+  useAutoPriceWatch,
+  useMaintenanceState,
+} from '@/lib/api/system';
 import { BRAND } from '@/lib/brand';
 import { durationUntil, formatDateTime } from '@/lib/format';
 import { useModeLanding } from '@/lib/mode';
@@ -90,6 +95,9 @@ export function SystemGate({ children }: { children: React.ReactNode }) {
 
   // AI 自動審核巡邏：同樣只在共用排程到期時才發一次請求。
   useAutoModeration();
+
+  // 收藏降價巡邏：到期時才問一次伺服器有沒有人的願望清單降價了。
+  useAutoPriceWatch();
 
   // 賣家的 J幣簽到提醒：當天第一次開 App 時問伺服器一次該不該提醒。
   useCheckinReminder();

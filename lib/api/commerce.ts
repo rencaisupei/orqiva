@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { bilt, callMarket } from '@/lib/backend';
-import type { CartItem, Order, ProductListItem } from '@/lib/types';
+import type { CartItem, FavoriteItem, Order, ProductListItem } from '@/lib/types';
 
 export const SHIPPING_FEE = 60;
 
@@ -212,17 +212,31 @@ export function useFavorites(userId: string | null) {
   return useQuery({
     enabled: !!userId,
     queryKey: ['favorites', userId],
-    queryFn: async (): Promise<ProductListItem[]> => {
+    queryFn: async (): Promise<FavoriteItem[]> => {
       const { data, error } = await bilt
         .from('favorites')
         .select(
-          'created_at, product:products(*, store:stores(id, name, logo_url, rating, rating_count, location))',
+          'created_at, watch_price, price_notified_at, product:products(*, store:stores(id, name, logo_url, rating, rating_count, location))',
         )
         .eq('user_id', userId!)
         .order('created_at', { ascending: false })
-        .returns<{ product: ProductListItem | null }[]>();
+        .returns<
+          {
+            created_at: string;
+            watch_price: number | null;
+            price_notified_at: string | null;
+            product: ProductListItem | null;
+          }[]
+        >();
       if (error) throw new Error(error.message);
-      return (data ?? []).map((r) => r.product).filter((p): p is ProductListItem => !!p);
+      return (data ?? [])
+        .filter((row): row is typeof row & { product: ProductListItem } => row.product !== null)
+        .map((row) => ({
+          product: row.product,
+          watch_price: row.watch_price,
+          price_notified_at: row.price_notified_at,
+          created_at: row.created_at,
+        }));
     },
   });
 }
@@ -240,9 +254,21 @@ export function useToggleFavorite() {
         if (error) throw new Error(error.message);
         return;
       }
-      const { error } = await bilt
-        .from('favorites')
-        .insert({ user_id: input.userId, product_id: input.productId });
+
+      /* 收藏當下的價格就是降價通知的基準價。巡邏也會補上缺的基準價，
+         這裡先寫是為了「收藏後馬上降價」也能被抓到。 */
+      const { data: product } = await bilt
+        .from('products')
+        .select('price')
+        .eq('id', input.productId)
+        .returns<{ price: number }[]>()
+        .maybeSingle();
+
+      const { error } = await bilt.from('favorites').insert({
+        user_id: input.userId,
+        product_id: input.productId,
+        watch_price: product?.price ?? null,
+      });
       if (error) throw new Error(error.message);
     },
     onSuccess: () => {

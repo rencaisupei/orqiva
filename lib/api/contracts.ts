@@ -418,3 +418,27 @@ export type RecommendResponses = {
   similar: RecommendationResult;
   for_you: RecommendationResult;
 };
+
+/* ── price-watch ─────────────────────────────────────────────── */
+
+/**
+ * `price-watch`：收藏降價巡邏。與自動清理同一套節流做法，所以回傳形狀刻意相近：
+ * `ran` 為 false 時 `skipped` 說明原因（未到期／已停用／另一個執行中）。
+ */
+export type PriceWatchResult = {
+  ok: boolean;
+  ran: boolean;
+  skipped: 'disabled' | 'not_due' | 'locked' | null;
+  startedAt: string | null;
+  durationMs: number;
+  nextDueAt: string | null;
+  /** 這一輪發出的降價通知筆數。 */
+  notified: number;
+  /** 第一次巡邏到、只建立基準價的收藏筆數。 */
+  baselined: number;
+  pushed: number;
+};
+
+export type PriceWatchResponses = {
+  run: PriceWatchResult;
+};

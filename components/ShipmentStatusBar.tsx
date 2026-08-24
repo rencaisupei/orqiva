@@ -59,6 +59,11 @@ type Props = {
   onChange: (value: ShipmentFilter) => void;
   /** 標題文字：買家與賣家兩邊說法略有不同。 */
   title?: string;
+  /**
+   * 只畫這幾個階段的膠囊（'all' 一律留著）。省略 = 全部階段都畫。
+   * 買家訂單列表用它把階段收斂成「這個分頁真的有的貨態」。
+   */
+  stages?: ShipmentStage[];
 };
 
 /**
@@ -68,7 +73,7 @@ type Props = {
  * 途中的訂單，在畫面取得焦點時會自動同步一次；手動按鈕仍保留，用來立刻更新
  * 全部在途訂單（含尚未回寄貨編號的 requested）。
  */
-export function ShipmentStatusBar({ orders, value, onChange, title }: Props) {
+export function ShipmentStatusBar({ orders, value, onChange, title, stages }: Props) {
   const { toast } = useToast();
   const { mutate: syncShipments, isPending } = useSyncShipments();
   const [autoSyncedAt, setAutoSyncedAt] = useState<number | null>(null);
@@ -133,6 +138,11 @@ export function ShipmentStatusBar({ orders, value, onChange, title }: Props) {
 
   if (cvsOrders.length === 0) return null;
 
+  /* 這一次要畫哪些膠囊：'all' 永遠在，其餘依呼叫端指定的階段收斂。 */
+  const visible = stages
+    ? SHIPMENT_FILTERS.filter((item) => item.key === 'all' || stages.includes(item.key))
+    : SHIPMENT_FILTERS;
+
   const statusLine = isPending
     ? '正在向綠界更新貨態…'
     : autoSyncedAt
@@ -179,7 +189,7 @@ export function ShipmentStatusBar({ orders, value, onChange, title }: Props) {
 
       {/* 固定三欄：每一列寬度一致，狀態與筆數上下對齊。 */}
       <View className="flex-row flex-wrap gap-2">
-        {SHIPMENT_FILTERS.map((item) => (
+        {visible.map((item) => (
           <View key={item.key} className="w-[31.5%] grow">
             <SelectPill
               block
