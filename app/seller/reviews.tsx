@@ -90,8 +90,8 @@ export default function SellerReviewsScreen() {
       <View className="bg-background flex-1">
         <EmptyState
           icon={<MessageSquareQuote size={26} color={BRAND.blue} />}
-          title="還沒有店舖"
-          description="建立店舖並完成第一筆訂單後，買家的評價會出現在這裡。"
+          title="還沒有店鋪"
+          description="建立店鋪並完成第一筆訂單後，買家的評價會出現在這裡。"
         />
         <SellerTabBar />
       </View>

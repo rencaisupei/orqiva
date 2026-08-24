@@ -206,7 +206,7 @@ export default function SellerCoinsScreen() {
         <EmptyState
           icon={<StoreIcon size={26} color={BRAND.blue} />}
           title={`${COIN_NAME}是賣家專屬`}
-          description={`建立店舖之後就能靠簽到、任務與成交累積${COIN_NAME}，用來換廣告曝光。`}
+          description={`建立店鋪之後就能靠簽到、任務與成交累積${COIN_NAME}，用來換廣告曝光。`}
           action={
             <Button onPress={() => router.push('/seller/onboarding')}>
               <Button.Label>申請成為賣家</Button.Label>
@@ -247,7 +247,7 @@ export default function SellerCoinsScreen() {
               className="flex-1 text-white"
               style={{ fontWeight: '600' }}
             >
-              {data.storeName ?? '我的店舖'}的{COIN_NAME}
+              {data.storeName ?? '我的店鋪'}的{COIN_NAME}
             </Typography>
           </View>
           <Typography type="h2" className="text-white" style={{ fontWeight: '700' }}>

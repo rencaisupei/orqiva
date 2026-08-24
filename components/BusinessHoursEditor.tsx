@@ -43,8 +43,8 @@ function normalizeTime(raw: string, fallback: string) {
 }
 
 /**
- * 店舖營業時間編輯器。value = null 代表賣家選擇不顯示營業時間，
- * 店舖頁就完全不會出現那一區。
+ * 店鋪營業時間編輯器。value = null 代表賣家選擇不顯示營業時間，
+ * 店鋪頁就完全不會出現那一區。
  */
 export function BusinessHoursEditor({ value, onChange }: Props) {
   const mode: Mode = value === null ? 'off' : value.mode === 'always' ? 'always' : 'weekly';
@@ -82,7 +82,7 @@ export function BusinessHoursEditor({ value, onChange }: Props) {
         </Typography>
       </View>
       <Typography type="body-xs" color="muted">
-        會顯示在店舖頁，讓買家知道什麼時候找得到你。選「不顯示」就不會出現這一區。
+        會顯示在店鋪頁，讓買家知道什麼時候找得到你。選「不顯示」就不會出現這一區。
       </Typography>
 
       <SegmentedControl items={MODES} value={mode} onChange={setMode} size="sm" />

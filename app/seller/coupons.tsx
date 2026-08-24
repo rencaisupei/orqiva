@@ -108,8 +108,8 @@ export default function SellerCouponsScreen() {
       <View className="bg-background flex-1">
         <EmptyState
           icon={<TicketPercent size={26} color={BRAND.blue} />}
-          title="還沒有店舖"
-          description="建立店舖後就能發行折扣碼。"
+          title="還沒有店鋪"
+          description="建立店鋪後就能發行折扣碼。"
           action={
             <Button onPress={() => router.replace('/seller/onboarding')}>
               <Button.Label>申請成為賣家</Button.Label>
@@ -215,7 +215,7 @@ export default function SellerCouponsScreen() {
             {store.name} 的折扣碼
           </Typography>
           <Typography type="body-xs" color="muted" className="leading-5">
-            折扣碼會出現在你的商品頁，買家在結帳頁輸入即折抵。折扣只套用在你這一間店舖的訂單上。
+            折扣碼會出現在你的商品頁，買家在結帳頁輸入即折抵。折扣只套用在你這一間店鋪的訂單上。
           </Typography>
         </View>
 

@@ -40,7 +40,7 @@ export default function RecentlyViewedScreen() {
         <EmptyState
           icon={<History size={26} color={BRAND.blue} />}
           title="還沒有瀏覽紀錄"
-          description="看過的商品會出現在這裡，紀錄只保存在這台裝置上。"
+          description="看過的商品會出現在這裡，紀錄只儲存在這台裝置上。"
           action={
             <Button onPress={() => router.push('/products')}>
               <Button.Label>開始逛商品</Button.Label>
@@ -55,7 +55,7 @@ export default function RecentlyViewedScreen() {
     <View className="bg-background flex-1">
       <View className="bg-surface flex-row items-center justify-between gap-3 px-4 py-3">
         <Typography type="body-xs" color="muted" className="flex-1">
-          共 {formatNumber(list.length)} 件 · 只保存在這台裝置上，不會上傳
+          共 {formatNumber(list.length)} 件 · 只儲存在這台裝置上，不會上傳
         </Typography>
         <Pressable hitSlop={6} onPress={clear}>
           <Typography type="body-xs" className="text-brand-orange" style={{ fontWeight: '600' }}>

@@ -194,7 +194,7 @@ export default function RootLayout() {
               <Stack.Screen name="auth/sign-in" options={{ title: '登入 / 註冊' }} />
               <Stack.Screen name="products/index" options={{ title: '商品列表' }} />
               <Stack.Screen name="products/[id]" options={{ title: '商品詳情' }} />
-              <Stack.Screen name="store/[id]" options={{ title: '店舖' }} />
+              <Stack.Screen name="store/[id]" options={{ title: '店鋪' }} />
               <Stack.Screen name="checkout" options={{ title: '結帳' }} />
               <Stack.Screen name="favorites" options={{ title: '我的收藏' }} />
               <Stack.Screen name="orders/index" options={{ title: '我的訂單' }} />
@@ -233,7 +233,7 @@ export default function RootLayout() {
               <Stack.Screen name="seller/coins" options={{ title: 'J幣中心' }} />
               <Stack.Screen name="seller/coupons" options={{ title: '優惠券' }} />
               <Stack.Screen name="seller/promote" options={{ title: '兌換推廣' }} />
-              <Stack.Screen name="seller/store" options={{ title: '店舖設定' }} />
+              <Stack.Screen name="seller/store" options={{ title: '店鋪設定' }} />
               <Stack.Screen name="admin/index" options={{ title: '平台管理' }} />
               <Stack.Screen name="admin/logistics" options={{ title: '物流串接設定' }} />
               <Stack.Screen name="legal/privacy" options={{ title: '隱私權政策' }} />

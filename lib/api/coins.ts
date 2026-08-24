@@ -94,7 +94,7 @@ export function useRedeemCoins() {
     mutationFn: (input: RedeemInput) => callCoins('redeem', { ...input }),
     onSuccess: () => {
       invalidateCoins(qc);
-      // 置頂與徽章立刻生效，列表與店舖頁要跟著換。
+      // 置頂與徽章立刻生效，列表與店鋪頁要跟著換。
       void qc.invalidateQueries({ queryKey: ['products'] });
       void qc.invalidateQueries({ queryKey: ['store-promotion'] });
       void qc.invalidateQueries({ queryKey: ['home'] });
@@ -125,7 +125,7 @@ export function useReviewRedemption() {
   });
 }
 
-/* ── 買家端：店舖徽章 ────────────────────────────────────────── */
+/* ── 買家端：店鋪徽章 ────────────────────────────────────────── */
 
 /** 公開鏡像表，買家不用登入也讀得到；過期的徽章由伺服器收掉。 */
 export function useStorePromotion(storeId: string | undefined) {

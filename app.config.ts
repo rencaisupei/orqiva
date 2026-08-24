@@ -91,6 +91,11 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       // needs only a single 404→index.html fallback rule.
       output: 'single',
       favicon: './assets/icon.png',
+      // Substituted into %LANG_ISO_CODE% in public/index.html. Without it Expo
+      // writes lang="en", Chrome reads the page as English and machine-translates
+      // every Chinese string (極貨網 → 計貨網). Must stay Taiwan Traditional.
+      lang: 'zh-Hant-TW',
+      description: '萬物皆品，極致首選。買家與賣家都在同一個平台。',
     },
     extra: {
       appStoreAppId: process.env.BILT_APP_STORE_APP_ID,

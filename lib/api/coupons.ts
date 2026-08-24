@@ -7,7 +7,7 @@ import { isCouponLive, normalizeCouponCode, type Coupon, type CouponKind } from 
 /**
  * 賣家優惠券。
  *
- * 建立、停用與刪除都走 RLS（`coupons_seller_all`：只有店舖擁有者動得了自己的券），
+ * 建立、停用與刪除都走 RLS（`coupons_seller_all`：只有店鋪擁有者動得了自己的券），
  * 但「這張券在這筆訂單折多少」一律由 market 邊緣函式判斷 —— App 只顯示伺服器算好的
  * 金額，避免前端算一套、下單又算另一套。
  */
@@ -31,7 +31,7 @@ export function useMyCoupons(storeId: string | null) {
 }
 
 /**
- * 某間店舖目前可用的券。RLS 的 select 政策已經把停用／未開始／過期／用完的擋掉，
+ * 某間店鋪目前可用的券。RLS 的 select 政策已經把停用／未開始／過期／用完的擋掉，
  * 這裡再用 isCouponLive 過一次（避免裝置時間與伺服器時間差造成的邊界誤差）。
  */
 export function useStoreCoupons(storeId: string | null | undefined) {

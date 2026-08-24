@@ -126,7 +126,7 @@ export function EcpaySignupGuide({ showBackfillGuide = true }: { showBackfillGui
         </View>
       ) : (
         <BrandText type="body-xs" color="muted" className="leading-5">
-          💡 註冊驗證通過後（約需2-3個工作日），到「賣家中心 → 店舖設定」把綠界商店代號與「物流」的
+          💡 註冊驗證通過後（約需2-3個工作日），到「賣家中心 → 店鋪設定」把綠界商店代號與「物流」的
           HashKey、HashIV（不是金流那一組）填回極貨網，就會開通超商貨到付款。
         </BrandText>
       )}

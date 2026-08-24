@@ -30,7 +30,7 @@ import {
 const KIND_SEGMENTS: Segment<CoinRedemptionKind>[] = [
   { key: 'ad_slot', label: '廣告版位' },
   { key: 'product_boost', label: '商品置頂' },
-  { key: 'store_badge', label: '店舖徽章' },
+  { key: 'store_badge', label: '店鋪徽章' },
 ];
 
 const AD_DAY_OPTIONS = [1, 3, 7, 14, 30];
@@ -91,7 +91,7 @@ function ProductPicker({
  * 用J幣兌換推廣。
  *
  * 廣告版位要管理員審核（過了才會出現在首頁輪播／開啟時的彈出廣告），商品置頂與
- * 店舖徽章立刻生效。價目表由 seller-coins 回傳，這一頁不自己寫死價格。
+ * 店鋪徽章立刻生效。價目表由 seller-coins 回傳，這一頁不自己寫死價格。
  */
 export default function SellerPromoteScreen() {
   const userId = useUserId();
@@ -139,8 +139,8 @@ export default function SellerPromoteScreen() {
       <View className="bg-background flex-1">
         <EmptyState
           icon={<StoreIcon size={26} color={BRAND.blue} />}
-          title="先建立店舖"
-          description="推廣是給店舖用的，建立店舖後就能兌換。"
+          title="先建立店鋪"
+          description="推廣是給店鋪用的，建立店鋪後就能兌換。"
           action={
             <Button onPress={() => router.replace('/seller/onboarding')}>
               <Button.Label>申請成為賣家</Button.Label>
@@ -255,11 +255,11 @@ export default function SellerPromoteScreen() {
             <View className="flex-row items-center gap-2">
               <StoreIcon size={16} color={BRAND.navy} />
               <Typography type="body" className="text-navy" style={{ fontWeight: '600' }}>
-                店舖徽章
+                店鋪徽章
               </Typography>
             </View>
             <Typography type="body-xs" color="muted">
-              徽章會顯示在你的店舖頁面，讓買家一眼看出這是活躍店家。
+              徽章會顯示在你的店鋪頁面，讓買家一眼看出這是活躍店家。
             </Typography>
             <View className="gap-2">
               {pricing.badges.map((item) => (
@@ -349,7 +349,7 @@ export default function SellerPromoteScreen() {
               <SelectPill
                 size="sm"
                 tone="soft"
-                label="我的店舖"
+                label="我的店鋪"
                 selected={!linkToProduct}
                 onPress={() => setLinkToProduct(false)}
               />

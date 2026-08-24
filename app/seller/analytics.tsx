@@ -164,8 +164,8 @@ export default function SellerAnalyticsScreen() {
         <View className="flex-1">
           <EmptyState
             icon={<BarChart3 size={26} color={BRAND.blue} />}
-            title="還沒有店舖數據"
-            description="建立店舖並上架商品後，這裡會顯示瀏覽、訂單與營收趨勢。"
+            title="還沒有店鋪數據"
+            description="建立店鋪並上架商品後，這裡會顯示瀏覽、訂單與營收趨勢。"
           />
         </View>
         <SellerTabBar />

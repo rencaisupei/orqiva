@@ -95,8 +95,8 @@ export default function CartScreen() {
   if (!userId) {
     return (
       <View className="bg-background flex-1">
-        <CartHeader subtitle="登入後就能保存購物車" />
-        <SignInRequired title="登入後查看購物車" description="登入即可保存購物車與訂單紀錄。" />
+        <CartHeader subtitle="登入後就能保留購物車" />
+        <SignInRequired title="登入後查看購物車" description="登入即可保留購物車與訂單紀錄。" />
       </View>
     );
   }

@@ -61,7 +61,7 @@ function RedemptionCard({ row }: { row: CoinRedemption }) {
           className="text-navy flex-1"
           style={{ fontWeight: '700' }}
         >
-          {row.storeName ?? '未命名店舖'}
+          {row.storeName ?? '未命名店鋪'}
         </Typography>
         <Chip disabled size="sm" variant="soft">
           {COIN_REDEMPTION_KIND_LABEL[row.kind]}
@@ -166,7 +166,7 @@ export function AdminPromoPanel() {
           ) : null}
         </View>
         <Typography type="body-xs" color="muted">
-          廣告版位需要審核才會出現在首頁；商品置頂與店舖徽章即時生效，這裡只作紀錄。
+          廣告版位需要審核才會出現在首頁；商品置頂與店鋪徽章即時生效，這裡只作紀錄。
         </Typography>
         <View className="flex-row flex-wrap gap-2">
           {FILTERS.map((item) => (

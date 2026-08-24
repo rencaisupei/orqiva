@@ -106,11 +106,11 @@ export default function NewProductScreen() {
     return (
       <View className="bg-background flex-1">
         <EmptyState
-          title="需要先建立店舖"
-          description="極貨網的商品都屬於一間店舖，先完成店舖設定再上架。"
+          title="需要先建立店鋪"
+          description="極貨網的商品都屬於一間店鋪，先完成店鋪設定再上架。"
           action={
             <Button onPress={() => router.replace('/seller/onboarding')}>
-              <Button.Label>建立店舖</Button.Label>
+              <Button.Label>建立店鋪</Button.Label>
             </Button>
           }
         />

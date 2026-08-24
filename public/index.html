@@ -10,10 +10,16 @@
   apple-* tags iOS Safari needs (iOS ignores most of the manifest). Keep the app
   identity in public/manifest.json in sync with the name in app.config.ts.
 -->
-<html lang="%LANG_ISO_CODE%">
+<html lang="%LANG_ISO_CODE%" translate="no">
   <head>
     <meta charset="utf-8" />
     <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- The UI is written in Taiwan Traditional Chinese and must stay that way:
+         machine translation rewrites brand names and product copy (極貨網 →
+         計貨網). lang comes from app.config.ts web.lang (zh-Hant-TW); these two
+         opt the whole document out of Chrome / Google Translate. -->
+    <meta name="google" content="notranslate" />
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover"
@@ -54,7 +60,7 @@
 
   <body>
     <!-- Use static rendering with Expo Router to support running without JavaScript. -->
-    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <noscript>請開啟瀏覽器的 JavaScript 才能使用極貨網。</noscript>
     <!-- The root element for your Expo app. -->
     <div id="root"></div>
   </body>

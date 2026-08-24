@@ -17,12 +17,12 @@ type Props = {
 };
 
 /**
- * 店舖目前可用的優惠券（商品頁與店舖頁共用）。
+ * 店鋪目前可用的優惠券（商品頁與店鋪頁共用）。
  *
  * 券碼可以直接複製，結帳頁貼上即可 —— 不做「領取」動作，所以買家不需要多記一份
  * 我的優惠券清單，賣家也不必管理領取名單。沒有可用券時整塊不顯示。
  */
-export function StoreCoupons({ storeId, productId, title = '店舖優惠券' }: Props) {
+export function StoreCoupons({ storeId, productId, title = '店鋪優惠券' }: Props) {
   const { toast } = useBrandToast();
   const { data: coupons } = useStoreCoupons(storeId);
 

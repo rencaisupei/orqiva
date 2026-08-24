@@ -99,7 +99,7 @@ export default function ProfileScreen() {
             </Avatar>
             <View className="flex-1">
               <Typography type="h5" className="text-navy" style={{ fontWeight: '700' }}>
-                {protectBrand(profile?.display_name ?? '極貨網用戶')}
+                {protectBrand(profile?.display_name ?? '極貨網會員')}
               </Typography>
               <Typography type="body-sm" color="muted">
                 {account?.email ?? ''}

@@ -40,7 +40,7 @@ export function useAppMode(): AppMode {
   return useModeStore((s) => s.mode);
 }
 
-/** 切到賣家介面。還沒有店舖的人先走申請流程，成功後就會落在賣家中心。 */
+/** 切到賣家介面。還沒有店鋪的人先走申請流程，成功後就會落在賣家中心。 */
 export function enterSellerMode(hasStore: boolean) {
   useModeStore.getState().setMode('seller');
   router.replace(hasStore ? '/seller' : '/seller/onboarding');
@@ -61,7 +61,7 @@ let landingHandled = false;
 /**
  * 掛在 SystemGate：
  * - 上次停在賣家模式的人，開 App 直接進賣家中心（只在還停在買家首頁時才轉）。
- * - 店舖不存在或已登出時把模式收回買家，避免卡在需要登入的賣家頁。
+ * - 店鋪不存在或已登出時把模式收回買家，避免卡在需要登入的賣家頁。
  */
 export function useModeLanding() {
   const mode = useModeStore((s) => s.mode);

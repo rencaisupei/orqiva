@@ -53,7 +53,7 @@ function MenuRow({
   );
 }
 
-/** 賣家介面的「我的」：店舖、推廣與帳號設定，並提供切回買家介面的出口。 */
+/** 賣家介面的「我的」：店鋪、推廣與帳號設定，並提供切回買家介面的出口。 */
 export default function SellerAccountScreen() {
   const userId = useUserId();
   const profile = useSessionStore((s) => s.profile);
@@ -83,8 +83,8 @@ export default function SellerAccountScreen() {
       <View className="bg-background pt-safe flex-1">
         <EmptyState
           icon={<StoreIcon size={26} color={BRAND.blue} />}
-          title="還沒有極貨網店舖"
-          description="建立店舖後才會有賣家介面。"
+          title="還沒有極貨網店鋪"
+          description="建立店鋪後才會有賣家介面。"
           action={
             <Button onPress={() => router.replace('/seller/onboarding')}>
               <Button.Label>申請成為賣家</Button.Label>
@@ -125,7 +125,7 @@ export default function SellerAccountScreen() {
             </View>
             <Pressable
               className="h-10 w-10 items-center justify-center"
-              accessibilityLabel="店舖設定"
+              accessibilityLabel="店鋪設定"
               onPress={() => router.push('/seller/store')}
             >
               <Settings size={22} color={BRAND.navy} />
@@ -187,7 +187,7 @@ export default function SellerAccountScreen() {
           />
           <MenuRow
             icon={<StoreIcon size={18} color={BRAND.blue} />}
-            title="店舖與出貨設定"
+            title="店鋪與出貨設定"
             onPress={() => router.push('/seller/store')}
           />
         </View>
@@ -205,7 +205,7 @@ export default function SellerAccountScreen() {
                 className="text-navy"
                 style={{ fontWeight: '600' }}
               >
-                {protectBrand(profile?.display_name ?? '極貨網用戶')}
+                {protectBrand(profile?.display_name ?? '極貨網會員')}
               </Typography>
               <Typography type="body-xs" color="muted" numberOfLines={1}>
                 {account?.email ?? ''}

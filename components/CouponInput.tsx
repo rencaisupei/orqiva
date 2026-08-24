@@ -16,7 +16,7 @@ type Props = {
   shippingFee: number;
   applied: CouponPreview | null;
   onApplied: (coupon: CouponPreview | null) => void;
-  /** 顯示折扣落在哪一間店舖的訂單上（跨店結帳時買家會想知道）。 */
+  /** 顯示折扣落在哪一間店鋪的訂單上（跨店結帳時買家會想知道）。 */
   storeName?: (storeId: string) => string | undefined;
 };
 

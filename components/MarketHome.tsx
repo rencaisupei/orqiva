@@ -355,7 +355,7 @@ export function MarketHome({ showLaunchAd = true }: Props) {
         {/* 個人化推薦：種子是這台裝置最近看過的商品，登入時伺服器再加上購物車與收藏。 */}
         <RecommendationRail title="為你推薦" seedIds={recentlyViewed} limit={10} />
 
-        {/* 已經有店舖的人不需要這張卡：賣家功能都在賣家介面，從「我的」切換過去。 */}
+        {/* 已經有店鋪的人不需要這張卡：賣家功能都在賣家介面，從「我的」切換過去。 */}
         {store ? null : (
           <View className="mt-1 px-4">
             <Pressable
@@ -370,7 +370,7 @@ export function MarketHome({ showLaunchAd = true }: Props) {
                   有東西想賣？
                 </Typography>
                 <BrandText type="body-sm" color="muted">
-                  開一間極貨網店舖，讓你的商品找到對的人
+                  開一間極貨網店鋪，讓你的商品找到對的人
                 </BrandText>
               </View>
               <ChevronRight size={18} color={BRAND.muted} />

@@ -78,7 +78,7 @@ export default function StoreScreen() {
   if (!store) {
     return (
       <View className="bg-background flex-1">
-        <EmptyState title="找不到這間店舖" />
+        <EmptyState title="找不到這間店鋪" />
       </View>
     );
   }
@@ -168,7 +168,7 @@ export default function StoreScreen() {
                 </Typography>
               ) : null}
 
-              {/* 營業時間：賣家在店舖設定選「不顯示」時 hours 為 null，整塊不出現。 */}
+              {/* 營業時間：賣家在店鋪設定選「不顯示」時 hours 為 null，整塊不出現。 */}
               {hoursStatus ? (
                 <View className="border-border gap-1 rounded-2xl border p-3">
                   <View className="flex-row items-center gap-2">
@@ -230,13 +230,13 @@ export default function StoreScreen() {
         ListEmptyComponent={
           categoryId === ALL ? (
             <EmptyState
-              title="這間店舖還沒有商品"
+              title="這間店鋪還沒有商品"
               description="賣家正在準備上架，稍後再回來看看。"
             />
           ) : (
             <EmptyState
               title="這個分類沒有商品"
-              description="換一個分類，或看看店舖的全部商品。"
+              description="換一個分類，或看看店鋪的全部商品。"
               action={
                 <Button variant="secondary" onPress={() => setCategoryId(ALL)}>
                   <Button.Label>看全部商品</Button.Label>

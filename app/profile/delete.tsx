@@ -15,7 +15,7 @@ const REMOVED_ITEMS = [
   '個人資料、頭像與登入帳號',
   '購物車、收藏、通知與推播裝置',
   '聊天對話與商品評價',
-  '賣家店舖與所有上架商品',
+  '賣家店鋪與所有上架商品',
   '已完成或已取消的訂單紀錄',
 ];
 
@@ -112,7 +112,7 @@ export default function DeleteAccountScreen() {
           </Typography>
           {data?.storeName ? (
             <Typography type="body-xs" color="muted">
-              賣家店舖「{data.storeName}」與 {data.products} 件商品會一併下架刪除
+              賣家店鋪「{data.storeName}」與 {data.products} 件商品會一併下架刪除
             </Typography>
           ) : null}
         </View>

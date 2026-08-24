@@ -58,7 +58,7 @@ const PLACEMENT_HINT: Record<AdBannerPlacement, string> = {
 const LINK_HINT: Record<AdBannerLinkType, string> = {
   none: '只顯示圖文，點了不會跳頁。',
   product: '填商品 ID（商品詳情網址最後那一段）。',
-  store: '填店舖 ID。',
+  store: '填店鋪 ID。',
   category: '填分類 ID。',
   search: '填搜尋關鍵字，留空就帶到全部商品。',
 };

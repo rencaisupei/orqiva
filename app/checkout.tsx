@@ -87,7 +87,7 @@ export default function CheckoutScreen() {
 
   /*
    * 貨到付款只能賣給「物流已開通」的賣家。這一筆結帳裡只要有一位賣家未開通，
-   * 整張訂單就不能走綠界（訂單依店舖拆單，但收件資料是共用的）。
+   * 整張訂單就不能走綠界（訂單依店鋪拆單，但收件資料是共用的）。
    */
   const sellerIds = useMemo(() => lines.map((item) => item.product?.seller_id ?? null), [lines]);
   const { data: sellerStatuses } = useSellerLogisticsStatuses(sellerIds);
@@ -119,7 +119,7 @@ export default function CheckoutScreen() {
   const total = Math.max(0, subtotal + shipping - bulkDiscount - discount);
 
   /*
-   * 代收金額的上下限是「每一張物流單」各自計算的：購物車跨店時每間店舖會拆成
+   * 代收金額的上下限是「每一張物流單」各自計算的：購物車跨店時每間店鋪會拆成
    * 一筆訂單，所以這裡也逐筆算出應付金額，和伺服器的檢查完全一致。
    */
   const orderTotals = useMemo(() => {

@@ -55,7 +55,7 @@ export type Store = {
   owner_id: string | null;
   name: string;
   logo_url: string | null;
-  /** 店舖頁最上方的橫幅圖片（store-assets bucket）。 */
+  /** 店鋪頁最上方的橫幅圖片（store-assets bucket）。 */
   banner_url: string | null;
   description: string | null;
   location: string;
@@ -68,7 +68,7 @@ export type Store = {
   updated_at: string;
 };
 
-/* ── 店舖營業時間 ────────────────────────────────────────────── */
+/* ── 店鋪營業時間 ────────────────────────────────────────────── */
 
 /** 一天的營業時段。from / to 為 24 小時制的 'HH:MM'。 */
 export type BusinessHoursDay = { open: boolean; from: string; to: string };
@@ -1102,7 +1102,7 @@ export function validateSenderName(value: string): string | null {
   const name = value.trim();
   if (!name) return '請填寫寄件人姓名（本名）';
   if (name.length < 2 || name.length > 5)
-    return '寄件人姓名需為 2~5 個字的本名，請勿填公司或店舖名稱';
+    return '寄件人姓名需為 2~5 個字的本名，請勿填公司或店鋪名稱';
   return null;
 }
 
@@ -1323,7 +1323,7 @@ export type AdBannerLinkType = 'none' | 'product' | 'store' | 'category' | 'sear
 export const AD_BANNER_LINK_LABEL: Record<AdBannerLinkType, string> = {
   none: '不連結',
   product: '商品',
-  store: '店舖',
+  store: '店鋪',
   category: '分類',
   search: '搜尋關鍵字',
 };
@@ -1412,7 +1412,7 @@ export type CoinRedemptionKind = 'ad_slot' | 'product_boost' | 'store_badge';
 export const COIN_REDEMPTION_KIND_LABEL: Record<CoinRedemptionKind, string> = {
   ad_slot: '首頁廣告版位',
   product_boost: '商品置頂曝光',
-  store_badge: '店舖徽章',
+  store_badge: '店鋪徽章',
 };
 
 export type CoinRedemptionStatus = 'pending' | 'active' | 'rejected' | 'expired';
@@ -1432,7 +1432,7 @@ export const STORE_BADGE_LABEL: Record<StoreBadgeKind, string> = {
   preferred: '嚴選優質店',
 };
 
-/** 公開鏡像表：買家看得到店舖徽章，但只有伺服器寫得進去。 */
+/** 公開鏡像表：買家看得到店鋪徽章，但只有伺服器寫得進去。 */
 export type StorePromotion = {
   store_id: string;
   badge_kind: 'none' | StoreBadgeKind;

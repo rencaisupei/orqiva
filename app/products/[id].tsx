@@ -340,7 +340,7 @@ export default function ProductDetailScreen() {
         <View className="bg-surface mt-3 flex-row items-center gap-3 p-4">
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`查看 ${product.store?.name ?? '賣家'} 的店舖`}
+            accessibilityLabel={`查看 ${product.store?.name ?? '賣家'} 的店鋪`}
             className="flex-1 flex-row items-center gap-3"
             onPress={() =>
               router.push({ pathname: '/store/[id]', params: { id: product.store_id } })
@@ -383,7 +383,7 @@ export default function ProductDetailScreen() {
               router.push({ pathname: '/store/[id]', params: { id: product.store_id } })
             }
           >
-            <Button.Label>進入店舖</Button.Label>
+            <Button.Label>進入店鋪</Button.Label>
           </Button>
         </View>
 

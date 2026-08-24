@@ -49,7 +49,7 @@ export default function SellerOnboardingScreen() {
       <View className="bg-background flex-1 items-center justify-center gap-4 px-8">
         <ShieldCheck size={40} color={BRAND.blue} />
         <BrandText type="h5" align="center" className="text-navy">
-          你已經有極貨網店舖
+          你已經有極貨網店鋪
         </BrandText>
         <Typography type="body-sm" align="center" color="muted">
           {existingStore.name}
@@ -77,7 +77,7 @@ export default function SellerOnboardingScreen() {
 
   const submit = () => {
     if (!name.trim()) {
-      setError('請填寫店舖名稱');
+      setError('請填寫店鋪名稱');
       return;
     }
     const nameError = validateSenderName(senderName);
@@ -103,7 +103,7 @@ export default function SellerOnboardingScreen() {
       },
       {
         onSuccess: () => {
-          toast.show({ variant: 'success', label: '店舖建立成功' });
+          toast.show({ variant: 'success', label: '店鋪建立成功' });
           router.replace('/seller');
         },
         onError: (err: Error) => setError(err.message),
@@ -143,7 +143,7 @@ export default function SellerOnboardingScreen() {
 
         <View className="bg-surface gap-3 rounded-2xl p-4">
           <View className="items-center gap-2">
-            <Avatar size="lg" alt={name || '店舖'}>
+            <Avatar size="lg" alt={name || '店鋪'}>
               {logoUrl ? <Avatar.Image source={{ uri: logoUrl }} /> : null}
               <Avatar.Fallback />
             </Avatar>
@@ -154,20 +154,20 @@ export default function SellerOnboardingScreen() {
             >
               <Camera size={14} color={BRAND.blue} />
               <Typography type="body-sm" className="text-brand-blue">
-                {uploading ? '上傳中…' : '上傳店舖 Logo'}
+                {uploading ? '上傳中…' : '上傳店鋪 Logo'}
               </Typography>
             </Pressable>
           </View>
 
           <View>
-            <Label isRequired>店舖名稱</Label>
+            <Label isRequired>店鋪名稱</Label>
             <BrandGuard always>
               <Input placeholder="例如：極貨網 3C 嚴選" value={name} onChangeText={setName} />
             </BrandGuard>
           </View>
 
           <View>
-            <Label>店舖介紹</Label>
+            <Label>店鋪介紹</Label>
             <TextArea
               placeholder="介紹你的商品類型、出貨速度與服務"
               value={description}
@@ -177,7 +177,7 @@ export default function SellerOnboardingScreen() {
           </View>
 
           <View className="gap-2">
-            <Label>店舖所在地</Label>
+            <Label>店鋪所在地</Label>
             <View className="flex-row flex-wrap gap-2">
               {LOCATIONS.map((item) => (
                 <SelectPill
@@ -200,7 +200,7 @@ export default function SellerOnboardingScreen() {
             </Typography>
           </View>
           <Typography type="body-xs" color="muted">
-            超商取貨的物流單會以這組資料當寄件人，退貨時需憑本人身分證領取，請填你本人的姓名與手機，不要填店舖名稱。只有你自己與平台管理員看得到。
+            超商取貨的物流單會以這組資料當寄件人，退貨時需憑本人身分證領取，請填你本人的姓名與手機，不要填店鋪名稱。只有你自己與平台管理員看得到。
           </Typography>
 
           <View>
@@ -227,7 +227,7 @@ export default function SellerOnboardingScreen() {
           <FormError message={error} />
 
           <Button isDisabled={createStore.isPending} onPress={submit}>
-            <Button.Label>{createStore.isPending ? '建立中…' : '建立店舖'}</Button.Label>
+            <Button.Label>{createStore.isPending ? '建立中…' : '建立店鋪'}</Button.Label>
           </Button>
         </View>
       </ScrollView>

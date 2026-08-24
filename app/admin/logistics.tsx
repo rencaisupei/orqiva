@@ -431,7 +431,7 @@ export default function AdminLogisticsScreen() {
             </Typography>
             <Typography type="body-xs" color="muted">
               建立物流單時，SenderName 與 SenderCellPhone 會即時查詢該筆訂單賣家在「賣家中心 →
-              店舖設定」填寫的寄件人姓名與手機，不再使用任何固定值。C2C
+              店鋪設定」填寫的寄件人姓名與手機，不再使用任何固定值。C2C
               退件需憑本人身分證領取，寄件人必須是賣家自己。
             </Typography>
             <Typography type="body-xs" color="muted">

@@ -27,7 +27,7 @@ const STATUS_COLOR: Record<OrderStatus, string> = {
  *
  * 取貨門市、寄貨編號等物流細節只在訂單詳情頁呈現，列表卡片保持精簡。
  *
- * 結構刻意分成兩層：上半部（店舖、商品、金額）是一個 Pressable，整塊點下去進訂單
+ * 結構刻意分成兩層：上半部（店鋪、商品、金額）是一個 Pressable，整塊點下去進訂單
  * 詳情；下半部的操作按鈕放在 Pressable 外面，避免兩層可點區互相吃掉觸控。
  */
 export function BuyerOrderCard({ order }: { order: Order }) {
@@ -102,7 +102,7 @@ export function BuyerOrderCard({ order }: { order: Order }) {
   return (
     <View className="bg-surface overflow-hidden rounded-2xl">
       <Pressable accessibilityRole="button" className="gap-3 px-4 pt-3.5" onPress={openDetail}>
-        {/* 店舖 + 目前狀態：一眼看出「誰的單、到哪一步」。 */}
+        {/* 店鋪 + 目前狀態：一眼看出「誰的單、到哪一步」。 */}
         <View className="flex-row items-center gap-2">
           {order.store?.logo_url ? (
             <AppImage uri={order.store.logo_url} className="h-7 w-7 rounded-full" />

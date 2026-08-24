@@ -87,7 +87,7 @@ export default function StoreSettingsScreen() {
   }, [ecpaySettings?.ecpay.merchantId]);
 
   if (!userId) {
-    return <SignInRequired title="登入後管理店舖" />;
+    return <SignInRequired title="登入後管理店鋪" />;
   }
 
   if (isLoading || profileLoading) {
@@ -102,11 +102,11 @@ export default function StoreSettingsScreen() {
     return (
       <View className="bg-background flex-1">
         <EmptyState
-          title="還沒有店舖"
-          description="先建立店舖才能設定名稱、Logo 與介紹。"
+          title="還沒有店鋪"
+          description="先建立店鋪才能設定名稱、Logo 與介紹。"
           action={
             <Button onPress={() => router.replace('/seller/onboarding')}>
-              <Button.Label>建立店舖</Button.Label>
+              <Button.Label>建立店鋪</Button.Label>
             </Button>
           }
         />
@@ -136,7 +136,7 @@ export default function StoreSettingsScreen() {
 
   const save = () => {
     if (!name.trim()) {
-      setError('請填寫店舖名稱');
+      setError('請填寫店鋪名稱');
       return;
     }
     const nameError = validateSenderName(senderName);
@@ -217,13 +217,13 @@ export default function StoreSettingsScreen() {
             >
               <Camera size={14} color={BRAND.blue} />
               <Typography type="body-sm" className="text-brand-blue">
-                {uploading === 'logo' ? '上傳中…' : '更換店舖 Logo'}
+                {uploading === 'logo' ? '上傳中…' : '更換店鋪 Logo'}
               </Typography>
             </Pressable>
           </View>
 
           <View className="gap-2">
-            <Label>店舖橫幅</Label>
+            <Label>店鋪橫幅</Label>
             <AppImage uri={bannerUrl} className="h-32 w-full rounded-2xl" placeholderSize={26} />
             <View className="flex-row gap-2">
               <Button
@@ -242,11 +242,11 @@ export default function StoreSettingsScreen() {
                 </Button>
               ) : null}
             </View>
-            <Description>顯示在店舖頁最上方，建議用橫式圖片（例如 1200 × 480）。</Description>
+            <Description>顯示在店鋪頁最上方，建議用橫式圖片（例如 1200 × 480）。</Description>
           </View>
 
           <View>
-            <Label isRequired>店舖名稱</Label>
+            <Label isRequired>店鋪名稱</Label>
             {/* 店名是自己輸入的資料，被翻譯後會連著存回資料庫，所以整欄不可翻譯。 */}
             <BrandGuard always>
               <Input value={name} onChangeText={setName} />
@@ -254,15 +254,15 @@ export default function StoreSettingsScreen() {
           </View>
 
           <View>
-            <Label>店舖介紹</Label>
+            <Label>店鋪介紹</Label>
             <BrandGuard always>
               <TextArea value={description} onChangeText={setDescription} numberOfLines={4} />
             </BrandGuard>
-            <Description>會顯示在店舖頁，寫下你賣什麼、出貨速度與售後服務。</Description>
+            <Description>會顯示在店鋪頁，寫下你賣什麼、出貨速度與售後服務。</Description>
           </View>
 
           <View className="gap-2">
-            <Label>店舖所在地</Label>
+            <Label>店鋪所在地</Label>
             <View className="flex-row flex-wrap gap-2">
               {LOCATIONS.map((item) => (
                 <SelectPill
@@ -290,7 +290,7 @@ export default function StoreSettingsScreen() {
           </View>
           <Typography type="body-xs" color="muted">
             前面是物流單上的寄件人。C2C
-            退貨需憑本人身分證領取，請填你本人的姓名與手機，不要填店舖名稱。這些欄位只有你自己與平台管理員看得到。
+            退貨需憑本人身分證領取，請填你本人的姓名與手機，不要填店鋪名稱。這些欄位只有你自己與平台管理員看得到。
           </Typography>
 
           <Separator />
@@ -430,7 +430,7 @@ export default function StoreSettingsScreen() {
             variant="secondary"
             onPress={() => router.push({ pathname: '/store/[id]', params: { id: store.id } })}
           >
-            <Button.Label>預覽店舖頁面</Button.Label>
+            <Button.Label>預覽店鋪頁面</Button.Label>
           </Button>
         </View>
       </ScrollView>

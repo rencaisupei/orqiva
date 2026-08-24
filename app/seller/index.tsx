@@ -102,8 +102,8 @@ export default function SellerDashboardScreen() {
       <View className="bg-background pt-safe flex-1">
         <EmptyState
           icon={<StoreIcon size={26} color={BRAND.blue} />}
-          title="還沒有極貨網店舖"
-          description="建立店舖後就能查看銷售數據與訂單。"
+          title="還沒有極貨網店鋪"
+          description="建立店鋪後就能查看銷售數據與訂單。"
           action={
             <Button onPress={() => router.replace('/seller/onboarding')}>
               <Button.Label>申請成為賣家</Button.Label>
@@ -141,7 +141,7 @@ export default function SellerDashboardScreen() {
           </Pressable>
           <Pressable
             className="h-10 w-10 items-center justify-center"
-            accessibilityLabel="店舖設定"
+            accessibilityLabel="店鋪設定"
             onPress={() => router.push('/seller/store')}
           >
             <Settings size={22} color={BRAND.navy} />
@@ -297,7 +297,7 @@ export default function SellerDashboardScreen() {
           <MenuRow
             icon={<StoreIcon size={18} color={BRAND.navy} />}
             iconBg={BRAND.blueSoft}
-            label="店舖設定"
+            label="店鋪設定"
             href="/seller/store"
           />
         </View>

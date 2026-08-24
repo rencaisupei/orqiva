@@ -162,7 +162,7 @@ export function useCreateStore() {
         user_id: input.userId,
         type: 'system',
         title: '賣家中心已開通',
-        body: `店舖「${input.name}」建立成功，現在可以開始上架商品。`,
+        body: `店鋪「${input.name}」建立成功，現在可以開始上架商品。`,
         link: '/seller',
       });
       return data;
@@ -186,9 +186,9 @@ export function useUpdateStore() {
       description: string;
       location: string;
       logoUrl: string | null;
-      /** 店舖頁橫幅。null = 移除。 */
+      /** 店鋪頁橫幅。null = 移除。 */
       bannerUrl: string | null;
-      /** 營業時間。null = 未設定（店舖頁不顯示營業時間）。 */
+      /** 營業時間。null = 未設定（店鋪頁不顯示營業時間）。 */
       businessHours: BusinessHours | null;
       senderName: string;
       senderCellPhone: string;

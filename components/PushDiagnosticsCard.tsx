@@ -168,7 +168,7 @@ export function PushDiagnosticsCard() {
           ) : null}
           <Row
             label="Expo 專案"
-            value={state.projectId ?? '未設定（發佈或建置後才會有）'}
+            value={state.projectId ?? '未設定（發布或建置後才會有）'}
             warn={!state.projectId}
           />
         </View>
