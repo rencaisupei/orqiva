@@ -9,7 +9,7 @@ function seedKey(ids: string[]): string {
 }
 
 /**
- * 商品頁的「猜你喜歡」。伺服器拿當前商品當種子，用模型從同分類與熱門商品裡挑，
+ * 商品頁的「智慧推薦」。伺服器拿當前商品當種子，用模型從同分類與熱門商品裡挑，
  * 結果快取數小時，所以同一件商品的多位買家共用同一份推薦。
  */
 export function useSimilarProducts(productId: string | undefined, limit = 10) {

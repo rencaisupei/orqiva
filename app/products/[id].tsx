@@ -422,7 +422,7 @@ export default function ProductDetailScreen() {
         />
 
         {/* AI 推薦：同分類與可搭配的商品，由伺服器排序並快取。 */}
-        <RecommendationRail title="猜你喜歡" productId={product.id} limit={10} />
+        <RecommendationRail title="智慧推薦" productId={product.id} limit={10} />
 
         <Pressable
           className="mt-3 flex-row items-center justify-center gap-2 p-4"

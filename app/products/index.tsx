@@ -289,7 +289,7 @@ export default function ProductListScreen() {
               />
               {/* 找不到東西時至少給幾個方向，-mx-4 抵銷列表容器的 p-4。 */}
               <View className="-mx-4">
-                <RecommendationRail title="猜你喜歡" seedIds={recentlyViewed} limit={10} />
+                <RecommendationRail title="智慧推薦" seedIds={recentlyViewed} limit={10} />
               </View>
             </View>
           }

@@ -8,7 +8,7 @@ import { useForYouProducts, useSimilarProducts } from '@/lib/api/recommend';
 import { BRAND } from '@/lib/brand';
 
 type Props = {
-  /** 區塊標題，例如「猜你喜歡」或「為你推薦」。 */
+  /** 區塊標題，例如「智慧推薦」或「為你推薦」。 */
   title: string;
   /** 帶 productId = 商品頁的相似推薦；不帶就用 seedIds 做個人化推薦。 */
   productId?: string;

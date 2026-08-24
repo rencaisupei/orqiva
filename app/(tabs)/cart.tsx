@@ -125,7 +125,7 @@ export default function CartScreen() {
               </Button>
             }
           />
-          <RecommendationRail title="猜你喜歡" seedIds={recentlyViewed} limit={10} />
+          <RecommendationRail title="智慧推薦" seedIds={recentlyViewed} limit={10} />
         </ScrollView>
       </View>
     );
@@ -240,7 +240,7 @@ export default function CartScreen() {
         {/* 湊單用的推薦：種子是購物車內容，所以會跟著購物車變。
             -mx-4 抵銷外層的 p-4，橫向列表才與上面的卡片同一條左邊界。 */}
         <View className="-mx-4">
-          <RecommendationRail title="猜你喜歡" seedIds={cartSeeds} limit={10} />
+          <RecommendationRail title="智慧推薦" seedIds={cartSeeds} limit={10} />
         </View>
       </ScrollView>
 
