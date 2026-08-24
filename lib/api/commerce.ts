@@ -332,6 +332,8 @@ export function usePlaceOrder() {
       shippingAddress: string;
       note: string;
       cvsPickup?: CvsPickup | null;
+      /** 折扣碼；伺服器會重新驗證與計算折抵金額。 */
+      couponCode?: string | null;
     }) => {
       return await callMarket('place_order', {
         items: input.items,
@@ -340,6 +342,7 @@ export function usePlaceOrder() {
         shipping_address: input.shippingAddress,
         note: input.note,
         shipping_fee: SHIPPING_FEE,
+        coupon_code: input.couponCode ?? null,
         logistics_sub_type: input.cvsPickup?.logisticsSubType ?? null,
         cvs_store_id: input.cvsPickup?.storeId ?? null,
         cvs_store_name: input.cvsPickup?.storeName ?? null,
@@ -352,6 +355,7 @@ export function usePlaceOrder() {
       void qc.invalidateQueries({ queryKey: ['orders'] });
       void qc.invalidateQueries({ queryKey: ['products'] });
       void qc.invalidateQueries({ queryKey: ['notifications'] });
+      void qc.invalidateQueries({ queryKey: ['coupons'] });
     },
   });
 }

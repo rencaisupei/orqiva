@@ -215,6 +215,7 @@ export default function RootLayout() {
               <Stack.Screen name="seller/messages" options={{ headerShown: false }} />
               <Stack.Screen name="seller/account" options={{ headerShown: false }} />
               <Stack.Screen name="seller/coins" options={{ title: 'J幣中心' }} />
+              <Stack.Screen name="seller/coupons" options={{ title: '優惠券' }} />
               <Stack.Screen name="seller/promote" options={{ title: '兌換推廣' }} />
               <Stack.Screen name="seller/store" options={{ title: '店舖設定' }} />
               <Stack.Screen name="admin/index" options={{ title: '平台管理' }} />

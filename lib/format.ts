@@ -1,3 +1,5 @@
+import type { Coupon } from '@/lib/types';
+
 function withThousands(value: number): string {
   const [int, frac] = Math.abs(value)
     .toFixed(value % 1 === 0 ? 0 : 2)
@@ -110,4 +112,29 @@ export function deliveryEstimate(shippingMethod: string): string {
   if (shippingMethod === '面交') return '與賣家約定時間地點';
   if (shippingMethod === '超商取貨') return '付款後 2-4 個工作日到店';
   return '付款後 1-3 個工作日到貨';
+}
+
+/** "免運費" / "12% 折扣" / "折 NT$100" — the headline on a coupon badge. */
+export function couponHeadline(coupon: Pick<Coupon, 'kind' | 'value'>): string {
+  if (coupon.kind === 'free_shipping') return '免運費';
+  if (coupon.kind === 'percent') return `${formatNumber(coupon.value)}% 折扣`;
+  return `折 ${formatPrice(coupon.value)}`;
+}
+
+/** The coupon's rules as short phrases, in the order a buyer cares about them. */
+export function couponConditions(
+  coupon: Pick<
+    Coupon,
+    'kind' | 'min_spend' | 'max_discount' | 'per_user_limit' | 'product_ids' | 'ends_at'
+  >,
+): string[] {
+  const parts: string[] = [];
+  parts.push(coupon.min_spend > 0 ? `消費滿 ${formatPrice(coupon.min_spend)}` : '無低消門檻');
+  if (coupon.kind === 'percent' && coupon.max_discount) {
+    parts.push(`最多折 ${formatPrice(coupon.max_discount)}`);
+  }
+  if (coupon.product_ids.length > 0) parts.push(`限指定 ${coupon.product_ids.length} 件商品`);
+  if (coupon.per_user_limit) parts.push(`每人限用 ${coupon.per_user_limit} 次`);
+  parts.push(coupon.ends_at ? `${formatDate(coupon.ends_at)} 前使用` : '無使用期限');
+  return parts;
 }

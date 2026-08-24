@@ -205,6 +205,16 @@ export default function OrderDetailScreen() {
               {formatPrice(order.shipping_fee)}
             </Typography>
           </View>
+          {order.discount > 0 ? (
+            <View className="flex-row justify-between">
+              <Typography type="body-sm" color="muted">
+                折扣碼{order.coupon_code ? ` ${order.coupon_code}` : ''}
+              </Typography>
+              <Typography type="body-sm" className="text-brand-orange">
+                -{formatPrice(order.discount)}
+              </Typography>
+            </View>
+          ) : null}
           <Separator />
           <View className="flex-row items-center justify-between">
             <Typography type="body" className="text-navy" style={{ fontWeight: '600' }}>

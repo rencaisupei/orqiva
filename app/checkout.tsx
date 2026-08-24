@@ -4,11 +4,13 @@ import { Button, Input, Label, Separator, Spinner, Typography, useToast } from '
 import { router, useLocalSearchParams } from 'expo-router';
 
 import { AppImage } from '@/components/AppImage';
+import { CouponInput } from '@/components/CouponInput';
 import { CvsStorePicker } from '@/components/CvsStorePicker';
 import { EmptyState } from '@/components/EmptyState';
 import { FormError } from '@/components/FormError';
 import { SelectPill } from '@/components/SelectPill';
 import { SignInRequired } from '@/components/SignInRequired';
+import type { CouponPreview } from '@/lib/api/contracts';
 import {
   SHIPPING_FEE,
   useCart,
@@ -47,6 +49,7 @@ export default function CheckoutScreen() {
   const [note, setNote] = useState('');
   const [mode, setMode] = useState<DeliveryMode>('home');
   const [pickup, setPickup] = useState<CvsPickup | null>(null);
+  const [coupon, setCoupon] = useState<CouponPreview | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [nameTouched, setNameTouched] = useState(false);
   const [phoneTouched, setPhoneTouched] = useState(false);
@@ -81,7 +84,16 @@ export default function CheckoutScreen() {
   const subtotal = lines.reduce((sum, item) => sum + (item.product?.price ?? 0) * item.quantity, 0);
   const storeCount = new Set(lines.map((item) => item.product?.store_id)).size;
   const shipping = storeCount * SHIPPING_FEE;
-  const total = subtotal + shipping;
+  const discount = coupon?.discount ?? 0;
+  const total = Math.max(0, subtotal + shipping - discount);
+
+  /* 折扣碼試算需要的最小輸入，與送出訂單用的是同一份購物車內容。 */
+  const couponItems = lines.map((item) => ({
+    product_id: item.product_id,
+    quantity: item.quantity,
+  }));
+  const storeNameById = (storeId: string) =>
+    lines.find((item) => item.product?.store_id === storeId)?.product?.store?.name;
 
   if (!userId) {
     return <SignInRequired title="登入後才能結帳" />;
@@ -175,6 +187,7 @@ export default function CheckoutScreen() {
             : address.trim(),
         note: note.trim(),
         cvsPickup: mode === 'cvs' ? pickup : null,
+        couponCode: coupon?.code ?? null,
       },
       {
         onSuccess: () => {
@@ -314,6 +327,14 @@ export default function CheckoutScreen() {
           ))}
         </View>
 
+        <CouponInput
+          items={couponItems}
+          shippingFee={SHIPPING_FEE}
+          applied={coupon}
+          onApplied={setCoupon}
+          storeName={storeNameById}
+        />
+
         <View className="bg-surface gap-2 rounded-2xl p-4">
           <View className="flex-row justify-between">
             <Typography type="body-sm" color="muted">
@@ -331,6 +352,16 @@ export default function CheckoutScreen() {
               {formatPrice(shipping)}
             </Typography>
           </View>
+          {discount > 0 && coupon ? (
+            <View className="flex-row justify-between">
+              <Typography type="body-sm" color="muted">
+                折扣碼 {coupon.code}
+              </Typography>
+              <Typography type="body-sm" className="text-brand-orange">
+                -{formatPrice(discount)}
+              </Typography>
+            </View>
+          ) : null}
           <Separator />
           <View className="flex-row items-center justify-between">
             <Typography type="body" className="text-navy" style={{ fontWeight: '600' }}>

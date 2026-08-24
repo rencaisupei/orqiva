@@ -19,6 +19,7 @@ import { QuantityStepper } from '@/components/QuantityStepper';
 import { RecommendationRail } from '@/components/RecommendationRail';
 import { SelectPill } from '@/components/SelectPill';
 import { StarRating } from '@/components/StarRating';
+import { StoreCoupons } from '@/components/StoreCoupons';
 import { useFavoriteToggle } from '@/hooks/useFavoriteToggle';
 import { useCreateReport } from '@/lib/api/admin';
 import { useProduct, useTrackProductView } from '@/lib/api/catalog';
@@ -282,6 +283,8 @@ export default function ProductDetailScreen() {
             </Typography>
           </View>
         </View>
+
+        <StoreCoupons storeId={product.store_id} productId={product.id} />
 
         <View className="bg-surface mt-3 gap-3 p-4">
           <Typography type="body" className="text-navy" style={{ fontWeight: '600' }}>

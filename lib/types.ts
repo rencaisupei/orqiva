@@ -220,6 +220,9 @@ export type Order = {
   status: OrderStatus;
   subtotal: number;
   shipping_fee: number;
+  discount: number;
+  coupon_id: string | null;
+  coupon_code: string | null;
   total: number;
   shipping_method: string;
   recipient_name: string | null;
@@ -242,6 +245,87 @@ export type Order = {
   store: Pick<Store, 'id' | 'name' | 'logo_url'> | null;
   order_items: OrderItem[];
 };
+
+/* ── 賣家優惠券 ──────────────────────────────────────────────── */
+
+export type CouponKind = 'percent' | 'fixed' | 'free_shipping';
+
+export const COUPON_KIND_LABEL: Record<CouponKind, string> = {
+  percent: '百分比折扣',
+  fixed: '固定金額',
+  free_shipping: '免運費',
+};
+
+export const COUPON_KINDS: CouponKind[] = ['percent', 'fixed', 'free_shipping'];
+
+/** 折扣碼：4~20 碼英數字，一律以大寫儲存與比對。 */
+export const COUPON_CODE_RE = /^[A-Z0-9]{4,20}$/;
+
+export function normalizeCouponCode(value: string): string {
+  return value
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '')
+    .slice(0, 20);
+}
+
+export function validateCouponCode(value: string): string | null {
+  return COUPON_CODE_RE.test(normalizeCouponCode(value)) ? null : '折扣碼請填 4~20 碼英文或數字。';
+}
+
+export type Coupon = {
+  id: string;
+  store_id: string;
+  seller_id: string | null;
+  code: string;
+  title: string;
+  kind: CouponKind;
+  /** percent: 折扣百分比（1~90）；fixed: 折抵金額；free_shipping: 不使用。 */
+  value: number;
+  /** 百分比折扣的折抵上限，null = 不設限。 */
+  max_discount: number | null;
+  min_spend: number;
+  /** null = 不限總使用次數。 */
+  usage_limit: number | null;
+  /** null = 同一位買家可重複使用。 */
+  per_user_limit: number | null;
+  used_count: number;
+  /** 空陣列 = 全店適用。 */
+  product_ids: string[];
+  starts_at: string;
+  ends_at: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type CouponState = 'live' | 'scheduled' | 'expired' | 'used_up' | 'disabled';
+
+export const COUPON_STATE_LABEL: Record<CouponState, string> = {
+  live: '進行中',
+  scheduled: '尚未開始',
+  expired: '已過期',
+  used_up: '已用完',
+  disabled: '已停用',
+};
+
+export function couponState(coupon: Coupon, now = Date.now()): CouponState {
+  if (!coupon.is_active) return 'disabled';
+  if (coupon.usage_limit !== null && coupon.used_count >= coupon.usage_limit) return 'used_up';
+  if (new Date(coupon.starts_at).getTime() > now) return 'scheduled';
+  if (coupon.ends_at && new Date(coupon.ends_at).getTime() < now) return 'expired';
+  return 'live';
+}
+
+/** 買家看得到的券只有進行中的。 */
+export function isCouponLive(coupon: Coupon, now = Date.now()): boolean {
+  return couponState(coupon, now) === 'live';
+}
+
+/** 這張券是否適用於某件商品（空的 product_ids 代表全店）。 */
+export function couponCoversProduct(coupon: Coupon, productId: string): boolean {
+  return coupon.product_ids.length === 0 || coupon.product_ids.includes(productId);
+}
 
 export type Review = {
   id: string;

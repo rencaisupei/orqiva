@@ -15,6 +15,7 @@ import type {
   CoinRedemptionKind,
   CoinRedemptionStatus,
   CoinTxKind,
+  CouponKind,
   LogisticsSettings,
   LogisticsSubType,
   LogisticsVerifyResult,
@@ -307,12 +308,28 @@ export type CoinSummary = {
   today: string;
 };
 
+/* ── market ──────────────────────────────────────────────────── */
+
+/**
+ * Server-side coupon試算. The edge function is the only place that decides a
+ * discount, so the checkout screen shows exactly what `place_order` will write.
+ */
+export type CouponPreview = {
+  code: string;
+  title: string;
+  kind: CouponKind;
+  value: number;
+  store_id: string;
+  discount: number;
+};
+
 /* ── action → response maps ──────────────────────────────────── */
 
 export type MarketResponses = {
   place_order: { order_ids: string[] };
   set_order_status: { ok: boolean };
   track_view: { ok: boolean };
+  preview_coupon: CouponPreview;
 };
 
 export type LogisticsResponses = {

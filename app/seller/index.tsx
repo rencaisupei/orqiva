@@ -13,6 +13,7 @@ import {
   Repeat,
   Settings,
   Store as StoreIcon,
+  TicketPercent,
 } from 'lucide-react-native';
 
 import { EmptyState } from '@/components/EmptyState';
@@ -261,6 +262,12 @@ export default function SellerDashboardScreen() {
             label="訂單管理"
             badge={stats?.pendingOrders ?? 0}
             href="/seller/orders"
+          />
+          <MenuRow
+            icon={<TicketPercent size={18} color={BRAND.orange} />}
+            iconBg={BRAND.orangeSoft}
+            label="優惠券與折扣碼"
+            href="/seller/coupons"
           />
           <MenuRow
             icon={<BarChart3 size={18} color={BRAND.blue} />}

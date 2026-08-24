@@ -8,25 +8,13 @@ import { BuyerOrderCard } from '@/components/BuyerOrderCard';
 import { EmptyState } from '@/components/EmptyState';
 import { SegmentedControl, type Segment } from '@/components/SegmentedControl';
 import { SelectPill } from '@/components/SelectPill';
-import {
-  matchesShipmentFilter,
-  ShipmentStatusBar,
-  type ShipmentFilter,
-} from '@/components/ShipmentStatusBar';
 import { SignInRequired } from '@/components/SignInRequired';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { useMyOrders } from '@/lib/api/commerce';
 import { BRAND } from '@/lib/brand';
 import { formatNumber } from '@/lib/format';
 import { useUserId } from '@/lib/session';
-import {
-  isCvsOrder,
-  shipmentStage,
-  toLogisticsStatus,
-  type Order,
-  type OrderStatus,
-  type ShipmentStage,
-} from '@/lib/types';
+import type { Order, OrderStatus } from '@/lib/types';
 
 type StatusFilter = OrderStatus | 'all';
 type RangeKey = 'all' | '30d' | '3m';
@@ -56,11 +44,10 @@ function matchesKeyword(order: Order, keyword: string): boolean {
   return order.order_items.some((line) => line.title.toLowerCase().includes(keyword));
 }
 
-/** 貨態徽章顏色與篩選比對搬到 ShipmentStatusBar，與賣家中心共用同一份規則。 */
+/** 出貨貨態一律在訂單詳情頁看：列表只做狀態、時間與關鍵字三種篩選。 */
 export default function OrdersScreen() {
   const userId = useUserId();
   const [status, setStatus] = useState<StatusFilter>('all');
-  const [shipment, setShipment] = useState<ShipmentFilter>('all');
   const [range, setRange] = useState<RangeKey>('all');
   const [search, setSearch] = useState('');
   const { data: orders, isLoading } = useMyOrders(userId);
@@ -69,16 +56,7 @@ export default function OrdersScreen() {
   const keyword = search.trim().toLowerCase();
   const rangeDays = RANGES.find((item) => item.key === range)?.days ?? null;
 
-  /* 換分頁時把貨態條件收回「全部」：每個分頁的階段不同，留著上一頁選的階段
-     會出現「看得到膠囊卻沒有訂單」的狀況。 */
-  const changeStatus = (next: StatusFilter) => {
-    setStatus(next);
-    setShipment('all');
-  };
-
-  /* 這個分頁的訂單（還沒套用貨態條件）：出貨狀態區塊的筆數與階段都由它決定，
-     所以待付款分頁只會看到待付款訂單的貨態。 */
-  const scoped = useMemo(() => {
+  const filtered = useMemo(() => {
     const cutoff = rangeDays ? Date.now() - rangeDays * DAY_MS : null;
     return (orders ?? []).filter((order) => {
       if (status !== 'all' && order.status !== status) return false;
@@ -87,36 +65,18 @@ export default function OrdersScreen() {
     });
   }, [orders, status, rangeDays, keyword]);
 
-  const filtered = useMemo(
-    () => scoped.filter((order) => matchesShipmentFilter(order, shipment)),
-    [scoped, shipment],
-  );
-
-  /* 只留這個分頁真的有訂單的階段，例如備貨中分頁通常只有「待出貨／已建單」。 */
-  const stages = useMemo(() => {
-    const present = new Set<ShipmentStage>();
-    for (const order of scoped) {
-      if (!isCvsOrder(order)) continue;
-      present.add(shipmentStage(toLogisticsStatus(order.logistics_status)));
-    }
-    return Array.from(present);
-  }, [scoped]);
-
   if (!userId) {
     return <SignInRequired title="登入後查看訂單" />;
   }
 
   const total = orders?.length ?? 0;
-  const narrowed = status !== 'all' || shipment !== 'all' || range !== 'all' || keyword.length > 0;
+  const narrowed = status !== 'all' || range !== 'all' || keyword.length > 0;
 
   const clearFilters = () => {
     setStatus('all');
-    setShipment('all');
     setRange('all');
     setSearch('');
   };
-
-  const statusLabel = STATUS_SEGMENTS.find((item) => item.key === status)?.label ?? '全部';
 
   return (
     <View className="bg-background flex-1">
@@ -129,21 +89,7 @@ export default function OrdersScreen() {
           </SearchField.Group>
         </SearchField>
 
-        <SegmentedControl
-          items={STATUS_SEGMENTS}
-          value={status}
-          onChange={changeStatus}
-          size="sm"
-        />
-
-        {/* 出貨動態跟著分頁走：每一頁都看得到，但只統計、只篩選這一頁的訂單。 */}
-        <ShipmentStatusBar
-          orders={scoped}
-          value={shipment}
-          onChange={setShipment}
-          stages={stages}
-          title={status === 'all' ? '超商取貨出貨狀態' : `${statusLabel}的出貨動態`}
-        />
+        <SegmentedControl items={STATUS_SEGMENTS} value={status} onChange={setStatus} size="sm" />
 
         <View className="flex-row flex-wrap gap-2">
           {RANGES.map((item) => (
