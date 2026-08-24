@@ -47,21 +47,39 @@ export function useSellerShippingProfile(userId: string | null) {
   });
 }
 
+/**
+ * 寄件人資料。姓名與手機是超商取貨必填；郵遞區號與地址只有黑貓宅急便建單需要
+ * （司機依這個地址上門收件），沒填不影響超商取貨。
+ */
+export type SenderProfileInput = {
+  senderName: string;
+  senderCellPhone: string;
+  senderZipCode?: string;
+  senderAddress?: string;
+};
+
 async function saveShippingProfile(
   userId: string,
-  senderName: string,
-  senderCellPhone: string,
+  sender: SenderProfileInput,
   ecpay?: SellerEcpayInput,
 ) {
-  const { error } = await bilt.from('seller_shipping_profiles').upsert(
-    {
-      user_id: userId,
-      sender_name: senderName.trim(),
-      sender_cell_phone: senderCellPhone.trim(),
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: 'user_id' },
-  );
+  const row: Record<string, unknown> = {
+    user_id: userId,
+    sender_name: sender.senderName.trim(),
+    sender_cell_phone: sender.senderCellPhone.trim(),
+    updated_at: new Date().toISOString(),
+  };
+  // undefined = 這個畫面沒有這個欄位，不要把既有值清掉。
+  if (sender.senderZipCode !== undefined) {
+    row.sender_zip_code = sender.senderZipCode.trim() || null;
+  }
+  if (sender.senderAddress !== undefined) {
+    row.sender_address = sender.senderAddress.trim() || null;
+  }
+
+  const { error } = await bilt
+    .from('seller_shipping_profiles')
+    .upsert(row, { onConflict: 'user_id' });
   if (error) throw new Error(error.message);
 
   /*
@@ -119,7 +137,10 @@ export function useCreateStore() {
       senderCellPhone: string;
     }): Promise<Store> => {
       // 寄件人資料先寫，開店後每一張綠界物流單都直接取用這一筆。
-      await saveShippingProfile(input.userId, input.senderName, input.senderCellPhone);
+      await saveShippingProfile(input.userId, {
+        senderName: input.senderName,
+        senderCellPhone: input.senderCellPhone,
+      });
 
       const { data, error } = await bilt
         .from('stores')
@@ -165,6 +186,9 @@ export function useUpdateStore() {
       logoUrl: string | null;
       senderName: string;
       senderCellPhone: string;
+      /** 黑貓宅急便建單用的寄件地址。省略 = 不動既有值。 */
+      senderZipCode?: string;
+      senderAddress?: string;
       /** 賣家自己的綠界特店金鑰。undefined = 不動既有設定。 */
       ecpay?: SellerEcpayInput;
     }) => {
@@ -180,7 +204,16 @@ export function useUpdateStore() {
         .eq('id', input.storeId);
       if (error) throw new Error(error.message);
 
-      await saveShippingProfile(input.userId, input.senderName, input.senderCellPhone, input.ecpay);
+      await saveShippingProfile(
+        input.userId,
+        {
+          senderName: input.senderName,
+          senderCellPhone: input.senderCellPhone,
+          senderZipCode: input.senderZipCode,
+          senderAddress: input.senderAddress,
+        },
+        input.ecpay,
+      );
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['my-store'] });

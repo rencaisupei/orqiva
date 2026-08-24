@@ -15,13 +15,13 @@ type Item = {
 };
 
 /**
- * 賣家分頁：賣家中心、市集（完整的商品首頁）、發布、訂單、訊息、我的。
+ * 賣家分頁：市集（完整的商品首頁）、賣家中心首頁、發布、訂單、訊息、我的。
  *
  * 「市集」與買家首頁是同一份內容 —— 買賣分開的是功能，賣家一樣看得到全部商品。
  */
 const ITEMS: Item[] = [
-  { label: '首頁', href: '/seller', match: '/seller', icon: House },
   { label: '市集', href: '/seller/market', match: '/seller/market', icon: Store },
+  { label: '首頁', href: '/seller', match: '/seller', icon: House },
   {
     label: '發布',
     href: '/seller/new-product',
@@ -63,7 +63,7 @@ function TabItem({ item, isActive }: { item: Item; isActive: boolean }) {
 
 /**
  * 賣家介面的底部分頁列。與買家分頁列是兩套完全獨立的導覽：買家看到的是
- * 首頁／分類／購物車／訊息／我的，賣家看到的是首頁／市集／發布／訂單／訊息／我的。
+ * 首頁／分類／購物車／訊息／我的，賣家看到的是市集／首頁／發布／訂單／訊息／我的。
  */
 export function SellerTabBar() {
   const pathname = usePathname();

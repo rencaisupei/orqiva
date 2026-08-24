@@ -1,17 +1,17 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Platform, View } from 'react-native';
-import { Button, Label, Spinner, Typography } from 'heroui-native';
+import { Button, Spinner, Typography } from 'heroui-native';
 import * as WebBrowser from 'expo-web-browser';
 import { MapPin, RefreshCw, Store } from 'lucide-react-native';
 
-import { SelectPill } from '@/components/SelectPill';
 import { useMapSelection, useStoreMapUrl } from '@/lib/api/logistics';
 import { BRAND } from '@/lib/brand';
 import type { CvsPickup } from '@/lib/api/commerce';
-import { LOGISTICS_SUB_TYPE_LABEL, toLogisticsSubType, type LogisticsSubType } from '@/lib/types';
+import { LOGISTICS_SUB_TYPE_LABEL, type CvsSubType } from '@/lib/types';
 
 type Props = {
-  availableSubTypes: LogisticsSubType[];
+  /** 買家在結帳頁選的取貨超商，決定電子地圖要開哪一家。 */
+  subType: CvsSubType;
   value: CvsPickup | null;
   onChange: (value: CvsPickup | null) => void;
   orderId?: string;
@@ -24,17 +24,20 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
  * 綠界的地圖必須以表單 POST 開啟網頁，因此透過系統／App 內瀏覽器（不使用內嵌
  * iframe，綠界文件明確禁止），選完後由後端回拋寫入，App 再拉回結果。
  */
-export function CvsStorePicker({ availableSubTypes, value, onChange, orderId }: Props) {
-  // 先選超商才能開地圖：綠界的地圖網址必須帶 LogisticsSubType。
-  const [subType, setSubType] = useState<LogisticsSubType | null>(
-    toLogisticsSubType(value?.logisticsSubType),
-  );
+export function CvsStorePicker({ subType, value, onChange, orderId }: Props) {
   const [token, setToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pulling, setPulling] = useState(false);
 
   const mapUrl = useStoreMapUrl();
   const selection = useMapSelection();
+  const brand = LOGISTICS_SUB_TYPE_LABEL[subType];
+
+  // 換一家超商時舊的選店連結就作廢了（門市代號不能跨通路使用）。
+  useEffect(() => {
+    setToken(null);
+    setError(null);
+  }, [subType]);
 
   /** 回拋寫入可能比瀏覽器關閉稍慢，所以重試幾次再回報失敗。 */
   const pullSelection = async (activeToken: string, attempts: number) => {
@@ -69,7 +72,6 @@ export function CvsStorePicker({ availableSubTypes, value, onChange, orderId }: 
   };
 
   const openMap = () => {
-    if (!subType) return;
     setError(null);
     mapUrl.mutate(
       { logisticsSubType: subType, orderId },
@@ -90,30 +92,8 @@ export function CvsStorePicker({ availableSubTypes, value, onChange, orderId }: 
     );
   };
 
-  if (availableSubTypes.length === 0) return null;
-
   return (
     <View className="gap-3">
-      <View>
-        <Label isRequired>取貨超商</Label>
-        <View className="flex-row flex-wrap gap-2">
-          {availableSubTypes.map((item) => (
-            <SelectPill
-              key={item}
-              size="sm"
-              label={`${LOGISTICS_SUB_TYPE_LABEL[item]} 取貨付款`}
-              selected={subType === item}
-              onPress={() => {
-                setSubType(item);
-                setToken(null);
-                setError(null);
-                onChange(null);
-              }}
-            />
-          ))}
-        </View>
-      </View>
-
       {value ? (
         <View className="bg-background gap-1 rounded-xl p-3">
           <View className="flex-row items-center gap-2">
@@ -139,7 +119,7 @@ export function CvsStorePicker({ availableSubTypes, value, onChange, orderId }: 
         <Button
           variant={value ? 'secondary' : 'primary'}
           className="flex-1"
-          isDisabled={!subType || mapUrl.isPending || pulling}
+          isDisabled={mapUrl.isPending || pulling}
           onPress={openMap}
         >
           <View className="flex-row items-center gap-2">
@@ -149,7 +129,7 @@ export function CvsStorePicker({ availableSubTypes, value, onChange, orderId }: 
               <MapPin size={15} color={value ? BRAND.navy : BRAND.white} />
             )}
             <Typography type="body-sm" className={value ? 'text-navy' : 'text-white'}>
-              {value ? '重新選擇門市' : '選擇取貨門市'}
+              {value ? `重新選擇${brand}門市` : `選擇${brand}取貨門市`}
             </Typography>
           </View>
         </Button>
@@ -177,9 +157,7 @@ export function CvsStorePicker({ availableSubTypes, value, onChange, orderId }: 
       ) : null}
 
       <Typography type="body-xs" color="muted">
-        {subType
-          ? '選店頁會在瀏覽器開啟；關閉瀏覽器後會自動帶回門市，若沒帶回請按「讀取門市」。'
-          : '請先選擇要取貨的超商，才能開啟門市電子地圖。'}
+        選店頁會在瀏覽器開啟；關閉瀏覽器後會自動帶回門市，若沒帶回請按「讀取門市」。
       </Typography>
     </View>
   );

@@ -42,6 +42,8 @@ export default function StoreSettingsScreen() {
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [senderName, setSenderName] = useState('');
   const [senderCellPhone, setSenderCellPhone] = useState('');
+  const [senderZipCode, setSenderZipCode] = useState('');
+  const [senderAddress, setSenderAddress] = useState('');
   const [merchantId, setMerchantId] = useState('');
   const [hashKey, setHashKey] = useState('');
   const [hashIv, setHashIv] = useState('');
@@ -61,6 +63,8 @@ export default function StoreSettingsScreen() {
     if (shippingProfile) {
       setSenderName(shippingProfile.sender_name);
       setSenderCellPhone(shippingProfile.sender_cell_phone);
+      setSenderZipCode(shippingProfile.sender_zip_code ?? '');
+      setSenderAddress(shippingProfile.sender_address ?? '');
     }
   }, [shippingProfile]);
 
@@ -131,6 +135,13 @@ export default function StoreSettingsScreen() {
       setError(phoneError);
       return;
     }
+    // 寄件地址可以不填（只做超商取貨），但填了一半會讓黑貓建單失敗，所以兩欄綁在一起檢查。
+    const zip = senderZipCode.trim();
+    const addr = senderAddress.trim();
+    if ((zip || addr) && (!/^\d{3,5}$/.test(zip) || addr.length < 6)) {
+      setError('寄件地址請填完整：郵遞區號 3 碼以上，地址需含縣市、路名與門牌');
+      return;
+    }
     if (ecpayTouched) {
       if (!/^\d{4,10}$/.test(merchantId.trim())) {
         setError('綠界商店代號需為 4~10 位數字（例如 2000933）');
@@ -152,6 +163,8 @@ export default function StoreSettingsScreen() {
         logoUrl,
         senderName,
         senderCellPhone,
+        senderZipCode,
+        senderAddress,
         // 只有動過這三欄、或原本就有金鑰（可能是要清空）時才送，避免每次存店名都重打綠界。
         ecpay:
           ecpayTouched || hadCredentials
@@ -225,12 +238,12 @@ export default function StoreSettingsScreen() {
           <View className="flex-row items-center gap-2">
             <Truck size={16} color={BRAND.blue} />
             <Typography type="body" className="text-navy flex-1" style={{ fontWeight: '600' }}>
-              第二步：填回五個欄位（超商取貨必填）
+              第二步：填寫寄件人與綠界特店資料
             </Typography>
           </View>
           <Typography type="body-xs" color="muted">
-            前兩欄是物流單上的寄件人。C2C
-            退貨需憑本人身分證領取，請填你本人的姓名與手機，不要填店舖名稱。這兩個欄位只有你自己與平台管理員看得到。
+            前面是物流單上的寄件人。C2C
+            退貨需憑本人身分證領取，請填你本人的姓名與手機，不要填店舖名稱。這些欄位只有你自己與平台管理員看得到。
           </Typography>
 
           <Separator />
@@ -255,6 +268,32 @@ export default function StoreSettingsScreen() {
             />
             <Description>只允許數字、10 碼、09 開頭；綠界會用這支手機發送物流通知。</Description>
           </View>
+
+          {/* 黑貓宅急便是司機上門收件，沒有地址就無法建立託運單；只做超商取貨可以留空。 */}
+          <View className="flex-row gap-2">
+            <View className="w-24">
+              <Label>寄件郵遞區號</Label>
+              <Input
+                placeholder="100"
+                keyboardType="number-pad"
+                inputMode="numeric"
+                maxLength={5}
+                value={senderZipCode}
+                onChangeText={(value) => setSenderZipCode(value.replace(/\D/g, '').slice(0, 5))}
+              />
+            </View>
+            <View className="flex-1">
+              <Label>寄件地址</Label>
+              <Input
+                placeholder="臺北市中正區忠孝東路一段 1 號 5 樓"
+                value={senderAddress}
+                onChangeText={setSenderAddress}
+              />
+            </View>
+          </View>
+          <Description>
+            黑貓宅急便（貨到付款）必填，司機會到這個地址收件。只做超商取貨可以留空。
+          </Description>
 
           <View className="flex-row items-center gap-2 pt-1">
             <KeyRound size={16} color={BRAND.blue} />

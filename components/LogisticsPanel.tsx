@@ -1,7 +1,7 @@
 import { Button, Chip, Spinner, Typography, useToast } from 'heroui-native';
 import { Pressable, View } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
-import { Copy, RefreshCw, Store, Truck } from 'lucide-react-native';
+import { Copy, MapPin, RefreshCw, Store, Truck } from 'lucide-react-native';
 
 import {
   useCreateLogisticsOrder,
@@ -14,6 +14,7 @@ import { formatDateTime, formatPrice } from '@/lib/format';
 import {
   LOGISTICS_STATUS_LABEL,
   LOGISTICS_SUB_TYPE_LABEL,
+  isHomeSubType,
   toLogisticsStatus,
   toLogisticsSubType,
   type LogisticsStatus,
@@ -33,7 +34,7 @@ function statusColor(status: LogisticsStatus) {
   return 'accent';
 }
 
-/** 綠界超商取貨付款的門市、寄貨編號與貨態。宅配訂單不會渲染。 */
+/** 綠界貨到付款的收件資料、寄貨編號／黑貓託運單號與貨態。非綠界訂單不會渲染。 */
 export function LogisticsPanel({ order, role, showEvents = false }: Props) {
   const { toast } = useToast();
   const { data: shipment, isLoading } = useLogisticsOrder(order.id);
@@ -44,6 +45,14 @@ export function LogisticsPanel({ order, role, showEvents = false }: Props) {
   if (order.shipping_provider !== 'ecpay' && !order.cvs_store_id) return null;
 
   const subType = toLogisticsSubType(order.logistics_sub_type ?? shipment?.logistics_sub_type);
+  // 宅配（黑貓）：沒有取貨門市，寄貨編號換成託運單號，司機依收件地址送達。
+  const isHome = isHomeSubType(subType) || order.logistics_type === 'HOME';
+  const waybillNo = isHome
+    ? (shipment?.booking_note ?? order.logistics_booking_note ?? shipment?.shipment_no ?? null)
+    : (shipment?.shipment_no ?? null);
+  const homeAddress = [order.receiver_zip_code, order.receiver_city, order.receiver_address]
+    .filter(Boolean)
+    .join(' ');
 
   const copy = (value: string, label: string) => {
     void Clipboard.setStringAsync(value);
@@ -55,7 +64,8 @@ export function LogisticsPanel({ order, role, showEvents = false }: Props) {
       <View className="flex-row items-center gap-2">
         <Truck size={16} color={BRAND.blue} />
         <Typography type="body-sm" className="text-navy flex-1" style={{ fontWeight: '600' }}>
-          超商取貨付款{subType ? ` · ${LOGISTICS_SUB_TYPE_LABEL[subType]}` : ''}
+          {isHome ? '宅配貨到付款' : '超商取貨付款'}
+          {subType ? ` · ${LOGISTICS_SUB_TYPE_LABEL[subType]}` : ''}
         </Typography>
         {shipment ? (
           <Chip size="sm" variant="soft" color={statusColor(shipment.status)}>
@@ -64,7 +74,21 @@ export function LogisticsPanel({ order, role, showEvents = false }: Props) {
         ) : null}
       </View>
 
-      {order.cvs_store_id ? (
+      {isHome ? (
+        homeAddress ? (
+          <View className="bg-background gap-1 rounded-xl p-3">
+            <View className="flex-row items-center gap-2">
+              <MapPin size={14} color={BRAND.muted} />
+              <Typography type="body-xs" color="muted" className="flex-1">
+                收件地址
+              </Typography>
+            </View>
+            <Typography type="body-sm" className="text-navy">
+              {homeAddress}
+            </Typography>
+          </View>
+        ) : null
+      ) : order.cvs_store_id ? (
         <View className="bg-background gap-1 rounded-xl p-3">
           <View className="flex-row items-center gap-2">
             <Store size={14} color={BRAND.muted} />
@@ -85,10 +109,10 @@ export function LogisticsPanel({ order, role, showEvents = false }: Props) {
       <View className="bg-background gap-1 rounded-xl p-3">
         <View className="flex-row items-center justify-between gap-2">
           <Typography type="body-xs" color="muted" className="flex-1">
-            代收金額（商品總金額 + 運費）
+            {isHome ? '代收金額（司機送達時收款）' : '代收金額（買家到店付款）'}
           </Typography>
           <Typography type="body-sm" className="text-brand-orange" style={{ fontWeight: '700' }}>
-            {formatPrice(shipment?.collection_amount ?? order.subtotal + order.shipping_fee)}
+            {formatPrice(shipment?.collection_amount ?? order.total)}
           </Typography>
         </View>
         <Typography type="body-xs" color="muted" numberOfLines={1}>
@@ -96,18 +120,18 @@ export function LogisticsPanel({ order, role, showEvents = false }: Props) {
         </Typography>
       </View>
 
-      {shipment?.shipment_no ? (
+      {waybillNo ? (
         <Pressable
           className="bg-background flex-row items-center gap-2 rounded-xl p-3"
-          onPress={() => copy(shipment.shipment_no!, '寄貨編號')}
+          onPress={() => copy(waybillNo, isHome ? '黑貓託運單號' : '寄貨編號')}
         >
           <View className="flex-1">
             <Typography type="body-xs" color="muted">
-              寄貨編號
+              {isHome ? '黑貓託運單號（列印託運單用）' : '寄貨編號'}
             </Typography>
             <Typography type="body-sm" className="text-navy" style={{ fontWeight: '600' }}>
-              {shipment.shipment_no}
-              {shipment.validation_no ? ` / ${shipment.validation_no}` : ''}
+              {waybillNo}
+              {!isHome && shipment?.validation_no ? ` / ${shipment.validation_no}` : ''}
             </Typography>
           </View>
           <Copy size={15} color={BRAND.muted} />
@@ -163,7 +187,9 @@ export function LogisticsPanel({ order, role, showEvents = false }: Props) {
             )
           }
         >
-          <Button.Label>{create.isPending ? '送出中…' : '建立綠界物流單'}</Button.Label>
+          <Button.Label>
+            {create.isPending ? '送出中…' : isHome ? '建立黑貓託運單' : '建立綠界物流單'}
+          </Button.Label>
         </Button>
       ) : null}
 

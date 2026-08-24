@@ -229,9 +229,14 @@ export type Order = {
   recipient_phone: string | null;
   shipping_address: string | null;
   note: string | null;
-  /* 綠界超商取貨付款 */
+  /* 綠界物流：超商取貨付款（CVS）或黑貓宅急便貨到付款（HOME） */
   shipping_provider: 'manual' | 'ecpay';
+  logistics_type: string | null;
   logistics_sub_type: string | null;
+  /* 宅配貨到付款的收件地址（黑貓建單需要 ReceiverZipCode / ReceiverAddress） */
+  receiver_zip_code: string | null;
+  receiver_city: string | null;
+  receiver_address: string | null;
   cvs_store_id: string | null;
   cvs_store_name: string | null;
   cvs_store_address: string | null;
@@ -240,6 +245,8 @@ export type Order = {
   logistics_shipment_no: string | null;
   logistics_validation_no: string | null;
   logistics_id: string | null;
+  /** 黑貓宅急便的託運單號（BookingNote），賣家列印託運單用。 */
+  logistics_booking_note: string | null;
   created_at: string;
   updated_at: string;
   store: Pick<Store, 'id' | 'name' | 'logo_url'> | null;
@@ -527,23 +534,79 @@ export function toSortKey(value: string | undefined): SortKey {
 
 export const SHIPPING_METHODS = ['宅配', '超商取貨', '面交'] as const;
 
-/* ── 綠界 (ECPay) C2C 超商取貨付款 ─────────────────────────────── */
+/* ── 綠界 (ECPay) 物流：超商取貨付款 + 黑貓宅急便貨到付款 ─────────── */
 
-export type LogisticsSubType = 'UNIMARTC2C' | 'FAMIC2C' | 'HILIFEC2C' | 'OKMARTC2C';
+/**
+ * 只保留支援「貨到付款（代收貨款）」的四種物流。
+ * 綠界 C2C 的 OK 超商與中華郵政不支援代收貨款，所以不再提供。
+ *
+ * 超商是 C2C 店到店（LogisticsType = CVS），黑貓宅急便是宅配（LogisticsType = HOME）。
+ */
+export type CvsSubType = 'UNIMARTC2C' | 'FAMIC2C' | 'HILIFEC2C';
+export type HomeSubType = 'TCAT';
+export type LogisticsSubType = CvsSubType | HomeSubType;
 
+export const CVS_SUB_TYPES: CvsSubType[] = ['UNIMARTC2C', 'FAMIC2C', 'HILIFEC2C'];
+export const HOME_SUB_TYPES: HomeSubType[] = ['TCAT'];
+export const LOGISTICS_SUB_TYPES: LogisticsSubType[] = [...CVS_SUB_TYPES, ...HOME_SUB_TYPES];
+
+/** 物流商名稱（後台、物流面板用）。 */
 export const LOGISTICS_SUB_TYPE_LABEL: Record<LogisticsSubType, string> = {
   UNIMARTC2C: '7-ELEVEN 交貨便',
   FAMIC2C: '全家店到店',
   HILIFEC2C: '萊爾富店到店',
-  OKMARTC2C: 'OK 店到店',
+  TCAT: '黑貓宅急便',
 };
 
-export const LOGISTICS_SUB_TYPES: LogisticsSubType[] = [
-  'UNIMARTC2C',
-  'FAMIC2C',
-  'HILIFEC2C',
-  'OKMARTC2C',
-];
+/** 結帳頁的貨到付款選項名稱。 */
+export const COD_OPTION_LABEL: Record<LogisticsSubType, string> = {
+  UNIMARTC2C: '7-11 取貨付款',
+  FAMIC2C: '全家 取貨付款',
+  HILIFEC2C: '萊爾富 取貨付款',
+  TCAT: '黑貓宅急便 貨到付款',
+};
+
+export function isCvsSubType(value: string | null | undefined): value is CvsSubType {
+  return CVS_SUB_TYPES.some((item) => item === value);
+}
+
+export function isHomeSubType(value: string | null | undefined): value is HomeSubType {
+  return HOME_SUB_TYPES.some((item) => item === value);
+}
+
+/** 綠界的 LogisticsType：超商是 CVS，黑貓宅急便是 HOME。 */
+export function logisticsTypeOf(subType: LogisticsSubType): 'CVS' | 'HOME' {
+  return isHomeSubType(subType) ? 'HOME' : 'CVS';
+}
+
+export function toCvsSubType(value: string | null | undefined): CvsSubType | null {
+  return isCvsSubType(value) ? value : null;
+}
+
+/* ── 代收貨款金額限制 ─────────────────────────────────────────── */
+
+/** 超商取貨付款：商品金額 + 運費須在 31 ~ 20,000 元之間。 */
+export const CVS_COD_MIN = 31;
+export const CVS_COD_MAX = 20_000;
+/** 黑貓宅急便貨到付款的代收金額上限。 */
+export const HOME_COD_MAX = 99_999;
+
+export const CVS_COD_RANGE_HINT =
+  '💡 提醒：超商取貨付款總金額限制為 NT$ 31 ~ $ 20,000，超出此限制請選用其他配送方式。';
+
+/**
+ * 貨到付款的金額檢查（商品金額 + 運費）。null = 可以送出。
+ * 與 market / ecpay-logistics 兩支伺服器函式用同一組上下限，避免綠界建單才被擋。
+ */
+export function codAmountError(subType: LogisticsSubType, total: number): string | null {
+  if (isHomeSubType(subType)) {
+    return total > HOME_COD_MAX
+      ? `黑貓宅急便貨到付款代收金額上限為 NT$ ${HOME_COD_MAX.toLocaleString('en-US')}`
+      : null;
+  }
+  if (total < CVS_COD_MIN || total > CVS_COD_MAX) return CVS_COD_RANGE_HINT;
+  return null;
+}
 
 /**
  * Narrows a stored text column (`orders.logistics_sub_type` and friends) onto the
@@ -554,11 +617,10 @@ export function toLogisticsSubType(value: string | null | undefined): LogisticsS
 }
 
 /** 綠界測試環境的固定門市代號，方便在 stage 直接測完整流程。 */
-export const LOGISTICS_TEST_STORE_ID: Record<LogisticsSubType, string> = {
+export const LOGISTICS_TEST_STORE_ID: Record<CvsSubType, string> = {
   UNIMARTC2C: '131386',
   FAMIC2C: '006598',
   HILIFEC2C: '007564',
-  OKMARTC2C: '1328',
 };
 
 export type LogisticsEnvironment = 'stage' | 'production';
@@ -766,6 +828,9 @@ export type SellerShippingProfile = {
   user_id: string;
   sender_name: string;
   sender_cell_phone: string;
+  /** 黑貓宅急便（宅配）建單必填的寄件地址；超商店到店不需要。 */
+  sender_zip_code: string | null;
+  sender_address: string | null;
   created_at: string;
   updated_at: string;
   /* 綠界 C2C 取貨付款開通狀態，由 ecpay-logistics 的 seller_verify 寫入 */
@@ -844,6 +909,25 @@ export function validateReceiverCellPhone(value: string): string | null {
   return /^09\d{8}$/.test(value.trim()) ? null : RECEIVER_CELL_PHONE_ERROR;
 }
 
+/* ── 宅配貨到付款的收件地址 ───────────────────────────────────── */
+
+export const RECEIVER_ZIP_ERROR = '請填寫 3~5 碼的郵遞區號（例如 100 或 10058）。';
+
+/** 宅配收件郵遞區號：3~5 碼數字。null = 通過。 */
+export function validateReceiverZipCode(value: string): string | null {
+  return /^\d{3,5}$/.test(value.trim()) ? null : RECEIVER_ZIP_ERROR;
+}
+
+/** 宅配收件縣市：至少 2 個字（例如「臺北市中正區」）。null = 通過。 */
+export function validateReceiverCity(value: string): string | null {
+  return value.trim().length >= 2 ? null : '請填寫收件的縣市與地區。';
+}
+
+/** 宅配詳細地址：至少 5 個字，需含路名門牌。null = 通過。 */
+export function validateReceiverAddress(value: string): string | null {
+  return value.trim().length >= 5 ? null : '請填寫詳細地址（路名、門牌與樓層）。';
+}
+
 export type LogisticsVerifyResult = {
   ok: boolean;
   environment: LogisticsEnvironment;
@@ -889,6 +973,8 @@ export type LogisticsOrder = {
   receiver_name: string | null;
   receiver_cell_phone: string | null;
   receiver_email: string | null;
+  receiver_zip_code: string | null;
+  receiver_address: string | null;
   sender_name: string | null;
   ecpay_logistics_id: string | null;
   shipment_no: string | null;

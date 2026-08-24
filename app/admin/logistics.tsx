@@ -30,14 +30,20 @@ import { formatDate } from '@/lib/format';
 import { WebOnlyNotice } from '@/components/WebOnlyNotice';
 import { ADMIN_CONSOLE_IS_WEB, useIsAdminConsole, useUserId } from '@/lib/session';
 import {
+  CVS_SUB_TYPES,
   LOGISTICS_SUB_TYPE_LABEL,
+  LOGISTICS_SUB_TYPES,
   LOGISTICS_TEST_STORE_ID,
+  type CvsSubType,
   type LogisticsEnvironment,
   type LogisticsSettings,
   type LogisticsSubType,
 } from '@/lib/types';
 
-const SUB_TYPES: LogisticsSubType[] = ['UNIMARTC2C', 'FAMIC2C', 'HILIFEC2C', 'OKMARTC2C'];
+/** 平台可開放的貨到付款方式（3 家超商 C2C + 黑貓宅急便）。 */
+const SUB_TYPES: LogisticsSubType[] = LOGISTICS_SUB_TYPES;
+/** 退貨門市只有超商 C2C 有這個概念，宅配沒有。 */
+const RETURN_STORE_SUB_TYPES: CvsSubType[] = CVS_SUB_TYPES;
 
 const ENV_OPTIONS = [
   { value: 'stage', label: '測試環境 (Stage)', hint: 'logistics-stage.ecpay.com.tw' },
@@ -384,8 +390,8 @@ export default function AdminLogisticsScreen() {
 
         <SectionCard title="開放設定">
           <ToggleRow
-            label="啟用超商取貨付款"
-            hint="關閉時買家結帳看不到超商取貨選項。"
+            label="啟用貨到付款"
+            hint="關閉時買家結帳看不到超商取貨付款與黑貓宅急便貨到付款。"
             value={draft.is_enabled ?? false}
             onChange={(value) => patch({ is_enabled: value })}
           />
@@ -397,7 +403,7 @@ export default function AdminLogisticsScreen() {
             onChange={(value) => patch({ is_collection_enabled: value })}
           />
           <Separator />
-          <Label>開放的超商（可多選）</Label>
+          <Label>開放的貨到付款方式（可多選）</Label>
           <View className="flex-row flex-wrap gap-2">
             {SUB_TYPES.map((subType) => (
               <SelectPill
@@ -409,7 +415,10 @@ export default function AdminLogisticsScreen() {
               />
             ))}
           </View>
-          <Description>綠界申請的物流模式需為 C2C（店到店）才能使用這些子類型。</Description>
+          <Description>
+            綠界申請的物流模式需為 C2C（店到店）才能使用超商子類型；黑貓宅急便（TCAT）走宅配
+            (HOME)，代收金額上限 NT$ 99,999。OK mart 與中華郵政不支援代收貨款，因此不提供。
+          </Description>
         </SectionCard>
 
         <SectionCard
@@ -441,9 +450,9 @@ export default function AdminLogisticsScreen() {
 
         <SectionCard
           title="退貨門市代號"
-          subtitle="留空時退件會回到原寄件門市。目前僅 7-ELEVEN C2C 會採用指定的退貨門市。"
+          subtitle="留空時退件會回到原寄件門市。只有超商 C2C 有退貨門市，宅配不需要。"
         >
-          {SUB_TYPES.map((subType) => (
+          {RETURN_STORE_SUB_TYPES.map((subType) => (
             <View key={subType}>
               <Label>{LOGISTICS_SUB_TYPE_LABEL[subType]}</Label>
               <Input

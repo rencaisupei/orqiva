@@ -331,7 +331,15 @@ export function usePlaceOrder() {
       recipientPhone: string;
       shippingAddress: string;
       note: string;
+      /** 'CVS' = 超商取貨付款、'HOME' = 黑貓宅急便貨到付款、null = 賣家自行寄送。 */
+      logisticsType?: 'CVS' | 'HOME' | null;
+      /** 宅配貨到付款的物流子類型（目前只有 TCAT）；超商由 cvsPickup 帶入。 */
+      logisticsSubType?: string | null;
       cvsPickup?: CvsPickup | null;
+      /** 宅配收件地址；黑貓建單需要 ReceiverZipCode / ReceiverAddress。 */
+      receiverZipCode?: string;
+      receiverCity?: string;
+      receiverAddress?: string;
       /** 折扣碼；伺服器會重新驗證與計算折抵金額。 */
       couponCode?: string | null;
     }) => {
@@ -343,11 +351,15 @@ export function usePlaceOrder() {
         note: input.note,
         shipping_fee: SHIPPING_FEE,
         coupon_code: input.couponCode ?? null,
-        logistics_sub_type: input.cvsPickup?.logisticsSubType ?? null,
+        logistics_type: input.logisticsType ?? null,
+        logistics_sub_type: input.cvsPickup?.logisticsSubType ?? input.logisticsSubType ?? null,
         cvs_store_id: input.cvsPickup?.storeId ?? null,
         cvs_store_name: input.cvsPickup?.storeName ?? null,
         cvs_store_address: input.cvsPickup?.storeAddress ?? null,
         cvs_store_phone: input.cvsPickup?.storePhone ?? null,
+        receiver_zip_code: input.receiverZipCode ?? null,
+        receiver_city: input.receiverCity ?? null,
+        receiver_address: input.receiverAddress ?? null,
       });
     },
     onSuccess: () => {

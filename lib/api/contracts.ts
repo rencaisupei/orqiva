@@ -53,7 +53,8 @@ export type SellerVerifyResult = {
 
 /** 賣家的寄件人 + 綠界特店設定。HashKey / HashIV 只回「有沒有設定」，不回內容。 */
 export type SellerEcpaySettings = {
-  sender: { name: string; cellPhone: string };
+  /** zipCode / address 只有黑貓宅急便建單需要（司機上門收件的地址）。 */
+  sender: { name: string; cellPhone: string; zipCode: string; address: string };
   ecpay: {
     merchantId: string;
     hasHashKey: boolean;
@@ -71,6 +72,8 @@ export type SellerEcpaySettings = {
     environment: 'stage' | 'production';
     apiHost: string;
     fallbackReady: boolean;
+    /** 平台目前開放的貨到付款方式，賣家據此知道要不要填寄件地址。 */
+    enabledSubTypes: LogisticsSubType[];
   };
 };
 
@@ -79,6 +82,10 @@ export type AdminLogisticsPayload = {
   callbackUrl: string;
   apiHost: string;
   supportedSubTypes: LogisticsSubType[];
+  /** 超商（CVS）與宅配（HOME）各自支援的方式，以及代收金額上下限。 */
+  cvsSubTypes: LogisticsSubType[];
+  homeSubTypes: LogisticsSubType[];
+  codLimits: { cvs: { min: number; max: number }; home: { min: number; max: number } };
   /** 物流 API 的檢查碼演算法（綠界規定 MD5；SHA256 只用於金流 AIO API）。 */
   checkMacAlgorithm: string;
   /** 綠界文件公開的 C2C 測試特店代號。 */
