@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Platform, Pressable, ScrollView, View } from 'react-native';
-import { Spinner, Typography } from 'heroui-native';
+import { Button, Spinner, Typography } from 'heroui-native';
 import { router } from 'expo-router';
 import { BarChart3, Eye, Receipt, Wallet } from 'lucide-react-native';
 
@@ -123,6 +123,7 @@ export default function SellerAnalyticsScreen() {
       ? reviewList.reduce((sum, review) => sum + review.rating, 0) / reviewList.length
       : 0;
   const photoReviews = reviewList.filter((review) => review.images.length > 0).length;
+  const unansweredReviews = reviewList.filter((review) => !review.seller_reply).length;
 
   const points = useMemo(
     () =>
@@ -360,6 +361,14 @@ export default function SellerAnalyticsScreen() {
               />
             </>
           )}
+
+          <Button variant="secondary" size="sm" onPress={() => router.push('/seller/reviews')}>
+            <Button.Label>
+              {unansweredReviews > 0
+                ? `回覆買家評價（${unansweredReviews} 則待回覆）`
+                : '管理買家評價'}
+            </Button.Label>
+          </Button>
         </View>
       </ScrollView>
 

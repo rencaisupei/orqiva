@@ -330,37 +330,55 @@ export default function ProductDetailScreen() {
           </View>
         </View>
 
-        <Pressable
-          className="bg-surface mt-3 flex-row items-center gap-3 p-4"
-          onPress={() => router.push({ pathname: '/store/[id]', params: { id: product.store_id } })}
-        >
-          <Avatar size="md" alt={product.store?.name ?? '賣家'}>
-            {product.store?.logo_url ? (
-              <Avatar.Image source={{ uri: product.store.logo_url }} />
-            ) : null}
-            <Avatar.Fallback />
-          </Avatar>
-          <View className="flex-1">
-            <View className="flex-row items-center gap-1.5">
-              <Typography type="body" className="text-navy" style={{ fontWeight: '600' }}>
-                {product.store?.name ?? '極貨網賣家'}
-              </Typography>
-              <ShieldCheck size={14} color={BRAND.blue} />
+        <View className="bg-surface mt-3 flex-row items-center gap-3 p-4">
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`查看 ${product.store?.name ?? '賣家'} 的店舖`}
+            className="flex-1 flex-row items-center gap-3"
+            onPress={() =>
+              router.push({ pathname: '/store/[id]', params: { id: product.store_id } })
+            }
+          >
+            <Avatar size="md" alt={product.store?.name ?? '賣家'}>
+              {product.store?.logo_url ? (
+                <Avatar.Image source={{ uri: product.store.logo_url }} />
+              ) : null}
+              <Avatar.Fallback />
+            </Avatar>
+            <View className="flex-1">
+              <View className="flex-row items-center gap-1.5">
+                <Typography
+                  type="body"
+                  numberOfLines={1}
+                  className="text-navy flex-1"
+                  style={{ fontWeight: '600' }}
+                >
+                  {product.store?.name ?? '極貨網賣家'}
+                </Typography>
+                <ShieldCheck size={14} color={BRAND.blue} />
+              </View>
+              <View className="flex-row items-center gap-2">
+                <StarRating
+                  rating={product.store?.rating ?? 0}
+                  count={product.store?.rating_count ?? 0}
+                />
+                <Typography type="body-xs" color="muted" numberOfLines={1}>
+                  {product.store?.location ?? ''}
+                </Typography>
+              </View>
             </View>
-            <View className="flex-row items-center gap-2">
-              <StarRating
-                rating={product.store?.rating ?? 0}
-                count={product.store?.rating_count ?? 0}
-              />
-              <Typography type="body-xs" color="muted">
-                {product.store?.location ?? ''}
-              </Typography>
-            </View>
-          </View>
-          <Button variant="secondary" size="sm">
+          </Pressable>
+          {/* 按鈕自己帶 onPress：HeroUI Button 是 Pressable，包在外層 Pressable 裡會吞掉點擊。 */}
+          <Button
+            variant="secondary"
+            size="sm"
+            onPress={() =>
+              router.push({ pathname: '/store/[id]', params: { id: product.store_id } })
+            }
+          >
             <Button.Label>進入店舖</Button.Label>
           </Button>
-        </Pressable>
+        </View>
 
         <View className="bg-surface mt-3 gap-2 p-4">
           <Typography type="body" className="text-navy" style={{ fontWeight: '600' }}>

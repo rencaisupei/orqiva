@@ -28,6 +28,7 @@ import { formatPrice } from '@/lib/format';
 import { useUserId } from '@/lib/session';
 import {
   LOCATIONS,
+  MAX_LOW_STOCK_THRESHOLD,
   SHIPPING_METHODS,
   validateBulkTiers,
   type BulkTier,
@@ -68,6 +69,7 @@ export default function NewProductScreen() {
   const [price, setPrice] = useState('');
   const [originalPrice, setOriginalPrice] = useState('');
   const [stock, setStock] = useState('1');
+  const [lowStockThreshold, setLowStockThreshold] = useState('3');
   const [specs, setSpecs] = useState<SpecRow[]>([newSpecRow()]);
   const [bulkTiers, setBulkTiers] = useState<BulkTier[]>([]);
   const [shipping, setShipping] = useState<string[]>(['宅配']);
@@ -249,6 +251,7 @@ export default function NewProductScreen() {
       price: Number(price),
       originalPrice: originalPrice ? Number(originalPrice) : null,
       stock: Number(stock),
+      lowStockThreshold: Math.min(MAX_LOW_STOCK_THRESHOLD, Number(lowStockThreshold || 0)),
       condition,
       location,
       shippingMethods: shipping,
@@ -424,6 +427,16 @@ export default function NewProductScreen() {
               />
               <Typography type="body-xs" color="muted">
                 買家下單後庫存會自動扣減，訂單取消則自動回補。
+              </Typography>
+              <Label>低庫存提醒門檻</Label>
+              <Input
+                placeholder="0 = 不提醒"
+                keyboardType="numeric"
+                value={lowStockThreshold}
+                onChangeText={(v) => setLowStockThreshold(v.replace(/\D/g, ''))}
+              />
+              <Typography type="body-xs" color="muted">
+                庫存剩下這個數量（含）以下時，我們會發通知提醒你補貨。填 0 或留空＝不提醒。
               </Typography>
             </>
           ) : null}

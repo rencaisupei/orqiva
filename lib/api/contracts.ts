@@ -387,6 +387,8 @@ export type NotifyResponses = {
   unregister_token: EdgeJson;
   send_message: { ok: boolean; messageId: string; moderation: MessageScanResult | null };
   support_reply: { ok: boolean };
+  /** 賣家回覆買家評價。notified = 這次是否真的通知了買家（清空回覆不通知）。 */
+  reply_review: { ok: boolean; notified: boolean };
   push_test: { ok: boolean; sent: number };
 };
 

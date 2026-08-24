@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { FlatList, Pressable, View } from 'react-native';
 import { Button, Chip, Spinner, Typography, useToast } from 'heroui-native';
 import { router } from 'expo-router';
@@ -5,6 +6,7 @@ import { PackagePlus, Pencil, ShieldAlert, Trash2 } from 'lucide-react-native';
 
 import { AppImage } from '@/components/AppImage';
 import { EmptyState } from '@/components/EmptyState';
+import { SelectPill } from '@/components/SelectPill';
 import { SellerTabBar } from '@/components/SellerTabBar';
 import { SignInRequired } from '@/components/SignInRequired';
 import { useModerateProduct } from '@/lib/api/moderation';
@@ -12,7 +14,7 @@ import { useDeleteProduct, useSellerProducts, useUpdateProduct } from '@/lib/api
 import { BRAND } from '@/lib/brand';
 import { formatPrice } from '@/lib/format';
 import { useUserId } from '@/lib/session';
-import { MODERATION_STATUS_LABEL } from '@/lib/types';
+import { isLowStock, MODERATION_STATUS_LABEL } from '@/lib/types';
 
 export default function SellerProductsScreen() {
   const userId = useUserId();
@@ -21,6 +23,11 @@ export default function SellerProductsScreen() {
   const updateProduct = useUpdateProduct();
   const deleteProduct = useDeleteProduct();
   const moderate = useModerateProduct();
+  const [lowStockOnly, setLowStockOnly] = useState(false);
+
+  const list = products ?? [];
+  const lowStockCount = list.filter(isLowStock).length;
+  const visible = lowStockOnly ? list.filter(isLowStock) : list;
 
   if (!userId) {
     return <SignInRequired title="登入後管理商品" />;
@@ -36,9 +43,31 @@ export default function SellerProductsScreen() {
 
   return (
     <View className="bg-background flex-1">
+      {lowStockCount > 0 ? (
+        <View className="bg-surface flex-row flex-wrap items-center gap-2 px-4 py-3">
+          <Typography type="body-sm" className="text-brand-orange flex-1">
+            {lowStockCount} 件商品庫存低於提醒門檻
+          </Typography>
+          <SelectPill
+            size="sm"
+            tone="soft"
+            label="全部"
+            selected={!lowStockOnly}
+            onPress={() => setLowStockOnly(false)}
+          />
+          <SelectPill
+            size="sm"
+            tone="soft"
+            label={`低庫存 ${lowStockCount}`}
+            selected={lowStockOnly}
+            onPress={() => setLowStockOnly(true)}
+          />
+        </View>
+      ) : null}
+
       <FlatList
         className="flex-1"
-        data={products ?? []}
+        data={visible}
         keyExtractor={(item) => item.id}
         contentContainerClassName="p-4 gap-3 pb-6"
         ListEmptyComponent={
@@ -77,6 +106,11 @@ export default function SellerProductsScreen() {
                   </Typography>
                 </View>
                 <View className="flex-row flex-wrap items-center gap-1.5">
+                  {isLowStock(item) ? (
+                    <Chip disabled size="sm" variant="soft" color="warning">
+                      {item.stock <= 0 ? '已售完' : `低庫存 ≤ ${item.low_stock_threshold}`}
+                    </Chip>
+                  ) : null}
                   <Chip
                     disabled
                     size="sm"

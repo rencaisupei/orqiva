@@ -8,6 +8,7 @@ import {
   Megaphone,
   MessageCircle,
   PackageCheck,
+  PackageX,
   Receipt,
   Settings2,
   ShieldCheck,
@@ -55,6 +56,8 @@ function iconFor(type: NotificationType) {
       return <Megaphone size={18} color={BRAND.blue} />;
     case 'price_drop':
       return <TrendingDown size={18} color={BRAND.orange} />;
+    case 'low_stock':
+      return <PackageX size={18} color={BRAND.orange} />;
     default:
       return <BellRing size={18} color={BRAND.blue} />;
   }
@@ -70,6 +73,7 @@ const PREF_ROWS: { key: keyof NotificationPrefs; label: string; hint: string }[]
     hint: `每天提醒領${COIN_NAME}、入帳時通知（賣家）`,
   },
   { key: 'notify_price_drop', label: '收藏降價', hint: '收藏清單裡的商品降價時通知' },
+  { key: 'notify_low_stock', label: '低庫存提醒', hint: '商品庫存低於門檻時通知（賣家）' },
 ];
 
 export default function NotificationsScreen() {

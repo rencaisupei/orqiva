@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
-import { Button, Input, Label, Spinner, TextArea, useToast } from 'heroui-native';
+import { Button, Input, Label, Spinner, TextArea, Typography, useToast } from 'heroui-native';
 import { router, useLocalSearchParams } from 'expo-router';
 
 import { AppImage } from '@/components/AppImage';
@@ -17,6 +17,7 @@ import { goBackOrReplace } from '@/lib/navigation';
 import { useUserId } from '@/lib/session';
 import {
   LOCATIONS,
+  MAX_LOW_STOCK_THRESHOLD,
   SHIPPING_METHODS,
   validateBulkTiers,
   type BulkTier,
@@ -39,6 +40,7 @@ export default function EditProductScreen() {
   const [price, setPrice] = useState('');
   const [originalPrice, setOriginalPrice] = useState('');
   const [stock, setStock] = useState('0');
+  const [lowStockThreshold, setLowStockThreshold] = useState('0');
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [condition, setCondition] = useState<ProductCondition>('new');
   const [location, setLocation] = useState<string>(LOCATIONS[0]);
@@ -63,6 +65,7 @@ export default function EditProductScreen() {
     setPrice(String(Math.round(product.price)));
     setOriginalPrice(product.original_price ? String(Math.round(product.original_price)) : '');
     setStock(String(product.stock));
+    setLowStockThreshold(String(product.low_stock_threshold ?? 0));
     setCategoryId(product.category_id);
     setCondition(product.condition);
     setLocation(product.location);
@@ -136,6 +139,7 @@ export default function EditProductScreen() {
           price: priceValue,
           original_price: originalPrice ? Number(originalPrice) : null,
           stock: Number(stock || 0),
+          low_stock_threshold: Math.min(MAX_LOW_STOCK_THRESHOLD, Number(lowStockThreshold || 0)),
           category_id: categoryId,
           condition,
           location,
@@ -203,6 +207,19 @@ export default function EditProductScreen() {
                 onChangeText={(v) => setStock(v.replace(/\D/g, ''))}
               />
             </View>
+          </View>
+
+          <View>
+            <Label>低庫存提醒門檻</Label>
+            <Input
+              keyboardType="numeric"
+              placeholder="0 = 不提醒"
+              value={lowStockThreshold}
+              onChangeText={(v) => setLowStockThreshold(v.replace(/\D/g, ''))}
+            />
+            <Typography type="body-xs" color="muted" className="mt-1">
+              庫存剩下這個數量（含）以下時通知你補貨。填 0 ＝關閉提醒。
+            </Typography>
           </View>
 
           <BulkTierEditor tiers={bulkTiers} onChange={setBulkTiers} price={Number(price) || 0} />

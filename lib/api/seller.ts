@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { bilt, callLogistics, callModeration } from '@/lib/backend';
+import { bilt, callLogistics, callModeration, callNotify } from '@/lib/backend';
 import { addRole } from '@/lib/session';
 import type {
   BulkTier,
@@ -257,6 +257,8 @@ export type ProductDraft = {
   price: number;
   originalPrice: number | null;
   stock: number;
+  /** 低庫存提醒門檻；0 = 不提醒。 */
+  lowStockThreshold: number;
   condition: ProductCondition;
   location: string;
   shippingMethods: string[];
@@ -287,6 +289,7 @@ export function useCreateProduct() {
           price: draft.price,
           original_price: draft.originalPrice,
           stock: draft.stock,
+          low_stock_threshold: draft.lowStockThreshold,
           condition: draft.condition,
           location: draft.location,
           shipping_methods: draft.shippingMethods,
@@ -351,6 +354,7 @@ export function useUpdateProduct() {
         price: number;
         original_price: number | null;
         stock: number;
+        low_stock_threshold: number;
         status: 'active' | 'draft' | 'suspended';
         category_id: string | null;
         condition: ProductCondition;
@@ -363,11 +367,18 @@ export function useUpdateProduct() {
         (key) => key in input.patch,
       );
 
+      /*
+       * 庫存或門檻一動，上一次的低庫存提醒就失效：清掉戳記，
+       * 這樣補貨後再次跌破門檻時賣家會再收到一次提醒。
+       */
+      const stockChanged = 'stock' in input.patch || 'low_stock_threshold' in input.patch;
+
       const { error } = await bilt
         .from('products')
         .update({
           ...input.patch,
           ...(contentChanged ? { moderation_status: 'pending' } : {}),
+          ...(stockChanged ? { low_stock_notified_at: null } : {}),
           updated_at: new Date().toISOString(),
         })
         .eq('id', input.productId);
@@ -803,6 +814,25 @@ export function useStoreReviews(storeId: string | null) {
         .returns<StoreReview[]>();
       if (error) throw new Error(error.message);
       return data ?? [];
+    },
+  });
+}
+
+/**
+ * 賣家回覆買家評價。回覆欄位只有 notify 函式（service key）寫得進去 ——
+ * reviews 沒有給賣家的 update 政策，因為 RLS 無法限制可寫的欄位，
+ * 給了就等於讓賣家改得動買家的星等與評語。
+ *
+ * 送空字串＝刪除自己的回覆（不會再通知買家）。
+ */
+export function useReplyToReview() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { reviewId: string; productId: string; reply: string }) =>
+      callNotify('reply_review', { reviewId: input.reviewId, reply: input.reply }),
+    onSuccess: (_data, input) => {
+      void qc.invalidateQueries({ queryKey: ['store-reviews'] });
+      void qc.invalidateQueries({ queryKey: ['reviews', input.productId] });
     },
   });
 }

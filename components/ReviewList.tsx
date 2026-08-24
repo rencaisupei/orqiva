@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Modal, Pressable, ScrollView, View } from 'react-native';
 import { Separator, Typography } from 'heroui-native';
-import { X } from 'lucide-react-native';
+import { Store as StoreIcon, X } from 'lucide-react-native';
 
 import { AppImage } from '@/components/AppImage';
 import { StarRating } from '@/components/StarRating';
@@ -14,15 +14,20 @@ type Props = {
   reviews: (Review & { productTitle?: string | null })[];
   /** 顯示 buyer 頭像。賣家分析頁的窄卡片可以關掉。 */
   showAvatar?: boolean;
+  /**
+   * 每一則評價下方的額外內容。賣家的評價管理頁用它放「回覆／編輯回覆」按鈕與
+   * 行內編輯器；買家看到的商品頁不會傳，所以同一份清單兩邊共用。
+   */
+  renderAction?: (review: Review) => ReactNode;
 };
 
 /**
- * 評價清單（買家名稱、星等、文字、實拍照片）。
+ * 評價清單（買家名稱、星等、文字、實拍照片、賣家回覆）。
  *
  * 照片點下去用全螢幕 Modal 放大：買家看實拍圖是評價的重點，縮圖看不出東西。
- * 商品頁與賣家分析頁共用這一份，兩邊的評價長相才會一致。
+ * 商品頁與賣家頁共用這一份，兩邊的評價長相才會一致。
  */
-export function ReviewList({ reviews, showAvatar = true }: Props) {
+export function ReviewList({ reviews, showAvatar = true, renderAction }: Props) {
   const [preview, setPreview] = useState<string | null>(null);
 
   return (
@@ -81,6 +86,31 @@ export function ReviewList({ reviews, showAvatar = true }: Props) {
           <Typography type="body-xs" color="muted">
             {formatDate(review.created_at)}
           </Typography>
+
+          {review.seller_reply ? (
+            <View className="bg-background gap-1 rounded-xl p-3">
+              <View className="flex-row items-center gap-1.5">
+                <StoreIcon size={13} color={BRAND.blue} />
+                <Typography
+                  type="body-xs"
+                  className="text-brand-blue flex-1"
+                  style={{ fontWeight: '700' }}
+                >
+                  賣家回覆
+                </Typography>
+                {review.seller_reply_at ? (
+                  <Typography type="body-xs" color="muted">
+                    {formatDate(review.seller_reply_at)}
+                  </Typography>
+                ) : null}
+              </View>
+              <Typography type="body-sm" color="muted">
+                {review.seller_reply}
+              </Typography>
+            </View>
+          ) : null}
+
+          {renderAction ? renderAction(review) : null}
         </View>
       ))}
 

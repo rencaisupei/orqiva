@@ -12,13 +12,20 @@ export type UserAccount = {
   notify_coins: boolean;
   /** 收藏商品降價時通知買家。 */
   notify_price_drop: boolean;
+  /** 商品庫存低於賣家設定的門檻時通知賣家。 */
+  notify_low_stock: boolean;
   created_at: string;
   updated_at: string;
 };
 
 export type NotificationPrefs = Pick<
   UserAccount,
-  'notify_messages' | 'notify_orders' | 'notify_moderation' | 'notify_coins' | 'notify_price_drop'
+  | 'notify_messages'
+  | 'notify_orders'
+  | 'notify_moderation'
+  | 'notify_coins'
+  | 'notify_price_drop'
+  | 'notify_low_stock'
 >;
 
 export type Profile = {
@@ -256,6 +263,10 @@ export type Product = {
   price: number;
   original_price: number | null;
   stock: number;
+  /** 低庫存提醒門檻；0 = 賣家關閉提醒。 */
+  low_stock_threshold: number;
+  /** 上一次發出低庫存提醒的時間；庫存回到門檻以上時由伺服器清空。 */
+  low_stock_notified_at: string | null;
   condition: ProductCondition;
   location: string;
   shipping_methods: string[];
@@ -543,6 +554,10 @@ export type Review = {
   images: string[];
   created_at: string;
   profile: Pick<Profile, 'id' | 'display_name' | 'avatar_url'> | null;
+  /** 賣家的公開回覆；null = 還沒回覆。只有 notify 函式寫得進去。 */
+  seller_reply: string | null;
+  seller_reply_at: string | null;
+  seller_reply_by: string | null;
 };
 
 /** 賣家分析頁用的評價：多帶商品資訊，因為一間店有很多商品。 */
@@ -561,6 +576,17 @@ export function ratingBreakdown(reviews: Pick<Review, 'rating'>[]): number[] {
 }
 
 export const MAX_REVIEW_IMAGES = 5;
+
+/** 賣家回覆的字數上限（與 notify 函式的 MAX_REPLY_LENGTH 一致）。 */
+export const MAX_REVIEW_REPLY = 500;
+
+/** 低庫存門檻的上限，避免賣家誤填成庫存數字。 */
+export const MAX_LOW_STOCK_THRESHOLD = 999;
+
+/** 這件商品目前是否低於賣家設定的提醒門檻（門檻 0 = 關閉提醒）。 */
+export function isLowStock(product: Pick<Product, 'stock' | 'low_stock_threshold'>): boolean {
+  return product.low_stock_threshold > 0 && product.stock <= product.low_stock_threshold;
+}
 
 export type Conversation = {
   id: string;
@@ -594,7 +620,8 @@ export type NotificationType =
   | 'moderation'
   | 'support'
   | 'logistics'
-  | 'price_drop';
+  | 'price_drop'
+  | 'low_stock';
 
 export type AppNotification = {
   id: string;

@@ -209,6 +209,7 @@ export default function RootLayout() {
               <Stack.Screen name="seller/onboarding" options={{ title: '成為極貨網賣家' }} />
               <Stack.Screen name="seller/products" options={{ title: '商品管理' }} />
               <Stack.Screen name="seller/analytics" options={{ title: '銷售分析' }} />
+              <Stack.Screen name="seller/reviews" options={{ headerShown: false }} />
               <Stack.Screen name="seller/new-product" options={{ title: '新增商品' }} />
               <Stack.Screen name="seller/edit/[id]" options={{ title: '編輯商品' }} />
               <Stack.Screen name="seller/orders" options={{ headerShown: false }} />

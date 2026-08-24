@@ -8,6 +8,7 @@ import {
   ClipboardList,
   Coins,
   MessageCircle,
+  MessageSquareQuote,
   Package,
   Plus,
   Repeat,
@@ -274,6 +275,12 @@ export default function SellerDashboardScreen() {
             iconBg={BRAND.blueSoft}
             label="銷售分析"
             href="/seller/analytics"
+          />
+          <MenuRow
+            icon={<MessageSquareQuote size={18} color={BRAND.blue} />}
+            iconBg={BRAND.blueSoft}
+            label="買家評價與回覆"
+            href="/seller/reviews"
           />
           <MenuRow
             icon={<MessageCircle size={18} color={BRAND.blue} />}

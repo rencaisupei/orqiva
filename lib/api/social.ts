@@ -224,7 +224,7 @@ export function useNotificationPrefs(userId: string | null) {
       const { data, error } = await bilt
         .from('users')
         .select(
-          'notify_messages, notify_orders, notify_moderation, notify_coins, notify_price_drop',
+          'notify_messages, notify_orders, notify_moderation, notify_coins, notify_price_drop, notify_low_stock',
         )
         .eq('id', userId!)
         .maybeSingle();
@@ -236,6 +236,7 @@ export function useNotificationPrefs(userId: string | null) {
           notify_moderation: true,
           notify_coins: true,
           notify_price_drop: true,
+          notify_low_stock: true,
         }
       );
     },
