@@ -62,6 +62,13 @@ export default function OrdersScreen() {
   const keyword = search.trim().toLowerCase();
   const rangeDays = RANGES.find((item) => item.key === range)?.days ?? null;
 
+  /* 出貨狀態只屬於「全部」這一頁：切到待付款等分頁時同時把貨態條件收回，
+     否則使用者看到的筆數會被一個看不到的篩選條件影響。 */
+  const changeStatus = (next: StatusFilter) => {
+    setStatus(next);
+    if (next !== 'all') setShipment('all');
+  };
+
   const filtered = useMemo(() => {
     const cutoff = rangeDays ? Date.now() - rangeDays * DAY_MS : null;
     return (orders ?? []).filter((order) => {
@@ -97,9 +104,16 @@ export default function OrdersScreen() {
           </SearchField.Group>
         </SearchField>
 
-        <SegmentedControl items={STATUS_SEGMENTS} value={status} onChange={setStatus} size="sm" />
+        <SegmentedControl
+          items={STATUS_SEGMENTS}
+          value={status}
+          onChange={changeStatus}
+          size="sm"
+        />
 
-        <ShipmentStatusBar orders={orders ?? []} value={shipment} onChange={setShipment} />
+        {status === 'all' ? (
+          <ShipmentStatusBar orders={orders ?? []} value={shipment} onChange={setShipment} />
+        ) : null}
 
         <View className="flex-row flex-wrap gap-2">
           {RANGES.map((item) => (

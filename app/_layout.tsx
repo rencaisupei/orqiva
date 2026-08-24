@@ -205,6 +205,7 @@ export default function RootLayout() {
               <Stack.Screen name="profile/edit" options={{ title: '編輯個人資料' }} />
               <Stack.Screen name="profile/delete" options={{ title: '刪除帳號' }} />
               <Stack.Screen name="seller/index" options={{ headerShown: false }} />
+              <Stack.Screen name="seller/market" options={{ headerShown: false }} />
               <Stack.Screen name="seller/onboarding" options={{ title: '成為極貨網賣家' }} />
               <Stack.Screen name="seller/products" options={{ title: '商品管理' }} />
               <Stack.Screen name="seller/analytics" options={{ title: '銷售分析' }} />

@@ -24,6 +24,13 @@ const DEFAULTS: AppSettings = {
   cleanup_last_run_at: null,
   cleanup_running_since: null,
   cleanup_last_total: 0,
+  auto_review_enabled: true,
+  auto_review_interval_hours: 6,
+  auto_approve_max_risk: 20,
+  auto_reject_min_risk: 90,
+  auto_review_last_run_at: null,
+  auto_review_running_since: null,
+  auto_review_last_total: 0,
   updated_at: new Date(0).toISOString(),
   updated_by: null,
 };

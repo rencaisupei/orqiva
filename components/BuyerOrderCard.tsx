@@ -1,25 +1,15 @@
 import { Pressable, View } from 'react-native';
-import { Button, Chip, Separator, Typography, useToast } from 'heroui-native';
+import { Button, Separator, Typography, useToast } from 'heroui-native';
 import { router } from 'expo-router';
-import { ChevronRight, Store as StoreIcon, Truck } from 'lucide-react-native';
+import { ChevronRight, Store as StoreIcon } from 'lucide-react-native';
 
 import { AppImage } from '@/components/AppImage';
-import { shipmentChipColor } from '@/components/ShipmentStatusBar';
 import { useReorder, useSetOrderStatus } from '@/lib/api/commerce';
 import { useStartConversation } from '@/lib/api/social';
 import { BRAND } from '@/lib/brand';
 import { formatDateTime, formatNumber, formatPrice } from '@/lib/format';
 import { useUserId } from '@/lib/session';
-import {
-  isCvsOrder,
-  LOGISTICS_STATUS_LABEL,
-  ORDER_STATUS_LABEL,
-  SHIPMENT_STAGE_LABEL,
-  shipmentStage,
-  toLogisticsStatus,
-  type Order,
-  type OrderStatus,
-} from '@/lib/types';
+import { ORDER_STATUS_LABEL, type Order, type OrderStatus } from '@/lib/types';
 
 /** 狀態文字的顏色：進行中用品牌色、已取消紅、已完成灰。 */
 const STATUS_COLOR: Record<OrderStatus, string> = {
@@ -30,25 +20,12 @@ const STATUS_COLOR: Record<OrderStatus, string> = {
   cancelled: BRAND.danger,
 };
 
-/** 取貨門市／寄貨編號：標籤固定寬度，多筆訂單的值上下對齊。 */
-function DetailRow({ label, value }: { label: string; value: string | null }) {
-  if (!value) return null;
-  return (
-    <View className="flex-row items-start gap-2">
-      <Typography type="body-xs" color="muted" className="w-16 shrink-0">
-        {label}
-      </Typography>
-      <Typography type="body-xs" numberOfLines={2} className="text-navy flex-1">
-        {value}
-      </Typography>
-    </View>
-  );
-}
-
 /**
  * 買家的訂單卡片。
  *
- * 結構刻意分成兩層：上半部（店舖、貨態、商品）是一個 Pressable，整塊點下去進訂單
+ * 取貨門市、寄貨編號等物流細節只在訂單詳情頁呈現，列表卡片保持精簡。
+ *
+ * 結構刻意分成兩層：上半部（店舖、商品、金額）是一個 Pressable，整塊點下去進訂單
  * 詳情；下半部的操作按鈕放在 Pressable 外面，避免兩層可點區互相吃掉觸控。
  */
 export function BuyerOrderCard({ order }: { order: Order }) {
@@ -58,8 +35,6 @@ export function BuyerOrderCard({ order }: { order: Order }) {
   const reorder = useReorder();
   const startConversation = useStartConversation();
 
-  const logisticsStatus = toLogisticsStatus(order.logistics_status);
-  const stage = shipmentStage(logisticsStatus);
   const itemCount = order.order_items.reduce((sum, line) => sum + line.quantity, 0);
   const visibleLines = order.order_items.slice(0, 2);
   const hiddenCount = order.order_items.length - visibleLines.length;
@@ -155,28 +130,6 @@ export function BuyerOrderCard({ order }: { order: Order }) {
             {ORDER_STATUS_LABEL[order.status]}
           </Typography>
         </View>
-
-        {/* 出貨狀態在商品上方：進到列表最先看到的就是「貨到哪了」。 */}
-        {isCvsOrder(order) ? (
-          <View className="bg-background gap-2 rounded-xl p-3">
-            <View className="flex-row items-center gap-2">
-              <Truck size={15} color={BRAND.blue} />
-              <Typography
-                type="body-xs"
-                numberOfLines={1}
-                className="text-navy flex-1"
-                style={{ fontWeight: '600' }}
-              >
-                {logisticsStatus ? LOGISTICS_STATUS_LABEL[logisticsStatus] : '賣家尚未建立物流單'}
-              </Typography>
-              <Chip disabled size="sm" variant="soft" color={shipmentChipColor(stage)}>
-                {SHIPMENT_STAGE_LABEL[stage]}
-              </Chip>
-            </View>
-            <DetailRow label="取貨門市" value={order.cvs_store_name} />
-            <DetailRow label="寄貨編號" value={order.logistics_shipment_no} />
-          </View>
-        ) : null}
 
         {/* 商品列：縮圖 + 名稱在左，單價與數量靠右對齊。 */}
         <View className="gap-3">

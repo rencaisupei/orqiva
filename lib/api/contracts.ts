@@ -127,6 +127,59 @@ export type AccountDeletionSummary = {
   confirmPhrase: string;
 };
 
+/* ── ai-moderation ───────────────────────────────────────────── */
+
+/**
+ * 自動審核巡邏的逐項結果。`count` 是這一輪真的處理掉幾筆（不是還剩幾筆）。
+ */
+export type AutoReviewTask = {
+  key: string;
+  label: string;
+  count: number;
+  error: string | null;
+};
+
+export type AutoReviewResult = {
+  ok: boolean;
+  /** false = 這次沒有真的執行（未到期／已停用／另一個執行中）。 */
+  ran: boolean;
+  skipped: 'disabled' | 'not_due' | 'locked' | null;
+  startedAt: string | null;
+  durationMs: number;
+  nextDueAt: string | null;
+  total: number;
+  /** 只有管理員拿得到逐項明細，一般觸發者只會收到 ran / nextDueAt。 */
+  tasks: AutoReviewTask[];
+};
+
+export type AutoReviewRun = {
+  id: string;
+  started_at: string;
+  finished_at: string | null;
+  trigger: 'auto' | 'admin';
+  total_actions: number;
+  duration_ms: number | null;
+  tasks: AutoReviewTask[];
+  error: string | null;
+};
+
+export type AutoReviewStatus = {
+  enabled: boolean;
+  intervalHours: number;
+  /** 風險分數 ≤ 這個值自動放行。 */
+  approveMaxRisk: number;
+  /** 風險分數 ≥ 這個值自動退回；101 代表關閉自動退回。 */
+  rejectMinRisk: number;
+  lastRunAt: string | null;
+  lastTotal: number;
+  nextDueAt: string | null;
+  dueNow: boolean;
+  running: boolean;
+  /** 現在等著被自動處理的筆數，讓管理員知道下一輪會做什麼。 */
+  pending: { key: string; label: string; rows: number }[];
+  recentRuns: AutoReviewRun[];
+};
+
 /* ── maintenance ─────────────────────────────────────────────── */
 
 export type CleanupTaskResult = {
@@ -312,6 +365,8 @@ export type ModerationResponses = {
   scan_message: EdgeJson;
   resolve_flag: { ok: boolean };
   triage_report: { severity: ReportSeverity; summary: string; suggestion: string };
+  auto_review: AutoReviewResult;
+  auto_status: AutoReviewStatus;
 };
 
 export type MaintenanceResponses = {

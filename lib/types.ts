@@ -574,6 +574,18 @@ export type AppSettings = {
   /** 有值代表某一次清理正在進行（5 分鐘後視為逾時可接手）。 */
   cleanup_running_since: string | null;
   cleanup_last_total: number;
+  /** 自動審核：關閉後 AI 只在賣家送審那一刻跑一次，佇列要靠人工清。 */
+  auto_review_enabled: boolean;
+  /** 兩次自動巡邏最短間隔（小時，1~168）。 */
+  auto_review_interval_hours: number;
+  /** 風險分數 ≤ 這個值的待覆核商品自動放行（0~100）。 */
+  auto_approve_max_risk: number;
+  /** 風險分數 ≥ 這個值的待覆核商品自動退回；101 = 不自動退回。 */
+  auto_reject_min_risk: number;
+  auto_review_last_run_at: string | null;
+  /** 有值代表某一次自動巡邏正在進行（5 分鐘後視為逾時可接手）。 */
+  auto_review_running_since: string | null;
+  auto_review_last_total: number;
   updated_at: string;
   updated_by: string | null;
 };

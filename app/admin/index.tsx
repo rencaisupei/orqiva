@@ -18,6 +18,7 @@ import { ChevronRight, ShieldAlert, ShieldCheck, Truck, Wrench } from 'lucide-re
 import { AdminHomePanel } from '@/components/AdminHomePanel';
 import { AdminPromoPanel } from '@/components/AdminPromoPanel';
 import { AppImage } from '@/components/AppImage';
+import { AutoReviewPanel } from '@/components/AutoReviewPanel';
 import { CleanupPanel } from '@/components/CleanupPanel';
 import { EmptyState } from '@/components/EmptyState';
 import { NativeSelect } from '@/components/NativeSelect';
@@ -835,6 +836,8 @@ export default function AdminScreen() {
 
         {tab === 'moderation' ? (
           <>
+            <AutoReviewPanel />
+
             <View className="bg-surface gap-1 rounded-2xl p-4">
               <Typography type="body" className="text-navy" style={{ fontWeight: '600' }}>
                 商品審核佇列（{(queue.data ?? []).length}）
