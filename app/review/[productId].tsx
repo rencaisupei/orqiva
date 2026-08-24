@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
-import { Button, Label, Spinner, TextArea, Typography, useToast } from 'heroui-native';
+import { Button, Label, Spinner, TextArea, Typography } from 'heroui-native';
+import { useBrandToast } from '@/components/brand/BrandToast';
 import { useLocalSearchParams } from 'expo-router';
 import { Camera, Star, X } from 'lucide-react-native';
 
@@ -30,7 +31,7 @@ export default function ReviewScreen() {
     orderItemId?: string;
   }>();
   const userId = useUserId();
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
   const { data: product } = useProduct(productId);
   const createReview = useCreateReview();
 

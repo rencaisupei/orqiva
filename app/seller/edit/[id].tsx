@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
-import { Button, Input, Label, Spinner, TextArea, Typography, useToast } from 'heroui-native';
+import { Button, Input, Label, Spinner, TextArea, Typography } from 'heroui-native';
+import { useBrandToast } from '@/components/brand/BrandToast';
 import { router, useLocalSearchParams } from 'expo-router';
 
 import { AppImage } from '@/components/AppImage';
@@ -27,7 +28,7 @@ import {
 export default function EditProductScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const userId = useUserId();
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
   const { data: product, isLoading } = useProduct(id);
   const { data: categories } = useCategories();
   const updateProduct = useUpdateProduct();

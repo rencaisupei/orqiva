@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, RefreshControl, ScrollView, View } from 'react-native';
-import { Button, Spinner, TextArea, Typography, useToast } from 'heroui-native';
+import { Button, Spinner, TextArea, Typography } from 'heroui-native';
+import { useBrandToast } from '@/components/brand/BrandToast';
 import { MessageSquareQuote, Star } from 'lucide-react-native';
 
 import { EmptyState } from '@/components/EmptyState';
@@ -50,7 +51,7 @@ function matches(review: StoreReview, filter: Filter): boolean {
  */
 export default function SellerReviewsScreen() {
   const userId = useUserId();
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
   const { data: store, isLoading: storeLoading } = useMyStoreQuery(userId);
   const { data: reviews, isLoading } = useStoreReviews(store?.id ?? null);
   const replyToReview = useReplyToReview();

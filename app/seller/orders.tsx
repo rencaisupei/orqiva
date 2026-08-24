@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { FlatList, Pressable, View } from 'react-native';
-import { Button, Chip, Spinner, Typography, useToast } from 'heroui-native';
+import { Button, Chip, Spinner, Typography } from 'heroui-native';
+import { useBrandToast } from '@/components/brand/BrandToast';
 import { router } from 'expo-router';
 import { ClipboardList } from 'lucide-react-native';
 
@@ -35,7 +36,7 @@ const FILTERS: Segment<StatusFilter>[] = [
 
 export default function SellerOrdersScreen() {
   const userId = useUserId();
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
   const [filter, setFilter] = useState<StatusFilter>('all');
   const [shipment, setShipment] = useState<ShipmentFilter>('all');
   const { data: orders, isLoading } = useSellerOrders(userId);

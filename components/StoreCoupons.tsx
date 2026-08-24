@@ -1,5 +1,6 @@
 import { Platform, Pressable, View } from 'react-native';
-import { Typography, useToast } from 'heroui-native';
+import { Typography } from 'heroui-native';
+import { useBrandToast } from '@/components/brand/BrandToast';
 import * as Clipboard from 'expo-clipboard';
 import { Copy, TicketPercent } from 'lucide-react-native';
 
@@ -22,7 +23,7 @@ type Props = {
  * 我的優惠券清單，賣家也不必管理領取名單。沒有可用券時整塊不顯示。
  */
 export function StoreCoupons({ storeId, productId, title = '店舖優惠券' }: Props) {
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
   const { data: coupons } = useStoreCoupons(storeId);
 
   const usable = (coupons ?? []).filter(

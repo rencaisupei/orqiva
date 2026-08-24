@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { FlatList, KeyboardAvoidingView, Platform, Pressable, View } from 'react-native';
-import { Input, Spinner, Typography, useToast } from 'heroui-native';
+import { Input, Spinner, Typography } from 'heroui-native';
+import { useBrandToast } from '@/components/brand/BrandToast';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ban, Flag, Send, ShieldAlert } from 'lucide-react-native';
 
@@ -25,7 +26,7 @@ import type { Message } from '@/lib/types';
 export default function ChatScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const userId = useUserId();
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
   const listRef = useRef<FlatList<Message>>(null);
 
   const { data: conversation, isLoading } = useConversation(id);

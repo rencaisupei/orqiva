@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
-import { Button, Checkbox, Chip, Separator, Spinner, Typography, useToast } from 'heroui-native';
+import { Button, Checkbox, Chip, Separator, Spinner, Typography } from 'heroui-native';
+import { useBrandToast } from '@/components/brand/BrandToast';
 import { router } from 'expo-router';
 import { ShoppingCart, Store as StoreIcon, Trash2 } from 'lucide-react-native';
 
@@ -44,7 +45,7 @@ function CartHeader({ subtitle }: { subtitle: string }) {
 
 export default function CartScreen() {
   const userId = useUserId();
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
   const { data: items, isLoading } = useCart(userId);
   const updateItem = useUpdateCartItem();
   const removeItem = useRemoveCartItem();

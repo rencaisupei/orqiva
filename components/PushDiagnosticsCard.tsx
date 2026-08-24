@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Platform, Pressable, View } from 'react-native';
-import { Button, Separator, Spinner, Typography, useToast } from 'heroui-native';
+import { Button, Separator, Spinner, Typography } from 'heroui-native';
+import { useBrandToast } from '@/components/brand/BrandToast';
 import * as Clipboard from 'expo-clipboard';
 import {
   BellRing,
@@ -49,7 +50,7 @@ function Row({ label, value, warn }: { label: string; value: string; warn?: bool
  * （伺服器推播 + 本機通知點擊跳轉）。僅在 iOS / Android 顯示。
  */
 export function PushDiagnosticsCard() {
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
   const [state, setState] = useState<PushDiagnostics | null>(null);
   const [busy, setBusy] = useState<'refresh' | 'enable' | 'link' | null>(null);
   const testPush = useSendTestPush();

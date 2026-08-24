@@ -1,15 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
-import {
-  Button,
-  Input,
-  Label,
-  SearchField,
-  Separator,
-  Switch,
-  Typography,
-  useToast,
-} from 'heroui-native';
+import { Button, Input, Label, SearchField, Separator, Switch, Typography } from 'heroui-native';
+import { useBrandToast } from '@/components/brand/BrandToast';
 import { ArrowDown, ArrowUp, ImagePlus, Minus, Plus, Trash2 } from 'lucide-react-native';
 
 import { AppImage } from '@/components/AppImage';
@@ -85,7 +77,7 @@ function SectionEditor({
   canMoveDown: boolean;
   onMove: (direction: -1 | 1) => void;
 }) {
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
   const save = useSaveHomeSection();
   const [title, setTitle] = useState(section.title);
   const [subtitle, setSubtitle] = useState(section.subtitle);
@@ -369,7 +361,7 @@ function SectionEditor({
 
 /** 廣告輪播管理：新增／編輯一張橫幅，並決定要不要上架。 */
 function BannerEditor({ userId }: { userId: string }) {
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
   const banners = useAdminAdBanners(true);
   const saveBanner = useSaveAdBanner();
   const deleteBanner = useDeleteAdBanner();
@@ -685,7 +677,7 @@ function BannerEditor({ userId }: { userId: string }) {
  * 產生或由管理員逐件審核，以及廣告輪播的橫幅。
  */
 export function AdminHomePanel({ userId }: { userId: string }) {
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
   const sections = useAdminHomeSections(true);
   const save = useSaveHomeSection();
 

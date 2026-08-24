@@ -9,8 +9,8 @@ import {
   Spinner,
   Switch,
   Typography,
-  useToast,
 } from 'heroui-native';
+import { useBrandToast } from '@/components/brand/BrandToast';
 import { router } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
 import { CheckCircle2, Copy, ShieldAlert, Truck, XCircle } from 'lucide-react-native';
@@ -111,7 +111,7 @@ function ToggleRow({
 export default function AdminLogisticsScreen() {
   const userId = useUserId();
   const isAdmin = useIsAdminConsole();
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
 
   const query = useAdminLogistics(isAdmin);
   const save = useSaveLogisticsSettings();

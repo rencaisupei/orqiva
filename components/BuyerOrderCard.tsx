@@ -1,5 +1,6 @@
 import { Pressable, View } from 'react-native';
-import { Button, Separator, Typography, useToast } from 'heroui-native';
+import { Button, Separator, Typography } from 'heroui-native';
+import { useBrandToast } from '@/components/brand/BrandToast';
 import { router } from 'expo-router';
 import { ChevronRight, Store as StoreIcon } from 'lucide-react-native';
 
@@ -31,7 +32,7 @@ const STATUS_COLOR: Record<OrderStatus, string> = {
  */
 export function BuyerOrderCard({ order }: { order: Order }) {
   const userId = useUserId();
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
   const setStatus = useSetOrderStatus();
   const reorder = useReorder();
   const startConversation = useStartConversation();

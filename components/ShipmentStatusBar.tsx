@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Platform, Pressable, View } from 'react-native';
-import { Typography, useToast } from 'heroui-native';
+import { Typography } from 'heroui-native';
+import { useBrandToast } from '@/components/brand/BrandToast';
 import { useFocusEffect } from 'expo-router';
 import { RefreshCw, Truck } from 'lucide-react-native';
 
@@ -74,7 +75,7 @@ type Props = {
  * 全部在途訂單（含尚未回寄貨編號的 requested）。
  */
 export function ShipmentStatusBar({ orders, value, onChange, title, stages }: Props) {
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
   const { mutate: syncShipments, isPending } = useSyncShipments();
   const [autoSyncedAt, setAutoSyncedAt] = useState<number | null>(null);
 

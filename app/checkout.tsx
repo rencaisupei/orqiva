@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
-import { Button, Input, Label, Separator, Spinner, Typography, useToast } from 'heroui-native';
+import { Button, Input, Label, Separator, Spinner, Typography } from 'heroui-native';
+import { useBrandToast } from '@/components/brand/BrandToast';
 import { router, useLocalSearchParams } from 'expo-router';
 
 import { AppImage } from '@/components/AppImage';
@@ -56,7 +57,7 @@ export default function CheckoutScreen() {
   const userId = useUserId();
   const profile = useSessionStore((s) => s.profile);
   const account = useSessionStore((s) => s.account);
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
 
   const { data: cartItems, isLoading } = useCart(userId);
   const { data: logistics } = useLogisticsConfig();

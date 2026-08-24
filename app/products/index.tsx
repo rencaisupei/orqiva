@@ -8,6 +8,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { ProductCard } from '@/components/ProductCard';
 import { RecommendationRail } from '@/components/RecommendationRail';
 import { SelectPill } from '@/components/SelectPill';
+import { BrandGuard } from '@/components/brand/BrandText';
 import { useFavoriteToggle } from '@/hooks/useFavoriteToggle';
 import { useProducts } from '@/lib/api/catalog';
 import { BRAND, BRAND_COPY } from '@/lib/brand';
@@ -91,12 +92,14 @@ export default function ProductListScreen() {
       <View className="bg-surface px-4 pt-3 pb-3">
         <View className="flex-row items-center gap-2">
           <View className="flex-1">
-            <Input
-              placeholder={BRAND_COPY.searchPlaceholder}
-              value={search}
-              onChangeText={setSearch}
-              returnKeyType="search"
-            />
+            <BrandGuard texts={[BRAND_COPY.searchPlaceholder]}>
+              <Input
+                placeholder={BRAND_COPY.searchPlaceholder}
+                value={search}
+                onChangeText={setSearch}
+                returnKeyType="search"
+              />
+            </BrandGuard>
           </View>
           <Pressable
             className="bg-brand-blue-soft h-11 w-11 items-center justify-center rounded-xl"

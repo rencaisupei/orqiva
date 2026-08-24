@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { FlatList, ScrollView, View } from 'react-native';
-import { Avatar, Button, Spinner, Typography, useToast } from 'heroui-native';
+import { Avatar, Button, Spinner, Typography } from 'heroui-native';
+import { useBrandToast } from '@/components/brand/BrandToast';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Clock, MapPin, MessageCircle } from 'lucide-react-native';
 
@@ -30,7 +31,7 @@ const ALL = 'all';
 export default function StoreScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const userId = useUserId();
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
   const { data: store, isLoading } = useStore(id);
   const { data: products } = useProducts({ storeId: id, sort: 'newest' });
   const { data: categories } = useCategories();

@@ -1,5 +1,6 @@
 import { Platform, Pressable, View } from 'react-native';
-import { Typography, useToast } from 'heroui-native';
+import { Typography } from 'heroui-native';
+import { useBrandToast } from '@/components/brand/BrandToast';
 import { Share2, TrendingDown } from 'lucide-react-native';
 
 import { ProductCard } from '@/components/ProductCard';
@@ -23,7 +24,7 @@ export function FavoriteCard({
   isFavorite: boolean;
   onToggleFavorite: (productId: string) => void;
 }) {
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
   const { product } = item;
   const drop = priceDrop(product.price, item.watch_price);
 

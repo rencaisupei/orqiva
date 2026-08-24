@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Platform, Pressable, ScrollView, View } from 'react-native';
-import { Avatar, Button, Chip, Typography, useToast } from 'heroui-native';
+import { Avatar, Button, Chip, Typography } from 'heroui-native';
+import { useBrandToast } from '@/components/brand/BrandToast';
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import {
@@ -61,7 +62,7 @@ export default function ProfileScreen() {
   const signOut = useSessionStore((s) => s.signOut);
   const showAdmin = useIsAdminConsole();
   const { data: store } = useMyStoreQuery(userId);
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
   const ota = useOtaUpdates();
 
   const checkForUpdate = () => {

@@ -1,7 +1,7 @@
 import { View } from 'react-native';
-import { Typography } from 'heroui-native';
 import { CircleAlert } from 'lucide-react-native';
 
+import { BrandText } from '@/components/brand/BrandText';
 import { BRAND } from '@/lib/brand';
 import { cn } from '@/lib/utils';
 
@@ -35,9 +35,9 @@ export function FormError({ message, className }: { message?: string | null; cla
       <View className="pt-0.5">
         <CircleAlert size={15} color={BRAND.danger} />
       </View>
-      <Typography type="body-sm" className="flex-1 leading-5" style={{ color: BRAND.danger }}>
+      <BrandText type="body-sm" className="flex-1 leading-5" style={{ color: BRAND.danger }}>
         {text}
-      </Typography>
+      </BrandText>
     </View>
   );
 }

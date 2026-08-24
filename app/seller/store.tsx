@@ -10,8 +10,8 @@ import {
   Spinner,
   TextArea,
   Typography,
-  useToast,
 } from 'heroui-native';
+import { useBrandToast } from '@/components/brand/BrandToast';
 import { router } from 'expo-router';
 import { Camera, KeyRound, Truck } from 'lucide-react-native';
 
@@ -26,7 +26,7 @@ import { SignInRequired } from '@/components/SignInRequired';
 import { useSellerEcpaySettings } from '@/lib/api/logistics';
 import { useMyStoreQuery, useSellerShippingProfile, useUpdateStore } from '@/lib/api/seller';
 import { pickImages, uploadImage } from '@/lib/api/upload';
-import { BrandText } from '@/components/brand/BrandText';
+import { BrandGuard, BrandText } from '@/components/brand/BrandText';
 import { BRAND } from '@/lib/brand';
 import { useUserId } from '@/lib/session';
 import {
@@ -39,7 +39,7 @@ import {
 
 export default function StoreSettingsScreen() {
   const userId = useUserId();
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
   const { data: store, isLoading } = useMyStoreQuery(userId);
   const { data: shippingProfile, isLoading: profileLoading } = useSellerShippingProfile(userId);
   const { data: ecpaySettings } = useSellerEcpaySettings(userId);
@@ -247,12 +247,17 @@ export default function StoreSettingsScreen() {
 
           <View>
             <Label isRequired>店舖名稱</Label>
-            <Input value={name} onChangeText={setName} />
+            {/* 店名是自己輸入的資料，被翻譯後會連著存回資料庫，所以整欄不可翻譯。 */}
+            <BrandGuard always>
+              <Input value={name} onChangeText={setName} />
+            </BrandGuard>
           </View>
 
           <View>
             <Label>店舖介紹</Label>
-            <TextArea value={description} onChangeText={setDescription} numberOfLines={4} />
+            <BrandGuard always>
+              <TextArea value={description} onChangeText={setDescription} numberOfLines={4} />
+            </BrandGuard>
             <Description>會顯示在店舖頁，寫下你賣什麼、出貨速度與售後服務。</Description>
           </View>
 

@@ -1,5 +1,6 @@
 import { View } from 'react-native';
-import { Button, Separator, Spinner, Switch, Typography, useToast } from 'heroui-native';
+import { Button, Separator, Spinner, Switch, Typography } from 'heroui-native';
+import { useBrandToast } from '@/components/brand/BrandToast';
 import { ShieldCheck } from 'lucide-react-native';
 
 import { SelectPill } from '@/components/SelectPill';
@@ -56,7 +57,7 @@ function RunSummary({ run }: { run: AutoReviewRun }) {
  * App 只在到期時觸發一次，伺服器端還有一道到期檢查與併發鎖。
  */
 export function AutoReviewPanel() {
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
   const { data: settings } = useAppSettings();
   const status = useAutoReviewStatus(true);
   const save = useSaveAppSettings();

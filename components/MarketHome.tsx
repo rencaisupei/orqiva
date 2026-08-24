@@ -8,7 +8,7 @@ import { AdCarousel } from '@/components/AdCarousel';
 import { CategoryIcon } from '@/components/CategoryIcon';
 import { HomeQuickLinks } from '@/components/HomeQuickLinks';
 import { JihuoLogo, JihuoMark } from '@/components/brand/JihuoLogo';
-import { BrandText } from '@/components/brand/BrandText';
+import { BrandGuard, BrandText } from '@/components/brand/BrandText';
 import { LaunchAdModal } from '@/components/LaunchAdModal';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductRail } from '@/components/ProductRail';
@@ -138,17 +138,19 @@ export function MarketHome({ showLaunchAd = true }: Props) {
         </View>
 
         <View className="px-4 pt-1 pb-2">
-          <SearchField value={query} onChange={setQuery}>
-            <SearchField.Group className="rounded-full">
-              <SearchField.SearchIcon />
-              <SearchField.Input
-                placeholder={BRAND_COPY.searchPlaceholder}
-                returnKeyType="search"
-                onSubmitEditing={submitSearch}
-              />
-              <SearchField.ClearButton />
-            </SearchField.Group>
-          </SearchField>
+          <BrandGuard texts={[BRAND_COPY.searchPlaceholder]}>
+            <SearchField value={query} onChange={setQuery}>
+              <SearchField.Group className="rounded-full">
+                <SearchField.SearchIcon />
+                <SearchField.Input
+                  placeholder={BRAND_COPY.searchPlaceholder}
+                  returnKeyType="search"
+                  onSubmitEditing={submitSearch}
+                />
+                <SearchField.ClearButton />
+              </SearchField.Group>
+            </SearchField>
+          </BrandGuard>
         </View>
 
         <HomeQuickLinks />

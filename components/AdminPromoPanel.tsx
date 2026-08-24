@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Button, Chip, Input, Spinner, Typography, useToast } from 'heroui-native';
+import { Button, Chip, Input, Spinner, Typography } from 'heroui-native';
+import { useBrandToast } from '@/components/brand/BrandToast';
 import { Megaphone } from 'lucide-react-native';
 
 import { AppImage } from '@/components/AppImage';
@@ -29,7 +30,7 @@ const FILTERS: { key: Filter; label: string }[] = [
 ];
 
 function RedemptionCard({ row }: { row: CoinRedemption }) {
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
   const review = useReviewRedemption();
   const [note, setNote] = useState('');
 

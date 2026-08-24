@@ -1,5 +1,6 @@
 import { ScrollView, View } from 'react-native';
-import { Button, Chip, Spinner, Typography, useToast } from 'heroui-native';
+import { Button, Chip, Spinner, Typography } from 'heroui-native';
+import { useBrandToast } from '@/components/brand/BrandToast';
 import { router } from 'expo-router';
 import {
   CalendarCheck,
@@ -166,7 +167,7 @@ function LedgerRow({ row }: { row: CoinTransaction }) {
  */
 export default function SellerCoinsScreen() {
   const userId = useUserId();
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
   const { data, isLoading, error } = useCoinSummary(userId);
   const checkin = useCoinCheckin();
   const claim = useClaimCoinTask();

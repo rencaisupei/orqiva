@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
-import { Avatar, Button, Input, Label, TextArea, Typography, useToast } from 'heroui-native';
+import { Avatar, Button, Input, Label, TextArea, Typography } from 'heroui-native';
+import { useBrandToast } from '@/components/brand/BrandToast';
 import { Camera } from 'lucide-react-native';
 
 import { FormError } from '@/components/FormError';
@@ -16,7 +17,7 @@ export default function EditProfileScreen() {
   const profile = useSessionStore((s) => s.profile);
   const account = useSessionStore((s) => s.account);
   const reload = useSessionStore((s) => s.reload);
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
   const updateProfile = useUpdateProfile();
 
   const [displayName, setDisplayName] = useState(profile?.display_name ?? '');

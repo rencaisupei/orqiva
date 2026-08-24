@@ -6,6 +6,7 @@ import { TriangleAlert } from 'lucide-react-native';
 
 import { FormError } from '@/components/FormError';
 import { SignInRequired } from '@/components/SignInRequired';
+import { BrandGuard } from '@/components/brand/BrandText';
 import { useAccountDeletionSummary, useDeleteAccount } from '@/lib/api/account';
 import { BRAND } from '@/lib/brand';
 import { useSessionStore, useUserId } from '@/lib/session';
@@ -131,12 +132,14 @@ export default function DeleteAccountScreen() {
         ) : (
           <View className="bg-surface gap-2 rounded-2xl p-4">
             <Label isRequired>確認文字</Label>
-            <Input
-              placeholder={phrase}
-              value={confirm}
-              autoCapitalize="none"
-              onChangeText={setConfirm}
-            />
+            <BrandGuard always>
+              <Input
+                placeholder={phrase}
+                value={confirm}
+                autoCapitalize="none"
+                onChangeText={setConfirm}
+              />
+            </BrandGuard>
             <Description>請逐字輸入「{phrase}」，避免誤觸。</Description>
           </View>
         )}

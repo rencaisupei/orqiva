@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
-import { Button, Input, Label, Spinner, Typography, useToast } from 'heroui-native';
+import { Button, Input, Label, Spinner, Typography } from 'heroui-native';
+import { useBrandToast } from '@/components/brand/BrandToast';
 import { router } from 'expo-router';
 import { Check, Coins, Megaphone, Store as StoreIcon, TrendingUp } from 'lucide-react-native';
 
@@ -10,6 +11,7 @@ import { FormError } from '@/components/FormError';
 import { SegmentedControl, type Segment } from '@/components/SegmentedControl';
 import { SelectPill } from '@/components/SelectPill';
 import { SignInRequired } from '@/components/SignInRequired';
+import { BrandGuard } from '@/components/brand/BrandText';
 import { useCoinSummary, useRedeemCoins, type RedeemInput } from '@/lib/api/coins';
 import { useSellerProducts } from '@/lib/api/seller';
 import { BRAND } from '@/lib/brand';
@@ -93,7 +95,7 @@ function ProductPicker({
  */
 export default function SellerPromoteScreen() {
   const userId = useUserId();
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
   const { data, isLoading } = useCoinSummary(userId);
   const { data: allProducts } = useSellerProducts(userId);
   const redeem = useRedeemCoins();
@@ -289,11 +291,13 @@ export default function SellerPromoteScreen() {
             </View>
 
             <Label isRequired>廣告標題（2-30 字）</Label>
-            <Input
-              placeholder={selectedProduct?.title ?? '例如：夏季家電下殺 5 折'}
-              value={title}
-              onChangeText={setTitle}
-            />
+            <BrandGuard texts={[selectedProduct?.title]}>
+              <Input
+                placeholder={selectedProduct?.title ?? '例如：夏季家電下殺 5 折'}
+                value={title}
+                onChangeText={setTitle}
+              />
+            </BrandGuard>
 
             <Label>一句說明（選填）</Label>
             <Input

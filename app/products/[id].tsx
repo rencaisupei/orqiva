@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
-import { Avatar, Button, Chip, Spinner, Typography, useToast } from 'heroui-native';
+import { Avatar, Button, Chip, Spinner, Typography } from 'heroui-native';
+import { useBrandToast } from '@/components/brand/BrandToast';
 import { router, useLocalSearchParams } from 'expo-router';
 import {
   Flag,
@@ -40,7 +41,7 @@ export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const width = useContentWidth();
   const userId = useUserId();
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
 
   const { data: product, isLoading } = useProduct(id);
   const { isFavorite, onToggleFavorite } = useFavoriteToggle();

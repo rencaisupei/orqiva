@@ -1,15 +1,7 @@
 import { useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
-import {
-  Button,
-  Chip,
-  Input,
-  Label,
-  Separator,
-  TextArea,
-  Typography,
-  useToast,
-} from 'heroui-native';
+import { Button, Chip, Input, Label, Separator, TextArea, Typography } from 'heroui-native';
+import { useBrandToast } from '@/components/brand/BrandToast';
 import { router } from 'expo-router';
 import { LifeBuoy, ShieldCheck } from 'lucide-react-native';
 
@@ -37,7 +29,7 @@ export default function ContactScreen() {
   const userId = useUserId();
   const account = useSessionStore((s) => s.account);
   const profile = useSessionStore((s) => s.profile);
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
 
   const createTicket = useCreateSupportTicket();
   const { data: tickets } = useMySupportTickets(userId);

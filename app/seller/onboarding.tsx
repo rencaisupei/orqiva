@@ -9,8 +9,8 @@ import {
   Separator,
   TextArea,
   Typography,
-  useToast,
 } from 'heroui-native';
+import { useBrandToast } from '@/components/brand/BrandToast';
 import { router } from 'expo-router';
 import { Camera, ShieldCheck, Sparkles, TrendingUp, Truck } from 'lucide-react-native';
 
@@ -20,14 +20,14 @@ import { SelectPill } from '@/components/SelectPill';
 import { SignInRequired } from '@/components/SignInRequired';
 import { useCreateStore, useMyStoreQuery } from '@/lib/api/seller';
 import { pickImages, uploadImage } from '@/lib/api/upload';
-import { BrandText } from '@/components/brand/BrandText';
+import { BrandGuard, BrandText } from '@/components/brand/BrandText';
 import { BRAND } from '@/lib/brand';
 import { useUserId } from '@/lib/session';
 import { LOCATIONS, validateSenderCellPhone, validateSenderName } from '@/lib/types';
 
 export default function SellerOnboardingScreen() {
   const userId = useUserId();
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
   const { data: existingStore } = useMyStoreQuery(userId);
   const createStore = useCreateStore();
 
@@ -161,7 +161,9 @@ export default function SellerOnboardingScreen() {
 
           <View>
             <Label isRequired>店舖名稱</Label>
-            <Input placeholder="例如：極貨網 3C 嚴選" value={name} onChangeText={setName} />
+            <BrandGuard always>
+              <Input placeholder="例如：極貨網 3C 嚴選" value={name} onChangeText={setName} />
+            </BrandGuard>
           </View>
 
           <View>

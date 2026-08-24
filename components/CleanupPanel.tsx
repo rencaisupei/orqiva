@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
-import { Button, Input, Separator, Spinner, Switch, Typography, useToast } from 'heroui-native';
+import { Button, Input, Separator, Spinner, Switch, Typography } from 'heroui-native';
+import { useBrandToast } from '@/components/brand/BrandToast';
 import { Eraser } from 'lucide-react-native';
 
 import {
@@ -46,7 +47,7 @@ function TaskRow({ task }: { task: CleanupTaskResult }) {
  * 這裡負責顯示狀態、調整保留天數，以及需要時手動執行一次。
  */
 export function CleanupPanel() {
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
   const { data: settings } = useAppSettings();
   const status = useMaintenanceStatus(true);
   const save = useSaveAppSettings();

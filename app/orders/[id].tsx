@@ -1,5 +1,6 @@
 import { ScrollView, View } from 'react-native';
-import { Button, Chip, Separator, Spinner, Typography, useToast } from 'heroui-native';
+import { Button, Chip, Separator, Spinner, Typography } from 'heroui-native';
+import { useBrandToast } from '@/components/brand/BrandToast';
 import { router, useLocalSearchParams } from 'expo-router';
 import { MapPin, Package, Truck } from 'lucide-react-native';
 
@@ -19,7 +20,7 @@ const TIMELINE = ['pending', 'paid', 'shipped', 'completed'] as const;
 export default function OrderDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const userId = useUserId();
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
   const { data: order, isLoading } = useOrder(id);
   const setStatus = useSetOrderStatus();
   const reorder = useReorder();

@@ -1,16 +1,7 @@
 import { useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
-import {
-  Button,
-  Chip,
-  Input,
-  Label,
-  Separator,
-  Spinner,
-  Switch,
-  Typography,
-  useToast,
-} from 'heroui-native';
+import { Button, Chip, Input, Label, Separator, Spinner, Switch, Typography } from 'heroui-native';
+import { useBrandToast } from '@/components/brand/BrandToast';
 import { router } from 'expo-router';
 import { Plus, TicketPercent, Trash2 } from 'lucide-react-native';
 
@@ -73,7 +64,7 @@ function toPositiveInt(value: string): number | null {
 /** 賣家的優惠券管理：建立促銷代碼、隨時停用，或刪掉還沒有人用過的券。 */
 export default function SellerCouponsScreen() {
   const userId = useUserId();
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
   const { data: store, isLoading: storeLoading } = useMyStoreQuery(userId);
   const { data: coupons, isLoading } = useMyCoupons(store?.id ?? null);
   const { data: products } = useSellerProducts(userId);

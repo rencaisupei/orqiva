@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { FlatList, Pressable, View } from 'react-native';
-import { Button, Chip, Spinner, Typography, useToast } from 'heroui-native';
+import { Button, Chip, Spinner, Typography } from 'heroui-native';
+import { useBrandToast } from '@/components/brand/BrandToast';
 import { router } from 'expo-router';
 import { PackagePlus, Pencil, ShieldAlert, Trash2 } from 'lucide-react-native';
 
@@ -18,7 +19,7 @@ import { isLowStock, MODERATION_STATUS_LABEL } from '@/lib/types';
 
 export default function SellerProductsScreen() {
   const userId = useUserId();
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
   const { data: products, isLoading } = useSellerProducts(userId);
   const updateProduct = useUpdateProduct();
   const deleteProduct = useDeleteProduct();

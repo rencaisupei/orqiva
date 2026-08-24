@@ -10,8 +10,8 @@ import {
   Switch,
   TextArea,
   Typography,
-  useToast,
 } from 'heroui-native';
+import { useBrandToast } from '@/components/brand/BrandToast';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ChevronRight, ShieldAlert, ShieldCheck, Truck, Wrench } from 'lucide-react-native';
 
@@ -123,7 +123,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 /** 審核佇列的單筆商品：AI 判定 + 管理員覆核。 */
 function QueueCard({ product }: { product: QueueProduct }) {
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
   const decide = useAdminDecideProduct();
   const rescan = useModerateProduct();
   const [note, setNote] = useState('');
@@ -249,7 +249,7 @@ function QueueCard({ product }: { product: QueueProduct }) {
 
 /** 客服工單：回覆與狀態切換。 */
 function TicketCard({ ticket }: { ticket: SupportTicket }) {
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
   const reply = useAdminReplyTicket();
   const [text, setText] = useState(ticket.admin_reply ?? '');
 
@@ -329,7 +329,7 @@ function hoursFromNow(hours: number): string {
 
 /** 系統維護與全站公告（維護模式開啟時，只有管理員還能使用 App）。 */
 function SystemPanel() {
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
   const { data: settings } = useAppSettings();
   const maintenance = useMaintenanceState();
   const save = useSaveAppSettings();
@@ -589,7 +589,7 @@ function SystemPanel() {
 export default function AdminScreen() {
   const userId = useUserId();
   const isAdmin = useIsAdminConsole();
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
   const params = useLocalSearchParams<{ tab?: string }>();
   // The open section is plain local state. It used to be mirrored into the URL
   // with `router.setParams`, but the router re-resolves `/admin` from the URL and
@@ -1288,7 +1288,7 @@ export default function AdminScreen() {
 
 /** 檢舉的 AI 分級按鈕（分開元件，避免整頁重繪）。 */
 function ReportTriageButton({ reportId, triaged }: { reportId: string; triaged: boolean }) {
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
   const triage = useTriageReport();
 
   return (

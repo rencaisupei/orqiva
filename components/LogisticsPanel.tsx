@@ -1,4 +1,5 @@
-import { Button, Chip, Spinner, Typography, useToast } from 'heroui-native';
+import { Button, Chip, Spinner, Typography } from 'heroui-native';
+import { useBrandToast } from '@/components/brand/BrandToast';
 import { Pressable, View } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { Copy, MapPin, RefreshCw, Store, Truck } from 'lucide-react-native';
@@ -36,7 +37,7 @@ function statusColor(status: LogisticsStatus) {
 
 /** 綠界貨到付款的收件資料、寄貨編號／黑貓託運單號與貨態。非綠界訂單不會渲染。 */
 export function LogisticsPanel({ order, role, showEvents = false }: Props) {
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
   const { data: shipment, isLoading } = useLogisticsOrder(order.id);
   const { data: events } = useLogisticsEvents(showEvents ? shipment?.id : undefined);
   const create = useCreateLogisticsOrder();

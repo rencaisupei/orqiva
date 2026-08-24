@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { FlatList, Platform, Pressable, RefreshControl, View } from 'react-native';
-import { Button, Separator, Spinner, Switch, Typography, useToast } from 'heroui-native';
+import { Button, Separator, Spinner, Switch, Typography } from 'heroui-native';
+import { useBrandToast } from '@/components/brand/BrandToast';
 import {
   BellRing,
   CheckCircle2,
@@ -78,7 +79,7 @@ const PREF_ROWS: { key: keyof NotificationPrefs; label: string; hint: string }[]
 
 export default function NotificationsScreen() {
   const userId = useUserId();
-  const { toast } = useToast();
+  const { toast } = useBrandToast();
   const { data: notifications, isLoading } = useNotifications(userId);
   const { data: prefs } = useNotificationPrefs(userId);
   const markRead = useMarkNotificationsRead();
