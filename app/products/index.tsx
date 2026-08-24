@@ -13,6 +13,7 @@ import { useFavoriteToggle } from '@/hooks/useFavoriteToggle';
 import { useProducts } from '@/lib/api/catalog';
 import { BRAND, BRAND_COPY } from '@/lib/brand';
 import { formatNumber } from '@/lib/format';
+import { useProductGrid } from '@/lib/layout';
 import { useRecentlyViewedStore } from '@/lib/recentlyViewed';
 import {
   LOCATIONS,
@@ -56,6 +57,7 @@ export default function ProductListScreen() {
   const [sort, setSort] = useState<SortKey>(toSortKey(params.sort));
   const [showFilters, setShowFilters] = useState(false);
   const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
+  const grid = useProductGrid();
   const [applied, setApplied] = useState<Draft>(EMPTY_DRAFT);
 
   const { isFavorite, onToggleFavorite } = useFavoriteToggle();
@@ -273,10 +275,11 @@ export default function ProductListScreen() {
         </View>
       ) : (
         <FlatList
+          key={grid.key}
           data={products ?? []}
           keyExtractor={(item) => item.id}
-          numColumns={2}
-          columnWrapperStyle={{ gap: 12 }}
+          numColumns={grid.columns}
+          columnWrapperStyle={grid.columnWrapperStyle}
           contentContainerClassName="p-4 gap-3 pb-10"
           ListEmptyComponent={
             <View>
@@ -297,7 +300,7 @@ export default function ProductListScreen() {
             </View>
           }
           renderItem={({ item }) => (
-            <View className="flex-1">
+            <View style={grid.itemStyle}>
               <ProductCard
                 product={item}
                 isFavorite={isFavorite(item.id)}

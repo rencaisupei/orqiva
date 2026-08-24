@@ -31,7 +31,7 @@ import { useStartConversation } from '@/lib/api/social';
 import { protectBrand } from '@/components/brand/BrandText';
 import { BRAND } from '@/lib/brand';
 import { deliveryEstimate, discountPercent, formatCompact, formatPrice } from '@/lib/format';
-import { useContentWidth } from '@/lib/layout';
+import { useMediaWidth } from '@/lib/layout';
 import { useRecentlyViewedStore } from '@/lib/recentlyViewed';
 import { useUserId } from '@/lib/session';
 import { shareProduct } from '@/lib/share';
@@ -39,7 +39,7 @@ import { CVS_SELLER_INACTIVE_HINT, CVS_SHIPPING_METHOD } from '@/lib/types';
 
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const width = useContentWidth();
+  const width = useMediaWidth();
   const userId = useUserId();
   const { toast } = useBrandToast();
 
@@ -197,37 +197,41 @@ export default function ProductDetailScreen() {
   return (
     <View className="bg-background flex-1">
       <ScrollView contentContainerClassName="pb-6" showsVerticalScrollIndicator={false}>
-        <View>
-          <ScrollView
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            onMomentumScrollEnd={(event) => {
-              setImageIndex(Math.round(event.nativeEvent.contentOffset.x / width));
-            }}
-          >
-            {images.length > 0 ? (
-              images.map((url) => (
-                <AppImage key={url} uri={url} className="aspect-square" style={{ width }} />
-              ))
-            ) : (
-              <AppImage className="aspect-square" style={{ width }} />
-            )}
-          </ScrollView>
-          {images.length > 1 ? (
-            <View className="absolute bottom-3 w-full flex-row justify-center gap-1.5">
-              {images.map((url, index) => (
-                <View
-                  key={url}
-                  className="h-1.5 rounded-full"
-                  style={{
-                    width: index === imageIndex ? 16 : 6,
-                    backgroundColor: index === imageIndex ? BRAND.orange : 'rgba(255,255,255,0.7)',
-                  }}
-                />
-              ))}
-            </View>
-          ) : null}
+        {/* 網頁版視窗很寬時主圖置中限寬（見 useMediaWidth），不然正方形主圖會佔滿整個螢幕。 */}
+        <View className="items-center">
+          <View style={{ width }}>
+            <ScrollView
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={(event) => {
+                setImageIndex(Math.round(event.nativeEvent.contentOffset.x / width));
+              }}
+            >
+              {images.length > 0 ? (
+                images.map((url) => (
+                  <AppImage key={url} uri={url} className="aspect-square" style={{ width }} />
+                ))
+              ) : (
+                <AppImage className="aspect-square" style={{ width }} />
+              )}
+            </ScrollView>
+            {images.length > 1 ? (
+              <View className="absolute bottom-3 w-full flex-row justify-center gap-1.5">
+                {images.map((url, index) => (
+                  <View
+                    key={url}
+                    className="h-1.5 rounded-full"
+                    style={{
+                      width: index === imageIndex ? 16 : 6,
+                      backgroundColor:
+                        index === imageIndex ? BRAND.orange : 'rgba(255,255,255,0.7)',
+                    }}
+                  />
+                ))}
+              </View>
+            ) : null}
+          </View>
         </View>
 
         <View className="bg-surface gap-2 p-4">

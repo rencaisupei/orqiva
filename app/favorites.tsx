@@ -13,6 +13,7 @@ import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { useFavorites } from '@/lib/api/commerce';
 import { BRAND } from '@/lib/brand';
 import { formatNumber, formatPrice } from '@/lib/format';
+import { useProductGrid } from '@/lib/layout';
 import { useUserId } from '@/lib/session';
 import { priceDrop } from '@/lib/types';
 
@@ -24,6 +25,7 @@ export default function FavoritesScreen() {
   const { isFavorite, onToggleFavorite } = useFavoriteToggle();
   const { refreshing, onRefresh } = usePullToRefresh();
   const [filter, setFilter] = useState<Filter>('all');
+  const grid = useProductGrid();
 
   const list = useMemo(() => favorites ?? [], [favorites]);
 
@@ -82,10 +84,11 @@ export default function FavoritesScreen() {
       ) : null}
 
       <FlatList
+        key={grid.key}
         data={shown}
         keyExtractor={(item) => item.product.id}
-        numColumns={2}
-        columnWrapperStyle={{ gap: 12 }}
+        numColumns={grid.columns}
+        columnWrapperStyle={grid.columnWrapperStyle}
         contentContainerClassName="p-4 gap-3 pb-10"
         refreshing={refreshing}
         onRefresh={onRefresh}
@@ -115,7 +118,7 @@ export default function FavoritesScreen() {
           )
         }
         renderItem={({ item }) => (
-          <View className="flex-1">
+          <View style={grid.itemStyle}>
             <FavoriteCard
               item={item}
               isFavorite={isFavorite(item.product.id)}

@@ -17,6 +17,7 @@ import { useStorePromotion } from '@/lib/api/coins';
 import { useStartConversation } from '@/lib/api/social';
 import { BRAND } from '@/lib/brand';
 import { formatDate } from '@/lib/format';
+import { useProductGrid } from '@/lib/layout';
 import { useUserId } from '@/lib/session';
 import {
   STORE_BADGE_LABEL,
@@ -37,6 +38,7 @@ export default function StoreScreen() {
   const { data: categories } = useCategories();
   const { data: promotion } = useStorePromotion(id);
   const { isFavorite, onToggleFavorite } = useFavoriteToggle();
+  const grid = useProductGrid();
   const startConversation = useStartConversation();
   const [categoryId, setCategoryId] = useState<string>(ALL);
 
@@ -104,10 +106,11 @@ export default function StoreScreen() {
   return (
     <View className="bg-background flex-1">
       <FlatList
+        key={grid.key}
         data={visible}
         keyExtractor={(item) => item.id}
-        numColumns={2}
-        columnWrapperStyle={{ gap: 12 }}
+        numColumns={grid.columns}
+        columnWrapperStyle={grid.columnWrapperStyle}
         contentContainerClassName="p-4 gap-3 pb-10"
         ListHeaderComponent={
           <View className="mb-1 gap-3">
@@ -243,7 +246,7 @@ export default function StoreScreen() {
           )
         }
         renderItem={({ item }) => (
-          <View className="flex-1">
+          <View style={grid.itemStyle}>
             <ProductCard
               product={item}
               isFavorite={isFavorite(item.id)}

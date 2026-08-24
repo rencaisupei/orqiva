@@ -22,6 +22,7 @@ import { useCartCount } from '@/lib/api/commerce';
 import { useMyStoreQuery } from '@/lib/api/seller';
 import { useUnreadNotificationCount } from '@/lib/api/social';
 import { BRAND, BRAND_COPY } from '@/lib/brand';
+import { useGridColumns } from '@/lib/layout';
 import { useRecentlyViewedStore } from '@/lib/recentlyViewed';
 import { useUserId } from '@/lib/session';
 import { HOME_AUTO_SORT } from '@/lib/types';
@@ -99,6 +100,8 @@ export function MarketHome({ showLaunchAd = true }: Props) {
   const { isFavorite, onToggleFavorite } = useFavoriteToggle();
   const { refreshing, onRefresh } = usePullToRefresh();
   const recentlyViewed = useRecentlyViewedStore((s) => s.ids);
+  // 網頁版視窗越寬就越多欄，商品卡（連帶封面圖）才不會被拉大。
+  const columns = useGridColumns();
 
   const submitSearch = () => {
     const term = query.trim();
@@ -312,9 +315,13 @@ export function MarketHome({ showLaunchAd = true }: Props) {
                   subtitle={section.subtitle || undefined}
                   onAction={onAction}
                 />
-                <View className="flex-row flex-wrap justify-between">
+                <View className="-mx-1.5 flex-row flex-wrap">
                   {products.map((product) => (
-                    <View key={product.id} className="mb-3 w-[48.5%]">
+                    <View
+                      key={product.id}
+                      className="mb-3 px-1.5"
+                      style={{ width: `${100 / columns}%` }}
+                    >
                       <ProductCard
                         product={product}
                         isFavorite={isFavorite(product.id)}

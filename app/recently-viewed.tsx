@@ -9,6 +9,7 @@ import { useFavoriteToggle } from '@/hooks/useFavoriteToggle';
 import { useProductsByIds } from '@/lib/api/catalog';
 import { BRAND } from '@/lib/brand';
 import { formatNumber } from '@/lib/format';
+import { useProductGrid } from '@/lib/layout';
 import { useRecentlyViewedStore } from '@/lib/recentlyViewed';
 
 /**
@@ -21,6 +22,7 @@ export default function RecentlyViewedScreen() {
   const clear = useRecentlyViewedStore((s) => s.clear);
   const { data: products, isLoading } = useProductsByIds(ids);
   const { isFavorite, onToggleFavorite } = useFavoriteToggle();
+  const grid = useProductGrid();
 
   if (!hydrated || (ids.length > 0 && isLoading)) {
     return (
@@ -63,13 +65,14 @@ export default function RecentlyViewedScreen() {
       </View>
 
       <FlatList
+        key={grid.key}
         data={list}
         keyExtractor={(item) => item.id}
-        numColumns={2}
-        columnWrapperStyle={{ gap: 12 }}
+        numColumns={grid.columns}
+        columnWrapperStyle={grid.columnWrapperStyle}
         contentContainerClassName="p-4 gap-3 pb-10"
         renderItem={({ item }) => (
-          <View className="flex-1">
+          <View style={grid.itemStyle}>
             <ProductCard
               product={item}
               isFavorite={isFavorite(item.id)}

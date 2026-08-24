@@ -28,7 +28,6 @@ import {
 import { initPostHog } from '@/lib/posthog';
 import { registerServiceWorker } from '@/lib/registerServiceWorker';
 import { reportErrorToParent } from '@/lib/reportPreviewError';
-import { AppShell } from '@/components/AppShell';
 import { InstallPrompt } from '@/components/InstallPrompt';
 import { SystemGate } from '@/components/SystemGate';
 import { BackButton } from '@/components/BackButton';
@@ -180,72 +179,69 @@ export default function RootLayout() {
       <StatusBar style="dark" translucent />
       <QueryClientProvider client={queryClient}>
         <HeroUINativeProvider>
-          {/* 網頁版把整個 App 收成置中的手機寬度一欄；原生不受影響。 */}
-          <AppShell>
-            <SystemGate>
-              <Stack
-                screenOptions={{
-                  headerStyle: { backgroundColor: BRAND.white },
-                  headerTitleStyle: { color: BRAND.navy, fontWeight: '600' },
-                  headerTintColor: BRAND.navy,
-                  headerShadowVisible: false,
-                  headerLeft: () => <BackButton />,
-                  contentStyle: { backgroundColor: BRAND.background },
+          <SystemGate>
+            <Stack
+              screenOptions={{
+                headerStyle: { backgroundColor: BRAND.white },
+                headerTitleStyle: { color: BRAND.navy, fontWeight: '600' },
+                headerTintColor: BRAND.navy,
+                headerShadowVisible: false,
+                headerLeft: () => <BackButton />,
+                contentStyle: { backgroundColor: BRAND.background },
+              }}
+            >
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="auth/sign-in" options={{ title: '登入 / 註冊' }} />
+              <Stack.Screen name="products/index" options={{ title: '商品列表' }} />
+              <Stack.Screen name="products/[id]" options={{ title: '商品詳情' }} />
+              <Stack.Screen name="store/[id]" options={{ title: '店舖' }} />
+              <Stack.Screen name="checkout" options={{ title: '結帳' }} />
+              <Stack.Screen name="favorites" options={{ title: '我的收藏' }} />
+              <Stack.Screen name="orders/index" options={{ title: '我的訂單' }} />
+              <Stack.Screen name="orders/[id]" options={{ title: '訂單詳情' }} />
+              <Stack.Screen name="recently-viewed" options={{ title: '最近瀏覽' }} />
+              <Stack.Screen name="review/[productId]" options={{ title: '評價商品' }} />
+              <Stack.Screen name="notifications" options={{ title: '通知中心' }} />
+              <Stack.Screen name="messages/[id]" options={{ title: '聊天' }} />
+              <Stack.Screen name="profile/edit" options={{ title: '編輯個人資料' }} />
+              <Stack.Screen name="profile/delete" options={{ title: '刪除帳號' }} />
+              <Stack.Screen name="seller/index" options={{ headerShown: false }} />
+              <Stack.Screen name="seller/market" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="seller/onboarding"
+                options={{
+                  title: '成為極貨網賣家',
+                  // 品牌名不能被瀏覽器翻譯，所以標題自己畫（沿用 headerTitleStyle 的樣式）。
+                  headerTitle: () => (
+                    <BrandText
+                      numberOfLines={1}
+                      style={{ fontSize: 17, fontWeight: '600', color: BRAND.navy }}
+                    >
+                      成為極貨網賣家
+                    </BrandText>
+                  ),
                 }}
-              >
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen name="auth/sign-in" options={{ title: '登入 / 註冊' }} />
-                <Stack.Screen name="products/index" options={{ title: '商品列表' }} />
-                <Stack.Screen name="products/[id]" options={{ title: '商品詳情' }} />
-                <Stack.Screen name="store/[id]" options={{ title: '店舖' }} />
-                <Stack.Screen name="checkout" options={{ title: '結帳' }} />
-                <Stack.Screen name="favorites" options={{ title: '我的收藏' }} />
-                <Stack.Screen name="orders/index" options={{ title: '我的訂單' }} />
-                <Stack.Screen name="orders/[id]" options={{ title: '訂單詳情' }} />
-                <Stack.Screen name="recently-viewed" options={{ title: '最近瀏覽' }} />
-                <Stack.Screen name="review/[productId]" options={{ title: '評價商品' }} />
-                <Stack.Screen name="notifications" options={{ title: '通知中心' }} />
-                <Stack.Screen name="messages/[id]" options={{ title: '聊天' }} />
-                <Stack.Screen name="profile/edit" options={{ title: '編輯個人資料' }} />
-                <Stack.Screen name="profile/delete" options={{ title: '刪除帳號' }} />
-                <Stack.Screen name="seller/index" options={{ headerShown: false }} />
-                <Stack.Screen name="seller/market" options={{ headerShown: false }} />
-                <Stack.Screen
-                  name="seller/onboarding"
-                  options={{
-                    title: '成為極貨網賣家',
-                    // 品牌名不能被瀏覽器翻譯，所以標題自己畫（沿用 headerTitleStyle 的樣式）。
-                    headerTitle: () => (
-                      <BrandText
-                        numberOfLines={1}
-                        style={{ fontSize: 17, fontWeight: '600', color: BRAND.navy }}
-                      >
-                        成為極貨網賣家
-                      </BrandText>
-                    ),
-                  }}
-                />
-                <Stack.Screen name="seller/products" options={{ title: '商品管理' }} />
-                <Stack.Screen name="seller/analytics" options={{ title: '銷售分析' }} />
-                <Stack.Screen name="seller/reviews" options={{ headerShown: false }} />
-                <Stack.Screen name="seller/new-product" options={{ title: '新增商品' }} />
-                <Stack.Screen name="seller/edit/[id]" options={{ title: '編輯商品' }} />
-                <Stack.Screen name="seller/orders" options={{ headerShown: false }} />
-                <Stack.Screen name="seller/messages" options={{ headerShown: false }} />
-                <Stack.Screen name="seller/account" options={{ headerShown: false }} />
-                <Stack.Screen name="seller/coins" options={{ title: 'J幣中心' }} />
-                <Stack.Screen name="seller/coupons" options={{ title: '優惠券' }} />
-                <Stack.Screen name="seller/promote" options={{ title: '兌換推廣' }} />
-                <Stack.Screen name="seller/store" options={{ title: '店舖設定' }} />
-                <Stack.Screen name="admin/index" options={{ title: '平台管理' }} />
-                <Stack.Screen name="admin/logistics" options={{ title: '物流串接設定' }} />
-                <Stack.Screen name="legal/privacy" options={{ title: '隱私權政策' }} />
-                <Stack.Screen name="legal/terms" options={{ title: '服務條款' }} />
-                <Stack.Screen name="support/contact" options={{ title: '聯絡我們' }} />
-              </Stack>
-            </SystemGate>
-            <InstallPrompt />
-          </AppShell>
+              />
+              <Stack.Screen name="seller/products" options={{ title: '商品管理' }} />
+              <Stack.Screen name="seller/analytics" options={{ title: '銷售分析' }} />
+              <Stack.Screen name="seller/reviews" options={{ headerShown: false }} />
+              <Stack.Screen name="seller/new-product" options={{ title: '新增商品' }} />
+              <Stack.Screen name="seller/edit/[id]" options={{ title: '編輯商品' }} />
+              <Stack.Screen name="seller/orders" options={{ headerShown: false }} />
+              <Stack.Screen name="seller/messages" options={{ headerShown: false }} />
+              <Stack.Screen name="seller/account" options={{ headerShown: false }} />
+              <Stack.Screen name="seller/coins" options={{ title: 'J幣中心' }} />
+              <Stack.Screen name="seller/coupons" options={{ title: '優惠券' }} />
+              <Stack.Screen name="seller/promote" options={{ title: '兌換推廣' }} />
+              <Stack.Screen name="seller/store" options={{ title: '店舖設定' }} />
+              <Stack.Screen name="admin/index" options={{ title: '平台管理' }} />
+              <Stack.Screen name="admin/logistics" options={{ title: '物流串接設定' }} />
+              <Stack.Screen name="legal/privacy" options={{ title: '隱私權政策' }} />
+              <Stack.Screen name="legal/terms" options={{ title: '服務條款' }} />
+              <Stack.Screen name="support/contact" options={{ title: '聯絡我們' }} />
+            </Stack>
+          </SystemGate>
+          <InstallPrompt />
         </HeroUINativeProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>
