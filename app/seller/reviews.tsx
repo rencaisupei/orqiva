@@ -78,9 +78,13 @@ export default function SellerReviewsScreen() {
   }
 
   if (storeLoading || isLoading) {
+    // 分頁列留著，否則整條底部導覽會在換頁時消失一下。
     return (
-      <View className="bg-background flex-1 items-center justify-center">
-        <Spinner />
+      <View className="bg-background flex-1">
+        <View className="flex-1 items-center justify-center">
+          <Spinner />
+        </View>
+        <SellerTabBar />
       </View>
     );
   }

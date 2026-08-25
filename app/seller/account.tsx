@@ -71,9 +71,13 @@ export default function SellerAccountScreen() {
   }
 
   if (isLoading) {
+    // 分頁列留著，否則整條底部導覽會在換頁時消失一下。
     return (
-      <View className="bg-background flex-1 items-center justify-center">
-        <Spinner />
+      <View className="bg-background flex-1">
+        <View className="flex-1 items-center justify-center">
+          <Spinner />
+        </View>
+        <SellerTabBar />
       </View>
     );
   }
@@ -91,6 +95,7 @@ export default function SellerAccountScreen() {
             </Button>
           }
         />
+        <SellerTabBar />
       </View>
     );
   }

@@ -205,8 +205,17 @@ export default function RootLayout() {
               <Stack.Screen name="messages/[id]" options={{ title: '聊天' }} />
               <Stack.Screen name="profile/edit" options={{ title: '編輯個人資料' }} />
               <Stack.Screen name="profile/delete" options={{ title: '刪除帳號' }} />
-              <Stack.Screen name="seller/index" options={{ headerShown: false }} />
-              <Stack.Screen name="seller/market" options={{ headerShown: false }} />
+              {/* 賣家分頁列的六個目的地是各自獨立的路由（不是 Tabs），換頁一定重新掛載。
+                  轉場動畫會再疊上約 0.3 秒，所以這幾頁一律不做動畫，點下去就換頁 ——
+                  跟買家分頁列（animation: 'none'）的手感一致。 */}
+              <Stack.Screen
+                name="seller/index"
+                options={{ headerShown: false, animation: 'none' }}
+              />
+              <Stack.Screen
+                name="seller/market"
+                options={{ headerShown: false, animation: 'none' }}
+              />
               <Stack.Screen
                 name="seller/onboarding"
                 options={{
@@ -224,12 +233,24 @@ export default function RootLayout() {
               />
               <Stack.Screen name="seller/products" options={{ title: '商品管理' }} />
               <Stack.Screen name="seller/analytics" options={{ title: '銷售分析' }} />
-              <Stack.Screen name="seller/reviews" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="seller/reviews"
+                options={{ headerShown: false, animation: 'none' }}
+              />
               <Stack.Screen name="seller/new-product" options={{ title: '新增商品' }} />
               <Stack.Screen name="seller/edit/[id]" options={{ title: '編輯商品' }} />
-              <Stack.Screen name="seller/orders" options={{ headerShown: false }} />
-              <Stack.Screen name="seller/messages" options={{ headerShown: false }} />
-              <Stack.Screen name="seller/account" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="seller/orders"
+                options={{ headerShown: false, animation: 'none' }}
+              />
+              <Stack.Screen
+                name="seller/messages"
+                options={{ headerShown: false, animation: 'none' }}
+              />
+              <Stack.Screen
+                name="seller/account"
+                options={{ headerShown: false, animation: 'none' }}
+              />
               <Stack.Screen name="seller/coins" options={{ title: 'J幣中心' }} />
               <Stack.Screen name="seller/coupons" options={{ title: '優惠券' }} />
               <Stack.Screen name="seller/promote" options={{ title: '兌換推廣' }} />

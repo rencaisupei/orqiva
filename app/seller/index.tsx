@@ -90,9 +90,14 @@ export default function SellerDashboardScreen() {
   }
 
   if (storeLoading) {
+    // 分頁列一定留著：整頁只剩一個 spinner 時，底部導覽會整條消失，
+    // 看起來就像「點了之後畫面不見了、過一下才出現」。
     return (
-      <View className="bg-background flex-1 items-center justify-center">
-        <Spinner />
+      <View className="bg-background flex-1">
+        <View className="flex-1 items-center justify-center">
+          <Spinner />
+        </View>
+        <SellerTabBar />
       </View>
     );
   }
@@ -110,6 +115,7 @@ export default function SellerDashboardScreen() {
             </Button>
           }
         />
+        <SellerTabBar />
       </View>
     );
   }

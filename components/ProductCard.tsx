@@ -1,4 +1,4 @@
-import { Pressable, View } from 'react-native';
+import { Platform, Pressable, View } from 'react-native';
 import { Typography } from 'heroui-native';
 import { router } from 'expo-router';
 import { Heart, MapPin } from 'lucide-react-native';
@@ -83,8 +83,14 @@ export function ProductCard({ product, isFavorite = false, onToggleFavorite, cla
           {onToggleFavorite ? (
             <Pressable
               className="h-7 w-7 shrink-0 items-center justify-center"
-              hitSlop={6}
+              hitSlop={8}
+              style={({ pressed }) => [
+                { opacity: pressed ? 0.55 : 1 },
+                Platform.OS === 'web' ? { cursor: 'pointer' } : null,
+              ]}
               onPress={() => onToggleFavorite(product.id)}
+              accessibilityRole="button"
+              accessibilityState={{ selected: isFavorite }}
               accessibilityLabel={isFavorite ? '取消收藏' : '收藏商品'}
             >
               <Heart

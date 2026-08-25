@@ -28,9 +28,12 @@ import { useUserId } from '@/lib/session';
 import { HOME_AUTO_SORT } from '@/lib/types';
 
 /**
- * 圖示右上角的數字。尺寸刻意寫死（16px 高、10px 字）而不是交給 body-xs 的行高，
- * 否則泡泡會長到跟 22px 的圖示一樣高、把圖案整個蓋掉。白邊是為了讓泡泡和底下的
- * 圖示線條分開。
+ * 圖示右上角的數字。整顆泡泡刻意畫在圖示的外側 —— 只要有一部分疊在 22px 的圖示上，
+ * 鈴鐺／購物車的線條就會被蓋掉看不清楚。所以泡泡的左下角只碰到圖示的右上角，
+ * 尺寸也寫死（15px 高、9px 字）而不是交給 body-xs 的行高。白邊讓泡泡和底色分開。
+ *
+ * 兩位數以上往左長會壓到圖示，所以改成往右長（用 left 定位），外層的
+ * Pressable 是 40x40、圖示只有 22px，右邊還有空間容納。
  */
 function Badge({ count }: { count: number }) {
   if (count <= 0) return null;
@@ -41,19 +44,19 @@ function Badge({ count }: { count: number }) {
       pointerEvents="none"
       style={{
         position: 'absolute',
-        top: -7,
-        right: -9,
-        height: 16,
-        minWidth: 16,
+        bottom: 22,
+        left: 14,
+        height: 15,
+        minWidth: 15,
         borderRadius: 8,
-        paddingHorizontal: label.length > 1 ? 4 : 0,
+        paddingHorizontal: label.length > 1 ? 3 : 0,
         borderWidth: 1.5,
         borderColor: BRAND.white,
       }}
     >
       <Typography
         className="text-white"
-        style={{ fontSize: 10, lineHeight: 12, fontWeight: '700', includeFontPadding: false }}
+        style={{ fontSize: 9, lineHeight: 11, fontWeight: '700', includeFontPadding: false }}
       >
         {label}
       </Typography>

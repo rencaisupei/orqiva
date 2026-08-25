@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Platform, Pressable, ScrollView, View } from 'react-native';
 import { Avatar, Button, Chip, Spinner, Typography } from 'heroui-native';
 import { useBrandToast } from '@/components/brand/BrandToast';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -91,6 +91,7 @@ export default function ProductDetailScreen() {
   const discount = discountPercent(product.price, product.original_price);
   const outOfStock = product.stock <= 0;
   const specEntries = Object.entries(product.specs ?? {});
+  const favorited = isFavorite(product.id);
 
   /*
    * 超商取貨付款需要賣家自己在綠界完成開通；未開通就不能被選，
@@ -147,6 +148,7 @@ export default function ProductDetailScreen() {
 
   const onContactSeller = () => {
     if (!requireSignIn() || !userId) return;
+    if (startConversation.isPending) return;
     startConversation.mutate(
       {
         buyerId: userId,
@@ -235,24 +237,31 @@ export default function ProductDetailScreen() {
         </View>
 
         <View className="bg-surface gap-2 p-4">
-          <View className="flex-row items-end gap-2">
-            <Typography type="h3" className="text-brand-orange" style={{ fontWeight: '700' }}>
-              {formatPrice(product.price)}
-            </Typography>
-            {product.original_price ? (
-              <Typography type="body-sm" color="muted" className="line-through">
-                {formatPrice(product.original_price)}
+          {/* 價格群組會換行，分享鍵 shrink-0 —— 原本全部擠在一行，遇到有原價
+              與折扣標籤的商品時分享鍵會被推出畫面外，看起來像「沒有分享按鈕」。 */}
+          <View className="flex-row items-start gap-2">
+            <View className="min-w-0 flex-1 flex-row flex-wrap items-end gap-x-2 gap-y-1">
+              <Typography type="h3" className="text-brand-orange" style={{ fontWeight: '700' }}>
+                {formatPrice(product.price)}
               </Typography>
-            ) : null}
-            {discount ? (
-              <Chip size="sm" variant="soft" color="warning">
-                省 {discount}%
-              </Chip>
-            ) : null}
-            <View className="flex-1" />
+              {product.original_price ? (
+                <Typography type="body-sm" color="muted" className="line-through">
+                  {formatPrice(product.original_price)}
+                </Typography>
+              ) : null}
+              {discount ? (
+                <Chip size="sm" variant="soft" color="warning">
+                  省 {discount}%
+                </Chip>
+              ) : null}
+            </View>
             <Pressable
-              className="border-border flex-row items-center gap-1 rounded-full border px-3 py-1.5"
-              hitSlop={6}
+              className="border-border shrink-0 flex-row items-center gap-1 rounded-full border px-3 py-1.5"
+              hitSlop={8}
+              style={({ pressed }) => [
+                { opacity: pressed ? 0.55 : 1 },
+                Platform.OS === 'web' ? { cursor: 'pointer' } : null,
+              ]}
               onPress={onShare}
               accessibilityRole="button"
               accessibilityLabel="分享商品"
@@ -443,23 +452,43 @@ export default function ProductDetailScreen() {
       </ScrollView>
 
       <View className="border-border bg-surface pb-safe-offset-2 flex-row items-center gap-2 border-t px-3 py-2.5">
+        {/* 收藏是樂觀更新的（按下心形立刻變色），聯絡賣家要先在伺服器上開好對話，
+            所以按下就換成 spinner 並鎖住，避免看起來沒反應而被連點。 */}
         <Pressable
           className="h-10 w-10 items-center justify-center"
+          hitSlop={8}
+          style={({ pressed }) => [
+            { opacity: pressed ? 0.55 : 1 },
+            Platform.OS === 'web' ? { cursor: 'pointer' } : null,
+          ]}
           onPress={() => onToggleFavorite(product.id)}
-          accessibilityLabel="收藏"
+          accessibilityRole="button"
+          accessibilityState={{ selected: favorited }}
+          accessibilityLabel={favorited ? '取消收藏' : '收藏'}
         >
           <Heart
             size={20}
-            color={isFavorite(product.id) ? BRAND.orange : BRAND.muted}
-            fill={isFavorite(product.id) ? BRAND.orange : 'transparent'}
+            color={favorited ? BRAND.orange : BRAND.muted}
+            fill={favorited ? BRAND.orange : 'transparent'}
           />
         </Pressable>
         <Pressable
           className="h-10 w-10 items-center justify-center"
+          hitSlop={8}
+          disabled={startConversation.isPending}
+          style={({ pressed }) => [
+            { opacity: pressed ? 0.55 : 1 },
+            Platform.OS === 'web' ? { cursor: 'pointer' } : null,
+          ]}
           onPress={onContactSeller}
+          accessibilityRole="button"
           accessibilityLabel="聯絡賣家"
         >
-          <MessageCircle size={20} color={BRAND.navy} />
+          {startConversation.isPending ? (
+            <Spinner size="sm" />
+          ) : (
+            <MessageCircle size={20} color={BRAND.navy} />
+          )}
         </Pressable>
         {/* Two five-character labels share ~220px on a 360px phone. `sm` plus the
             tighter padding keeps each label centred inside its button instead of

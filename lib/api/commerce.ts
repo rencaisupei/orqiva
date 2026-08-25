@@ -271,7 +271,23 @@ export function useToggleFavorite() {
       });
       if (error) throw new Error(error.message);
     },
-    onSuccess: () => {
+    /* 心形按下就要立刻變色：收藏是一次伺服器往返，等結果回來才變會像沒點到。
+       這裡先改本機的收藏清單（所有商品卡與商品頁都讀這一份），失敗再退回原狀。 */
+    onMutate: async (input) => {
+      const key = ['favorite-ids', input.userId];
+      await qc.cancelQueries({ queryKey: key });
+      const previous = qc.getQueryData<string[]>(key);
+      qc.setQueryData<string[]>(key, (current) => {
+        const ids = current ?? [];
+        if (input.isFavorite) return ids.filter((id) => id !== input.productId);
+        return ids.includes(input.productId) ? ids : [...ids, input.productId];
+      });
+      return { key, previous };
+    },
+    onError: (_error, _input, context) => {
+      if (context) qc.setQueryData(context.key, context.previous);
+    },
+    onSettled: () => {
       void qc.invalidateQueries({ queryKey: ['favorite-ids'] });
       void qc.invalidateQueries({ queryKey: ['favorites'] });
     },

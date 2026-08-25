@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { View } from 'react-native';
-import { Button, Typography } from 'heroui-native';
+import { Button, Spinner, Typography } from 'heroui-native';
 import { Camera } from 'lucide-react-native';
 
 import { RatingBreakdown } from '@/components/RatingBreakdown';
@@ -39,7 +39,7 @@ export function ProductReviews({
   rating: number;
   ratingCount: number;
 }) {
-  const { data: reviews } = useProductReviews(productId);
+  const { data: reviews, isLoading } = useProductReviews(productId);
   const [filter, setFilter] = useState<Filter>('all');
   const [expanded, setExpanded] = useState(false);
 
@@ -76,7 +76,13 @@ export function ProductReviews({
         <StarRating rating={rating} count={ratingCount} />
       </View>
 
-      {list.length === 0 ? (
+      {isLoading ? (
+        /* 還在讀評價時不要先寫「還沒有評價」：評語會晚一步蓋掉那句話，
+           看起來像畫面自己跳掉。 */
+        <View className="items-center py-4">
+          <Spinner size="sm" />
+        </View>
+      ) : list.length === 0 ? (
         <Typography type="body-sm" color="muted">
           目前還沒有買家評價，完成訂單後即可留下評價。
         </Typography>

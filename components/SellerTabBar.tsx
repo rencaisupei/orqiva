@@ -1,4 +1,5 @@
-import { Pressable, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Platform, Pressable, View } from 'react-native';
 import { Typography } from 'heroui-native';
 import { router, usePathname, type Href } from 'expo-router';
 import { House, MessageCircle, Plus, Receipt, Store, User } from 'lucide-react-native';
@@ -34,28 +35,46 @@ const ITEMS: Item[] = [
   { label: '我的', href: '/seller/account', match: '/seller/account', icon: User },
 ];
 
-function TabItem({ item, isActive }: { item: Item; isActive: boolean }) {
+function TabItem({
+  item,
+  selected,
+  isCurrent,
+  onNavigate,
+}: {
+  item: Item;
+  /** 要不要畫成選取中（含「已按下、還在換頁」的那一段）。 */
+  selected: boolean;
+  /** 目前真的站在這一頁。 */
+  isCurrent: boolean;
+  onNavigate: (match: string) => void;
+}) {
   const onPress = () => {
     // 已經站在這一頁就不要再導覽一次：replace 會把整頁重新掛載一次，看起來像卡住。
-    if (isActive) return;
-    if (item.filled) router.push(item.href);
-    else router.replace(item.href);
+    if (isCurrent) return;
+    if (item.filled) {
+      router.push(item.href);
+      return;
+    }
+    // 先把目標標成選取中再換頁：換頁本身要一小段時間，等路徑更新才變色會像沒點到。
+    onNavigate(item.match);
+    router.replace(item.href);
   };
 
   return (
     <Pressable
       className="flex-1 items-center gap-1 py-1"
       accessibilityRole="button"
-      accessibilityState={{ selected: isActive }}
+      accessibilityState={{ selected }}
       accessibilityLabel={item.label}
       // 手指按到分頁列邊緣（含安全區內縮的那一段）也算，並且按下就立刻變色 ——
       // 導覽本身要一小段時間，沒有立即回饋就會覺得點不到。
       hitSlop={{ top: 10, bottom: 10, left: 2, right: 2 }}
       android_ripple={{ color: 'rgba(8, 38, 107, 0.10)', borderless: true }}
+      style={Platform.OS === 'web' ? { cursor: 'pointer' } : undefined}
       onPress={onPress}
     >
       {({ pressed }) => {
-        const color = isActive || pressed ? BRAND.orange : BRAND.muted;
+        const color = selected || pressed ? BRAND.orange : BRAND.muted;
         return (
           <View className="items-center gap-1" style={{ opacity: pressed ? 0.7 : 1 }}>
             {item.filled ? (
@@ -81,14 +100,28 @@ function TabItem({ item, isActive }: { item: Item; isActive: boolean }) {
 /**
  * 賣家介面的底部分頁列。與買家分頁列是兩套完全獨立的導覽：買家看到的是
  * 首頁／分類／購物車／訊息／我的，賣家看到的是市集／首頁／發布／訂單／訊息／我的。
+ *
+ * 買家那邊是真正的 Tabs（畫面留在記憶體裡），賣家這幾頁是各自獨立的路由，
+ * 所以換頁一定會重新掛載。為了不讓人覺得「點了沒反應」，這裡在導覽完成前就先把
+ * 目標分頁畫成選取中（pending），路徑更新後再交回 pathname 判斷。
  */
 export function SellerTabBar() {
   const pathname = usePathname();
+  const [pending, setPending] = useState<string | null>(null);
+
+  // 路徑已經換過去（或使用者用返回鍵離開）就把樂觀狀態交還給真實路徑。
+  useEffect(() => setPending(null), [pathname]);
 
   return (
     <View className="border-border bg-surface pb-safe-offset-2 w-full flex-row border-t pt-2">
       {ITEMS.map((item) => (
-        <TabItem key={item.label} item={item} isActive={pathname === item.match} />
+        <TabItem
+          key={item.label}
+          item={item}
+          selected={pending ? pending === item.match : pathname === item.match}
+          isCurrent={pathname === item.match}
+          onNavigate={setPending}
+        />
       ))}
     </View>
   );
