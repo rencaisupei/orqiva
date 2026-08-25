@@ -9,7 +9,6 @@ import { AppImage } from '@/components/AppImage';
 import { EmptyState } from '@/components/EmptyState';
 import { LogisticsPanel } from '@/components/LogisticsPanel';
 import { SegmentedControl, type Segment } from '@/components/SegmentedControl';
-import { SellerTabBar } from '@/components/SellerTabBar';
 import {
   matchesShipmentFilter,
   ShipmentStatusBar,
@@ -240,8 +239,6 @@ export default function SellerOrdersScreen() {
           )}
         />
       )}
-
-      <SellerTabBar />
     </View>
   );
 }

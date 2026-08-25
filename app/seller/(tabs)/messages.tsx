@@ -3,7 +3,6 @@ import { View } from 'react-native';
 import { Typography } from 'heroui-native';
 
 import { ConversationList } from '@/components/ConversationList';
-import { SellerTabBar } from '@/components/SellerTabBar';
 import { SignInRequired } from '@/components/SignInRequired';
 import { useConversations } from '@/lib/api/social';
 import { useUserId } from '@/lib/session';
@@ -46,8 +45,6 @@ export default function SellerMessagesScreen() {
         emptyTitle="還沒有買家來訊"
         emptyDescription="買家在商品頁點「聯絡賣家」後，對話會出現在這裡。"
       />
-
-      <SellerTabBar />
     </View>
   );
 }

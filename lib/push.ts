@@ -75,10 +75,12 @@ export function openNotificationLink(link: string | null | undefined) {
       router.push('/notifications');
       break;
     case '/seller':
-      router.push('/seller');
+      // 賣家分頁（/seller、/seller/orders）是巢狀分頁導覽的目的地：navigate 會切到
+      // 那個分頁，push 會再疊一層賣家外框上去。
+      router.navigate('/seller');
       break;
     case '/seller/orders':
-      router.push('/seller/orders');
+      router.navigate('/seller/orders');
       break;
     case '/seller/products':
       router.push('/seller/products');

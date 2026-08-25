@@ -21,7 +21,6 @@ import { EmptyState } from '@/components/EmptyState';
 import { JihuoBadge } from '@/components/brand/JihuoLogo';
 import { SellerLogisticsStatusCard } from '@/components/SellerLogisticsStatusCard';
 import { SellerStatTile } from '@/components/SellerStatTile';
-import { SellerTabBar } from '@/components/SellerTabBar';
 import { SignInRequired } from '@/components/SignInRequired';
 import { LinearGradient } from '@/components/ui/primitives/LinearGradient';
 import { useCoinSummary } from '@/lib/api/coins';
@@ -51,7 +50,8 @@ function MenuRow({ icon, iconBg, label, badge, href }: MenuRowProps) {
         shadowRadius: 6,
         elevation: 1,
       }}
-      onPress={() => router.push(href)}
+      // navigate：訂單管理與買家訊息本身就是賣家分頁，切過去就好，不要再疊一層外框。
+      onPress={() => router.navigate(href)}
     >
       <View
         className="h-9 w-9 items-center justify-center rounded-xl"
@@ -74,6 +74,47 @@ function MenuRow({ icon, iconBg, label, badge, href }: MenuRowProps) {
   );
 }
 
+/**
+ * 賣家中心的頁首。載入資料時也要照樣畫出來 —— 頁首消失、只剩一個轉圈圈，
+ * 看起來就像「點了之後畫面不見了、過一下才出現」。
+ */
+function SellerHeader({ subtitle }: { subtitle: string }) {
+  return (
+    <View className="bg-surface pt-safe px-4 pb-3">
+      <View className="flex-row items-center gap-3 pt-2">
+        <JihuoBadge size={42} />
+        <View className="flex-1">
+          <Typography type="h5" className="text-navy" style={{ fontWeight: '700' }}>
+            賣家中心
+          </Typography>
+          <Typography type="body-xs" color="muted" numberOfLines={1}>
+            {subtitle}
+          </Typography>
+        </View>
+        <Pressable
+          className="h-10 flex-row items-center gap-1.5 rounded-full px-3"
+          style={{ backgroundColor: BRAND.orangeSoft }}
+          accessibilityRole="button"
+          accessibilityLabel="切換回買家介面"
+          onPress={exitSellerMode}
+        >
+          <Repeat size={15} color={BRAND.orange} />
+          <Typography type="body-xs" className="text-brand-orange" style={{ fontWeight: '700' }}>
+            買家介面
+          </Typography>
+        </Pressable>
+        <Pressable
+          className="h-10 w-10 items-center justify-center"
+          accessibilityLabel="店鋪設定"
+          onPress={() => router.push('/seller/store')}
+        >
+          <Settings size={22} color={BRAND.navy} />
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
 export default function SellerDashboardScreen() {
   const userId = useUserId();
   const { data: store, isLoading: storeLoading } = useMyStoreQuery(userId);
@@ -90,21 +131,20 @@ export default function SellerDashboardScreen() {
   }
 
   if (storeLoading) {
-    // 分頁列一定留著：整頁只剩一個 spinner 時，底部導覽會整條消失，
-    // 看起來就像「點了之後畫面不見了、過一下才出現」。
     return (
       <View className="bg-background flex-1">
+        <SellerHeader subtitle="正在載入店鋪資料…" />
         <View className="flex-1 items-center justify-center">
           <Spinner />
         </View>
-        <SellerTabBar />
       </View>
     );
   }
 
   if (!store) {
     return (
-      <View className="bg-background pt-safe flex-1">
+      <View className="bg-background flex-1">
+        <SellerHeader subtitle="還沒有店鋪" />
         <EmptyState
           icon={<StoreIcon size={26} color={BRAND.blue} />}
           title="還沒有極貨網店鋪"
@@ -115,45 +155,15 @@ export default function SellerDashboardScreen() {
             </Button>
           }
         />
-        <SellerTabBar />
       </View>
     );
   }
 
   return (
     <View className="bg-background flex-1">
-      <View className="bg-surface pt-safe px-4 pb-3">
-        <View className="flex-row items-center gap-3 pt-2">
-          <JihuoBadge size={42} />
-          <View className="flex-1">
-            <Typography type="h5" className="text-navy" style={{ fontWeight: '700' }}>
-              賣家中心
-            </Typography>
-            <Typography type="body-xs" color="muted" numberOfLines={1}>
-              {store.name} · 評價 {store.rating.toFixed(1)}（{store.rating_count}）
-            </Typography>
-          </View>
-          <Pressable
-            className="h-10 flex-row items-center gap-1.5 rounded-full px-3"
-            style={{ backgroundColor: BRAND.orangeSoft }}
-            accessibilityRole="button"
-            accessibilityLabel="切換回買家介面"
-            onPress={exitSellerMode}
-          >
-            <Repeat size={15} color={BRAND.orange} />
-            <Typography type="body-xs" className="text-brand-orange" style={{ fontWeight: '700' }}>
-              買家介面
-            </Typography>
-          </Pressable>
-          <Pressable
-            className="h-10 w-10 items-center justify-center"
-            accessibilityLabel="店鋪設定"
-            onPress={() => router.push('/seller/store')}
-          >
-            <Settings size={22} color={BRAND.navy} />
-          </Pressable>
-        </View>
-      </View>
+      <SellerHeader
+        subtitle={`${store.name} · 評價 ${store.rating.toFixed(1)}（${store.rating_count}）`}
+      />
 
       <ScrollView
         className="flex-1"
@@ -308,8 +318,6 @@ export default function SellerDashboardScreen() {
           />
         </View>
       </ScrollView>
-
-      <SellerTabBar />
     </View>
   );
 }

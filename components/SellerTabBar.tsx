@@ -49,15 +49,18 @@ function TabItem({
   onNavigate: (match: string) => void;
 }) {
   const onPress = () => {
-    // 已經站在這一頁就不要再導覽一次：replace 會把整頁重新掛載一次，看起來像卡住。
+    // 已經站在這一頁就不要再導覽一次。
     if (isCurrent) return;
     if (item.filled) {
       router.push(item.href);
       return;
     }
-    // 先把目標標成選取中再換頁：換頁本身要一小段時間，等路徑更新才變色會像沒點到。
+    // 先把目標標成選取中：在賣家分頁之間切換是即時的，但從推入的頁面
+    // （商品管理、評價…）回到分頁時還要退一層，沒有立即回饋會像沒點到。
     onNavigate(item.match);
-    router.replace(item.href);
+    // navigate 而不是 replace：分頁之間會直接切換焦點（畫面留在記憶體，不重新掛載），
+    // 從推入的頁面按分頁列則是退回已存在的分頁畫面。
+    router.navigate(item.href);
   };
 
   return (
@@ -101,9 +104,11 @@ function TabItem({
  * 賣家介面的底部分頁列。與買家分頁列是兩套完全獨立的導覽：買家看到的是
  * 首頁／分類／購物車／訊息／我的，賣家看到的是市集／首頁／發布／訂單／訊息／我的。
  *
- * 買家那邊是真正的 Tabs（畫面留在記憶體裡），賣家這幾頁是各自獨立的路由，
- * 所以換頁一定會重新掛載。為了不讓人覺得「點了沒反應」，這裡在導覽完成前就先把
- * 目標分頁畫成選取中（pending），路徑更新後再交回 pathname 判斷。
+ * 兩個用法，長相完全一樣：
+ * 1. app/seller/(tabs)/_layout.tsx 的自訂 tabBar —— 分頁畫面留在記憶體，切分頁是即時的。
+ * 2. 推入的賣家頁面（商品管理、評價、J幣…）自己渲染一份，按下會退回對應的分頁。
+ *
+ * 兩種情形都用 pathname 判斷選取狀態；按下時先樂觀染色（pending），路徑更新後交還給 pathname。
  */
 export function SellerTabBar() {
   const pathname = usePathname();

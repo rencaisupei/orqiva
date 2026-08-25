@@ -18,7 +18,6 @@ import {
 
 import { AppImage } from '@/components/AppImage';
 import { EmptyState } from '@/components/EmptyState';
-import { SellerTabBar } from '@/components/SellerTabBar';
 import { SignInRequired } from '@/components/SignInRequired';
 import { useCoinSummary } from '@/lib/api/coins';
 import { useMyStoreQuery } from '@/lib/api/seller';
@@ -53,6 +52,38 @@ function MenuRow({
   );
 }
 
+/**
+ * 「我的」頁首。店鋪資料還在載入時也照樣畫出來（含切回買家介面的出口），
+ * 頁首整塊消失只剩轉圈圈會讓人以為畫面壞了。
+ */
+function AccountHeader({ children }: { children: ReactNode }) {
+  return (
+    <View className="bg-surface pt-safe px-4 pb-5">
+      <View className="flex-row items-center gap-3 pt-3">{children}</View>
+
+      <Button variant="secondary" size="sm" className="mt-4 self-start" onPress={exitSellerMode}>
+        <View className="flex-row items-center gap-1.5">
+          <Repeat size={14} color={BRAND.navy} />
+          <Typography type="body-sm" className="text-navy" style={{ fontWeight: '600' }}>
+            切換回買家介面
+          </Typography>
+        </View>
+      </Button>
+    </View>
+  );
+}
+
+function StoreThumbFallback() {
+  return (
+    <View
+      className="h-14 w-14 items-center justify-center rounded-2xl"
+      style={{ backgroundColor: BRAND.blueSoft }}
+    >
+      <StoreIcon size={24} color={BRAND.blue} />
+    </View>
+  );
+}
+
 /** 賣家介面的「我的」：店鋪、推廣與帳號設定，並提供切回買家介面的出口。 */
 export default function SellerAccountScreen() {
   const userId = useUserId();
@@ -71,20 +102,29 @@ export default function SellerAccountScreen() {
   }
 
   if (isLoading) {
-    // 分頁列留著，否則整條底部導覽會在換頁時消失一下。
     return (
       <View className="bg-background flex-1">
+        <AccountHeader>
+          <StoreThumbFallback />
+          <View className="flex-1">
+            <Typography type="h5" className="text-navy" style={{ fontWeight: '700' }}>
+              賣家中心
+            </Typography>
+            <Typography type="body-xs" color="muted">
+              正在載入店鋪資料…
+            </Typography>
+          </View>
+        </AccountHeader>
         <View className="flex-1 items-center justify-center">
           <Spinner />
         </View>
-        <SellerTabBar />
       </View>
     );
   }
 
   if (!store) {
     return (
-      <View className="bg-background pt-safe flex-1">
+      <View className="bg-background flex-1">
         <EmptyState
           icon={<StoreIcon size={26} color={BRAND.blue} />}
           title="還沒有極貨網店鋪"
@@ -95,7 +135,6 @@ export default function SellerAccountScreen() {
             </Button>
           }
         />
-        <SellerTabBar />
       </View>
     );
   }
@@ -103,54 +142,33 @@ export default function SellerAccountScreen() {
   return (
     <View className="bg-background flex-1">
       <ScrollView className="flex-1" contentContainerClassName="pb-8">
-        <View className="bg-surface pt-safe px-4 pb-5">
-          <View className="flex-row items-center gap-3 pt-3">
-            {store.logo_url ? (
-              <AppImage uri={store.logo_url} className="h-14 w-14 rounded-2xl" />
-            ) : (
-              <View
-                className="h-14 w-14 items-center justify-center rounded-2xl"
-                style={{ backgroundColor: BRAND.blueSoft }}
-              >
-                <StoreIcon size={24} color={BRAND.blue} />
-              </View>
-            )}
-            <View className="flex-1">
-              <Typography
-                type="h5"
-                numberOfLines={1}
-                className="text-navy"
-                style={{ fontWeight: '700' }}
-              >
-                {store.name}
-              </Typography>
-              <Typography type="body-xs" color="muted" numberOfLines={1}>
-                評價 {store.rating.toFixed(1)}（{formatNumber(store.rating_count)}）
-              </Typography>
-            </View>
-            <Pressable
-              className="h-10 w-10 items-center justify-center"
-              accessibilityLabel="店鋪設定"
-              onPress={() => router.push('/seller/store')}
+        <AccountHeader>
+          {store.logo_url ? (
+            <AppImage uri={store.logo_url} className="h-14 w-14 rounded-2xl" />
+          ) : (
+            <StoreThumbFallback />
+          )}
+          <View className="flex-1">
+            <Typography
+              type="h5"
+              numberOfLines={1}
+              className="text-navy"
+              style={{ fontWeight: '700' }}
             >
-              <Settings size={22} color={BRAND.navy} />
-            </Pressable>
+              {store.name}
+            </Typography>
+            <Typography type="body-xs" color="muted" numberOfLines={1}>
+              評價 {store.rating.toFixed(1)}（{formatNumber(store.rating_count)}）
+            </Typography>
           </View>
-
-          <Button
-            variant="secondary"
-            size="sm"
-            className="mt-4 self-start"
-            onPress={exitSellerMode}
+          <Pressable
+            className="h-10 w-10 items-center justify-center"
+            accessibilityLabel="店鋪設定"
+            onPress={() => router.push('/seller/store')}
           >
-            <View className="flex-row items-center gap-1.5">
-              <Repeat size={14} color={BRAND.navy} />
-              <Typography type="body-sm" className="text-navy" style={{ fontWeight: '600' }}>
-                切換回買家介面
-              </Typography>
-            </View>
-          </Button>
-        </View>
+            <Settings size={22} color={BRAND.navy} />
+          </Pressable>
+        </AccountHeader>
 
         <Pressable
           className="bg-surface mx-4 mt-3 flex-row items-center gap-3 rounded-2xl px-4 py-3.5"
@@ -238,8 +256,6 @@ export default function SellerAccountScreen() {
           />
         </View>
       </ScrollView>
-
-      <SellerTabBar />
     </View>
   );
 }
