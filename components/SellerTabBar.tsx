@@ -35,28 +35,45 @@ const ITEMS: Item[] = [
 ];
 
 function TabItem({ item, isActive }: { item: Item; isActive: boolean }) {
-  const color = isActive ? BRAND.orange : BRAND.muted;
+  const onPress = () => {
+    // 已經站在這一頁就不要再導覽一次：replace 會把整頁重新掛載一次，看起來像卡住。
+    if (isActive) return;
+    if (item.filled) router.push(item.href);
+    else router.replace(item.href);
+  };
 
   return (
     <Pressable
       className="flex-1 items-center gap-1 py-1"
       accessibilityRole="button"
+      accessibilityState={{ selected: isActive }}
       accessibilityLabel={item.label}
-      onPress={() => (item.filled ? router.push(item.href) : router.replace(item.href))}
+      // 手指按到分頁列邊緣（含安全區內縮的那一段）也算，並且按下就立刻變色 ——
+      // 導覽本身要一小段時間，沒有立即回饋就會覺得點不到。
+      hitSlop={{ top: 10, bottom: 10, left: 2, right: 2 }}
+      android_ripple={{ color: 'rgba(8, 38, 107, 0.10)', borderless: true }}
+      onPress={onPress}
     >
-      {item.filled ? (
-        <View
-          className="items-center justify-center rounded-full"
-          style={{ width: 26, height: 26, backgroundColor: BRAND.blue }}
-        >
-          <item.icon size={18} color={BRAND.white} strokeWidth={2.8} />
-        </View>
-      ) : (
-        <item.icon size={22} color={color} />
-      )}
-      <Typography type="body-xs" numberOfLines={1} style={{ color, fontWeight: '600' }}>
-        {item.label}
-      </Typography>
+      {({ pressed }) => {
+        const color = isActive || pressed ? BRAND.orange : BRAND.muted;
+        return (
+          <View className="items-center gap-1" style={{ opacity: pressed ? 0.7 : 1 }}>
+            {item.filled ? (
+              <View
+                className="items-center justify-center rounded-full"
+                style={{ width: 26, height: 26, backgroundColor: BRAND.blue }}
+              >
+                <item.icon size={18} color={BRAND.white} strokeWidth={2.8} />
+              </View>
+            ) : (
+              <item.icon size={22} color={color} />
+            )}
+            <Typography type="body-xs" numberOfLines={1} style={{ color, fontWeight: '600' }}>
+              {item.label}
+            </Typography>
+          </View>
+        );
+      }}
     </Pressable>
   );
 }

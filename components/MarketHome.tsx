@@ -27,12 +27,35 @@ import { useRecentlyViewedStore } from '@/lib/recentlyViewed';
 import { useUserId } from '@/lib/session';
 import { HOME_AUTO_SORT } from '@/lib/types';
 
+/**
+ * 圖示右上角的數字。尺寸刻意寫死（16px 高、10px 字）而不是交給 body-xs 的行高，
+ * 否則泡泡會長到跟 22px 的圖示一樣高、把圖案整個蓋掉。白邊是為了讓泡泡和底下的
+ * 圖示線條分開。
+ */
 function Badge({ count }: { count: number }) {
   if (count <= 0) return null;
+  const label = count > 99 ? '99+' : String(count);
   return (
-    <View className="bg-brand-orange absolute -top-1 -right-1 min-w-4 items-center justify-center rounded-full px-1">
-      <Typography type="body-xs" className="text-white" style={{ fontWeight: '700' }}>
-        {count > 99 ? '99+' : count}
+    <View
+      className="bg-brand-orange items-center justify-center"
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        top: -7,
+        right: -9,
+        height: 16,
+        minWidth: 16,
+        borderRadius: 8,
+        paddingHorizontal: label.length > 1 ? 4 : 0,
+        borderWidth: 1.5,
+        borderColor: BRAND.white,
+      }}
+    >
+      <Typography
+        className="text-white"
+        style={{ fontSize: 10, lineHeight: 12, fontWeight: '700', includeFontPadding: false }}
+      >
+        {label}
       </Typography>
     </View>
   );
@@ -119,6 +142,8 @@ export function MarketHome({ showLaunchAd = true }: Props) {
           <View className="flex-row items-center">
             <Pressable
               className="h-10 w-10 items-center justify-center"
+              hitSlop={6}
+              style={({ pressed }) => ({ opacity: pressed ? 0.55 : 1 })}
               onPress={() => router.push('/notifications')}
               accessibilityLabel="通知"
             >
@@ -129,6 +154,8 @@ export function MarketHome({ showLaunchAd = true }: Props) {
             </Pressable>
             <Pressable
               className="h-10 w-10 items-center justify-center"
+              hitSlop={6}
+              style={({ pressed }) => ({ opacity: pressed ? 0.55 : 1 })}
               onPress={() => router.push('/cart')}
               accessibilityLabel="購物車"
             >

@@ -49,6 +49,13 @@
       body {
         overflow: hidden;
       }
+      /* touch-action removes the mobile browser's wait-for-double-tap delay, so
+         bottom-tab taps register immediately instead of feeling sticky. The tap
+         highlight is replaced by the app's own press feedback. */
+      html {
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+      }
       /* These styles make the root element full-height */
       #root {
         display: flex;

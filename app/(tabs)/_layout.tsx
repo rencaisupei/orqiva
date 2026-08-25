@@ -6,6 +6,17 @@ import { useCartCount } from '@/lib/api/commerce';
 import { BRAND } from '@/lib/brand';
 import { useUserId } from '@/lib/session';
 
+type IconProps = { color: string; size?: number };
+
+// 圖示宣告在模組層，切分頁時整條分頁列不用重建這些元件。
+const HomeIcon = ({ color, size }: IconProps) => <House color={color} size={size ?? 22} />;
+const CategoriesIcon = ({ color, size }: IconProps) => <Grid2x2 color={color} size={size ?? 22} />;
+const CartIcon = ({ color, size }: IconProps) => <ShoppingCart color={color} size={size ?? 22} />;
+const MessagesIcon = ({ color, size }: IconProps) => (
+  <MessageCircle color={color} size={size ?? 22} />
+);
+const ProfileIcon = ({ color, size }: IconProps) => <User color={color} size={size ?? 22} />;
+
 /**
  * 買家分頁列：只有買東西會用到的目的地。賣家功能全部收在賣家介面（/seller），
  * 入口是「我的」裡的模式切換，所以這裡不再有發布商品之類的賣家動作。
@@ -22,6 +33,11 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
+        // 切分頁不做轉場動畫，點下去就換頁。
+        animation: 'none',
+        // 沒在看的分頁停止重新渲染 —— 訊息與通知數量是輪詢來的，沒有這個設定時
+        // 每次輪詢都會讓所有已載入的分頁一起重繪，點分頁列就會有延遲感。
+        freezeOnBlur: true,
         sceneStyle: { backgroundColor: BRAND.background },
         tabBarStyle: {
           backgroundColor: BRAND.white,
@@ -39,14 +55,14 @@ export default function TabLayout() {
         name="index"
         options={{
           title: '首頁',
-          tabBarIcon: ({ color, size }) => <House color={color} size={size ?? 22} />,
+          tabBarIcon: HomeIcon,
         }}
       />
       <Tabs.Screen
         name="categories"
         options={{
           title: '分類',
-          tabBarIcon: ({ color, size }) => <Grid2x2 color={color} size={size ?? 22} />,
+          tabBarIcon: CategoriesIcon,
         }}
       />
       <Tabs.Screen
@@ -58,23 +74,24 @@ export default function TabLayout() {
             backgroundColor: BRAND.orange,
             color: BRAND.white,
             fontSize: 10,
+            lineHeight: 13,
             fontWeight: '700',
           },
-          tabBarIcon: ({ color, size }) => <ShoppingCart color={color} size={size ?? 22} />,
+          tabBarIcon: CartIcon,
         }}
       />
       <Tabs.Screen
         name="messages"
         options={{
           title: '訊息',
-          tabBarIcon: ({ color, size }) => <MessageCircle color={color} size={size ?? 22} />,
+          tabBarIcon: MessagesIcon,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: '我的',
-          tabBarIcon: ({ color, size }) => <User color={color} size={size ?? 22} />,
+          tabBarIcon: ProfileIcon,
         }}
       />
     </Tabs>
