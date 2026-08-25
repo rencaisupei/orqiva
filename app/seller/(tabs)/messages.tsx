@@ -42,6 +42,7 @@ export default function SellerMessagesScreen() {
         conversations={sellerThreads}
         isLoading={isLoading}
         userId={userId}
+        focusKey="seller-messages"
         emptyTitle="還沒有買家來訊"
         emptyDescription="買家在商品頁點「聯絡賣家」後，對話會出現在這裡。"
       />

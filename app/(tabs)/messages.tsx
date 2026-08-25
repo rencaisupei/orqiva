@@ -42,6 +42,7 @@ export default function MessagesScreen() {
         conversations={buyerThreads}
         isLoading={isLoading}
         userId={userId}
+        focusKey="buyer-messages"
         emptyTitle="還沒有任何對話"
         emptyDescription="在商品頁點「聯絡賣家」就能開始聊聊。"
       />

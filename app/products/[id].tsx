@@ -277,7 +277,8 @@ export default function ProductDetailScreen() {
             {product.title}
           </Typography>
 
-          <View className="flex-row items-center gap-3">
+          {/* 這兩列在窄螢幕上要能換行：不換行時「已售 / 庫存」會被推出畫面外。 */}
+          <View className="flex-row flex-wrap items-center gap-x-3 gap-y-1">
             <StarRating rating={product.rating} count={product.rating_count} />
             <Typography type="body-xs" color="muted">
               已售 {formatCompact(product.sold_count)}
@@ -287,11 +288,13 @@ export default function ProductDetailScreen() {
             </Typography>
           </View>
 
-          <View className="flex-row items-center gap-2">
-            <MapPin size={12} color={BRAND.muted} />
-            <Typography type="body-xs" color="muted">
-              {product.location}
-            </Typography>
+          <View className="flex-row flex-wrap items-center gap-x-2 gap-y-1">
+            <View className="flex-row items-center gap-1">
+              <MapPin size={12} color={BRAND.muted} />
+              <Typography type="body-xs" color="muted" numberOfLines={1}>
+                {product.location}
+              </Typography>
+            </View>
             <Chip size="sm" variant="tertiary">
               {product.condition === 'new' ? '全新' : '二手'}
             </Chip>

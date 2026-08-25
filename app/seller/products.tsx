@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { FlatList, Pressable, View } from 'react-native';
 import { Button, Chip, Spinner, Typography } from 'heroui-native';
 import { useBrandToast } from '@/components/brand/BrandToast';
@@ -13,9 +13,10 @@ import { SignInRequired } from '@/components/SignInRequired';
 import { useModerateProduct } from '@/lib/api/moderation';
 import { useDeleteProduct, useSellerProducts, useUpdateProduct } from '@/lib/api/seller';
 import { BRAND } from '@/lib/brand';
+import { scrollToIndexFallback, useFocusHighlight } from '@/lib/focus';
 import { formatPrice } from '@/lib/format';
 import { useUserId } from '@/lib/session';
-import { isLowStock, MODERATION_STATUS_LABEL } from '@/lib/types';
+import { isLowStock, MODERATION_STATUS_LABEL, type Product } from '@/lib/types';
 
 export default function SellerProductsScreen() {
   const userId = useUserId();
@@ -25,10 +26,22 @@ export default function SellerProductsScreen() {
   const deleteProduct = useDeleteProduct();
   const moderate = useModerateProduct();
   const [lowStockOnly, setLowStockOnly] = useState(false);
+  const listRef = useRef<FlatList<Product>>(null);
 
   const list = products ?? [];
   const lowStockCount = list.filter(isLowStock).length;
   const visible = lowStockOnly ? list.filter(isLowStock) : list;
+
+  /* 通知落地時把「只看低庫存」收回全部，指到的商品才一定在清單裡。 */
+  const showAll = useCallback(() => setLowStockOnly(false), []);
+
+  const focused = useFocusHighlight<Product>({
+    key: 'seller-products',
+    listRef,
+    items: visible,
+    matches: (product, token) => product.id === token,
+    onRequest: showAll,
+  });
 
   if (!userId) {
     return <SignInRequired title="登入後管理商品" />;
@@ -67,10 +80,12 @@ export default function SellerProductsScreen() {
       ) : null}
 
       <FlatList
+        ref={listRef}
         className="flex-1"
         data={visible}
         keyExtractor={(item) => item.id}
         contentContainerClassName="p-4 gap-3 pb-6"
+        onScrollToIndexFailed={(info) => scrollToIndexFallback(listRef, info)}
         ListEmptyComponent={
           <EmptyState
             icon={<PackagePlus size={26} color={BRAND.blue} />}
@@ -84,7 +99,13 @@ export default function SellerProductsScreen() {
           />
         }
         renderItem={({ item }) => (
-          <View className="bg-surface gap-3 rounded-2xl p-3">
+          <View
+            className={
+              focused === item.id
+                ? 'bg-surface border-brand-orange gap-3 rounded-2xl border-2 p-3'
+                : 'bg-surface gap-3 rounded-2xl p-3'
+            }
+          >
             <Pressable
               className="flex-row items-center gap-3"
               onPress={() => router.push({ pathname: '/products/[id]', params: { id: item.id } })}

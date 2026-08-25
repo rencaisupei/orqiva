@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { FlatList, Pressable, View } from 'react-native';
 import { Button, Chip, Spinner, Typography } from 'heroui-native';
 import { useBrandToast } from '@/components/brand/BrandToast';
@@ -18,9 +18,10 @@ import { SignInRequired } from '@/components/SignInRequired';
 import { useSetOrderStatus } from '@/lib/api/commerce';
 import { useSellerOrders } from '@/lib/api/seller';
 import { BRAND } from '@/lib/brand';
+import { scrollToIndexFallback, useFocusHighlight } from '@/lib/focus';
 import { formatDateTime, formatNumber, formatPrice } from '@/lib/format';
 import { useUserId } from '@/lib/session';
-import { ORDER_STATUS_LABEL, type OrderStatus } from '@/lib/types';
+import { ORDER_STATUS_LABEL, type Order, type OrderStatus } from '@/lib/types';
 
 type StatusFilter = OrderStatus | 'all';
 
@@ -40,6 +41,29 @@ export default function SellerOrdersScreen() {
   const [shipment, setShipment] = useState<ShipmentFilter>('all');
   const { data: orders, isLoading } = useSellerOrders(userId);
   const setStatus = useSetOrderStatus();
+  const listRef = useRef<FlatList<Order>>(null);
+
+  const all = orders ?? [];
+  const filtered = all.filter(
+    (order) =>
+      (filter === 'all' || order.status === filter) && matchesShipmentFilter(order, shipment),
+  );
+  const narrowed = filter !== 'all' || shipment !== 'all';
+
+  /* 通知落地：先把篩選收回全部，否則目標訂單可能正好被藏起來。 */
+  const clearFilters = useCallback(() => {
+    setFilter('all');
+    setShipment('all');
+  }, []);
+
+  const focused = useFocusHighlight<Order>({
+    key: 'seller-orders',
+    listRef,
+    items: filtered,
+    // 推播只帶得到訂單編號（通知文字裡的 JHW…），站內清單可能帶 id，兩種都比對。
+    matches: (order, token) => order.id === token || order.order_no === token,
+    onRequest: clearFilters,
+  });
 
   if (!userId) {
     return (
@@ -48,13 +72,6 @@ export default function SellerOrdersScreen() {
       </View>
     );
   }
-
-  const all = orders ?? [];
-  const filtered = all.filter(
-    (order) =>
-      (filter === 'all' || order.status === filter) && matchesShipmentFilter(order, shipment),
-  );
-  const narrowed = filter !== 'all' || shipment !== 'all';
 
   const advance = (orderId: string, status: string, label: string) => {
     setStatus.mutate(
@@ -95,13 +112,7 @@ export default function SellerOrdersScreen() {
             {narrowed ? `／全部 ${formatNumber(all.length)} 筆` : ''}
           </Typography>
           {narrowed ? (
-            <Pressable
-              hitSlop={6}
-              onPress={() => {
-                setFilter('all');
-                setShipment('all');
-              }}
-            >
+            <Pressable hitSlop={6} onPress={clearFilters}>
               <Typography type="body-xs" className="text-brand-orange">
                 清除條件
               </Typography>
@@ -116,10 +127,12 @@ export default function SellerOrdersScreen() {
         </View>
       ) : (
         <FlatList
+          ref={listRef}
           className="flex-1"
           data={filtered}
           keyExtractor={(item) => item.id}
           contentContainerClassName="p-4 gap-3 pb-6"
+          onScrollToIndexFailed={(info) => scrollToIndexFallback(listRef, info)}
           ListEmptyComponent={
             narrowed && all.length > 0 ? (
               <EmptyState
@@ -127,13 +140,7 @@ export default function SellerOrdersScreen() {
                 title="找不到符合的訂單"
                 description="把訂單狀態與出貨狀態調回全部就會看到所有訂單。"
                 action={
-                  <Button
-                    variant="secondary"
-                    onPress={() => {
-                      setFilter('all');
-                      setShipment('all');
-                    }}
-                  >
+                  <Button variant="secondary" onPress={clearFilters}>
                     <Button.Label>清除條件</Button.Label>
                   </Button>
                 }
@@ -147,7 +154,13 @@ export default function SellerOrdersScreen() {
             )
           }
           renderItem={({ item }) => (
-            <View className="bg-surface gap-3 rounded-2xl p-4">
+            <View
+              className={
+                focused === item.id || focused === item.order_no
+                  ? 'bg-surface border-brand-orange gap-3 rounded-2xl border-2 p-4'
+                  : 'bg-surface gap-3 rounded-2xl p-4'
+              }
+            >
               <Pressable
                 className="gap-2"
                 onPress={() => router.push({ pathname: '/orders/[id]', params: { id: item.id } })}

@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { FlatList, Pressable, RefreshControl, View } from 'react-native';
 import { Spinner, Typography } from 'heroui-native';
 import { router } from 'expo-router';
@@ -9,6 +10,7 @@ import { protectBrand } from '@/components/brand/BrandText';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import type { ConversationRow } from '@/lib/api/social';
 import { BRAND } from '@/lib/brand';
+import { scrollToIndexFallback, useFocusHighlight, type FocusKey } from '@/lib/focus';
 import { relativeTime } from '@/lib/format';
 
 type Props = {
@@ -18,6 +20,8 @@ type Props = {
   userId: string;
   emptyTitle: string;
   emptyDescription: string;
+  /** 通知落地時要指出某一條對話的分頁（買家或賣家的訊息分頁各一把）。 */
+  focusKey?: FocusKey;
 };
 
 /** 對話列表本體。買家分頁與賣家介面各自篩選資料，共用同一份列樣式。 */
@@ -27,8 +31,18 @@ export function ConversationList({
   userId,
   emptyTitle,
   emptyDescription,
+  focusKey,
 }: Props) {
   const { refreshing, onRefresh } = usePullToRefresh();
+  const listRef = useRef<FlatList<ConversationRow>>(null);
+
+  const focused = useFocusHighlight<ConversationRow>({
+    // focusKey 沒給的話用買家那把也不會被觸發（沒有人會登記它）。
+    key: focusKey ?? 'buyer-messages',
+    listRef,
+    items: focusKey ? conversations : [],
+    matches: (item, token) => item.id === token,
+  });
 
   if (isLoading) {
     return (
@@ -40,10 +54,12 @@ export function ConversationList({
 
   return (
     <FlatList
+      ref={listRef}
       className="flex-1"
       data={conversations}
       keyExtractor={(item) => item.id}
       contentContainerClassName="p-4 gap-2.5 pb-10"
+      onScrollToIndexFailed={(info) => scrollToIndexFallback(listRef, info)}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -66,7 +82,11 @@ export function ConversationList({
           : (item.buyer?.display_name ?? '買家');
         return (
           <Pressable
-            className="bg-surface flex-row items-center gap-3 rounded-2xl p-3"
+            className={
+              focused === item.id
+                ? 'bg-surface border-brand-orange flex-row items-center gap-3 rounded-2xl border-2 p-3'
+                : 'bg-surface flex-row items-center gap-3 rounded-2xl p-3'
+            }
             onPress={() => router.push({ pathname: '/messages/[id]', params: { id: item.id } })}
           >
             <AppImage

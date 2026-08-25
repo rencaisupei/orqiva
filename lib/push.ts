@@ -5,7 +5,9 @@ import * as Notifications from 'expo-notifications';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { router } from 'expo-router';
 
-import { callNotify } from '@/lib/backend';
+import { bilt, callNotify } from '@/lib/backend';
+import { requestFocus } from '@/lib/focus';
+import { useModeStore } from '@/lib/mode';
 import {
   getRegisteredPushToken,
   setRegisteredPushToken,
@@ -39,29 +41,112 @@ function readPayload(data: unknown): PushPayload {
   };
 }
 
-/** Maps a notification link (`/orders/<id>`, `/messages/<id>`, …) onto a typed route. */
-export function openNotificationLink(link: string | null | undefined) {
-  if (!link) return;
+/**
+ * 訂單編號（market 的 orderNo()：JHW + 日期 + 6 碼）。賣家的新訂單／狀態更新通知
+ * 連到的是「訂單管理」整頁，編號只出現在標題與內文裡，所以從文字取出來當作
+ * 要指出哪一筆的依據 —— 抓不到就只是單純落在分頁上，不會出錯。
+ */
+const ORDER_NO_RE = /\bJHW\d{8,}\b/;
 
-  const chat = /^\/messages\/([^/]+)$/.exec(link);
+/** `/seller/orders?focus=<id>` 這種連結的解析；沒有 focus 就回 null。 */
+function parseLink(link: string): { path: string; focus: string | null } {
+  const [path, query = ''] = link.split('?');
+  const found = /(?:^|&)focus=([^&]+)/.exec(query);
+  return { path, focus: found ? decodeURIComponent(found[1]) : null };
+}
+
+function enterSellerInterface() {
+  const state = useModeStore.getState();
+  if (state.mode !== 'seller') state.setMode('seller');
+}
+
+/**
+ * 賣家的分頁目的地：切分頁（不疊新畫面），需要的話先登記要指出哪一列。
+ * 分頁畫面留在記憶體裡，所以回到那一頁時底部導覽與頁首都不會消失。
+ */
+function openSellerTab(
+  href: '/seller' | '/seller/market' | '/seller/orders' | '/seller/messages' | '/seller/account',
+  focus?: { key: 'seller-orders' | 'seller-messages'; token: string | null },
+) {
+  enterSellerInterface();
+  if (focus?.token) requestFocus(focus.key, focus.token);
+  router.navigate(href);
+}
+
+/**
+ * 商品管理是推入的頁面（自己有頁首與底部導覽），所以先讓賣家中心分頁就位，
+ * 返回鍵才會回到賣家介面而不是買家首頁。
+ */
+function openSellerProducts(productId: string | null) {
+  enterSellerInterface();
+  if (productId) requestFocus('seller-products', productId);
+  router.navigate('/seller');
+  router.push('/seller/products');
+}
+
+/**
+ * 訊息通知：先切到「我在這條對話裡的身分」對應的訊息分頁，再打開對話本身，
+ * 這樣對話頁的返回鍵會回到訊息分頁（而不是隨便一個畫面）。
+ */
+async function openConversation(conversationId: string) {
+  const userId = useSessionStore.getState().session?.user.id ?? null;
+  let sellerSide = useModeStore.getState().mode === 'seller';
+
+  if (userId) {
+    const { data } = await bilt
+      .from('conversations')
+      .select('buyer_id, seller_id')
+      .eq('id', conversationId)
+      .maybeSingle();
+    const row = data;
+    if (row) sellerSide = row.buyer_id !== userId && row.seller_id === userId;
+  }
+
+  if (sellerSide) {
+    openSellerTab('/seller/messages', { key: 'seller-messages', token: conversationId });
+  } else {
+    requestFocus('buyer-messages', conversationId);
+    router.navigate('/messages');
+  }
+  router.push({ pathname: '/messages/[id]', params: { id: conversationId } });
+}
+
+/**
+ * 把通知的連結對到畫面。`text`（標題 + 內文）用來找出通知指的是哪一筆訂單。
+ *
+ * 賣家的通知一律落在賣家分頁上並指出相關的那一列，不在最上面疊一個新畫面。
+ */
+export function openNotificationLink(link: string | null | undefined, text?: string | null) {
+  if (!link) return;
+  const { path, focus } = parseLink(link);
+  const orderNo = text ? (ORDER_NO_RE.exec(text)?.[0] ?? null) : null;
+
+  const chat = /^\/messages\/([^/]+)$/.exec(path);
   if (chat) {
-    router.push({ pathname: '/messages/[id]', params: { id: chat[1] } });
+    void openConversation(chat[1]);
     return;
   }
 
-  const order = /^\/orders\/([^/]+)$/.exec(link);
+  const order = /^\/orders\/([^/]+)$/.exec(path);
   if (order) {
     router.push({ pathname: '/orders/[id]', params: { id: order[1] } });
     return;
   }
 
-  const product = /^\/products\/([^/]+)$/.exec(link);
+  const product = /^\/products\/([^/]+)$/.exec(path);
   if (product) {
     router.push({ pathname: '/products/[id]', params: { id: product[1] } });
     return;
   }
 
-  switch (link) {
+  /* 低庫存提醒指向商品：落在商品管理清單並標示那一件，不直接跳進編輯表單。 */
+  const sellerEdit = /^\/seller\/edit\/([^/]+)$/.exec(path);
+  if (sellerEdit) {
+    openSellerProducts(sellerEdit[1]);
+    return;
+  }
+
+  switch (path) {
     case '/orders':
       router.push('/orders');
       break;
@@ -74,16 +159,21 @@ export function openNotificationLink(link: string | null | undefined) {
     case '/notifications':
       router.push('/notifications');
       break;
+    case '/messages':
+      router.navigate('/messages');
+      break;
     case '/seller':
-      // 賣家分頁（/seller、/seller/orders）是巢狀分頁導覽的目的地：navigate 會切到
-      // 那個分頁，push 會再疊一層賣家外框上去。
-      router.navigate('/seller');
+      openSellerTab('/seller');
       break;
     case '/seller/orders':
-      router.navigate('/seller/orders');
+      // 新訂單／狀態更新：切到賣家訂單分頁，並捲到通知裡那一筆訂單。
+      openSellerTab('/seller/orders', { key: 'seller-orders', token: focus ?? orderNo });
+      break;
+    case '/seller/messages':
+      openSellerTab('/seller/messages', { key: 'seller-messages', token: focus });
       break;
     case '/seller/products':
-      router.push('/seller/products');
+      openSellerProducts(focus);
       break;
     case '/seller/coins':
       router.push('/seller/coins');
@@ -310,12 +400,14 @@ export function usePushNotifications() {
     if (Platform.OS === 'web') return undefined;
 
     const tapped = Notifications.addNotificationResponseReceivedListener((response) => {
-      const payload = readPayload(response.notification.request.content.data);
+      const content = response.notification.request.content;
+      const payload = readPayload(content.data);
+      const text = [content.title, content.body].filter(Boolean).join(' ');
       if (payload.conversationId) {
-        router.push({ pathname: '/messages/[id]', params: { id: payload.conversationId } });
+        void openConversation(payload.conversationId);
         return;
       }
-      openNotificationLink(payload.link);
+      openNotificationLink(payload.link, text);
     });
 
     return () => tapped.remove();

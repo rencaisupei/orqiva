@@ -57,6 +57,36 @@ export function ProductCard({ product, isFavorite = false, onToggleFavorite, cla
             </Typography>
           </View>
         ) : null}
+        {/* 收藏鍵畫在封面圖上：擺在文字區時會把「已售 N」擠到看不見（2 欄的卡片
+            在手機上只有約 150px 寬）。 */}
+        {onToggleFavorite ? (
+          <Pressable
+            className="absolute right-2 bottom-2 h-8 w-8 items-center justify-center rounded-full"
+            hitSlop={8}
+            style={({ pressed }) => [
+              {
+                backgroundColor: 'rgba(255, 255, 255, 0.92)',
+                opacity: pressed ? 0.6 : 1,
+                shadowColor: 'rgba(8, 38, 107, 0.20)',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 1,
+                shadowRadius: 3,
+                elevation: 2,
+              },
+              Platform.OS === 'web' ? { cursor: 'pointer' } : null,
+            ]}
+            onPress={() => onToggleFavorite(product.id)}
+            accessibilityRole="button"
+            accessibilityState={{ selected: isFavorite }}
+            accessibilityLabel={isFavorite ? '取消收藏' : '收藏商品'}
+          >
+            <Heart
+              size={16}
+              color={isFavorite ? BRAND.orange : BRAND.navy}
+              fill={isFavorite ? BRAND.orange : 'transparent'}
+            />
+          </Pressable>
+        ) : null}
       </View>
 
       <View className="gap-1 p-3">
@@ -64,12 +94,17 @@ export function ProductCard({ product, isFavorite = false, onToggleFavorite, cla
           {product.title}
         </Typography>
 
-        <View className="flex-row items-end gap-1.5">
-          <Typography type="h6" className="text-brand-blue" style={{ fontWeight: '700' }}>
+        <View className="flex-row flex-wrap items-end gap-x-1.5">
+          <Typography
+            type="h6"
+            numberOfLines={1}
+            className="text-brand-blue"
+            style={{ fontWeight: '700' }}
+          >
             {formatPrice(product.price)}
           </Typography>
           {product.original_price ? (
-            <Typography type="body-xs" color="muted" className="line-through">
+            <Typography type="body-xs" color="muted" numberOfLines={1} className="line-through">
               {formatPrice(product.original_price)}
             </Typography>
           ) : null}
@@ -80,26 +115,6 @@ export function ProductCard({ product, isFavorite = false, onToggleFavorite, cla
           <Typography type="body-xs" color="muted" numberOfLines={1} className="flex-1">
             已售 {formatCompact(product.sold_count)}
           </Typography>
-          {onToggleFavorite ? (
-            <Pressable
-              className="h-7 w-7 shrink-0 items-center justify-center"
-              hitSlop={8}
-              style={({ pressed }) => [
-                { opacity: pressed ? 0.55 : 1 },
-                Platform.OS === 'web' ? { cursor: 'pointer' } : null,
-              ]}
-              onPress={() => onToggleFavorite(product.id)}
-              accessibilityRole="button"
-              accessibilityState={{ selected: isFavorite }}
-              accessibilityLabel={isFavorite ? '取消收藏' : '收藏商品'}
-            >
-              <Heart
-                size={16}
-                color={isFavorite ? BRAND.orange : BRAND.muted}
-                fill={isFavorite ? BRAND.orange : 'transparent'}
-              />
-            </Pressable>
-          ) : null}
         </View>
 
         <View className="flex-row items-center gap-1">

@@ -195,7 +195,9 @@ export default function NotificationsScreen() {
               className="bg-surface flex-row gap-3 rounded-2xl p-4"
               onPress={() => {
                 if (!item.read) markRead.mutate({ userId, id: item.id });
-                openNotificationLink(item.link);
+                // 標題 + 內文一起傳：賣家的訂單通知只帶「訂單管理」的連結，
+                // 訂單編號在文字裡，要靠它才能捲到相關的那一筆。
+                openNotificationLink(item.link, `${item.title} ${item.body}`);
               }}
             >
               <View className="bg-brand-blue-soft h-9 w-9 items-center justify-center rounded-xl">
