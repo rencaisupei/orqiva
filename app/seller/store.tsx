@@ -414,9 +414,14 @@ export default function StoreSettingsScreen() {
                   ecpaySettings?.ecpay.updatedAt
                     ? `（${new Date(ecpaySettings.ecpay.updatedAt).toLocaleString('zh-TW')} 更新）`
                     : ''
-                }。要更換就直接填新的，三欄全部清空則改用平台的綠界帳號。`
-              : '還沒有綠界帳號可以先留空，開通狀態會顯示為審核中，商品仍可正常上架。'}
+                }。要更換就直接填新的；三欄全部清空會移除金鑰，你的商品就不再提供取貨付款。`
+              : '還沒有綠界帳號可以先留空，商品仍可正常上架，但只能走宅配（賣家自行寄送）。'}
           </Typography>
+
+          <BrandText type="body-xs" color="muted" className="leading-5">
+            取貨付款的貨款是綠界直接匯進這組商店代號名下的帳戶，所以必須是你自己的綠界帳號 ——
+            極貨網不會、也無法用平台的帳號代你收款。沒有填這三欄之前，買家在你的商品頁與結帳頁看不到取貨付款選項。
+          </BrandText>
 
           <SellerLogisticsStatusCard profile={shippingProfile} showSettingsLink={false} />
         </View>

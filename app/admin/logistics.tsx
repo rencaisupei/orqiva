@@ -312,12 +312,15 @@ export default function AdminLogisticsScreen() {
                 <XCircle size={16} color="#DC2626" />
               )}
               <Typography type="body-sm" className="text-navy flex-1" style={{ fontWeight: '600' }}>
-                {activeCredentials?.ready ? '金鑰已設定' : '尚未設定金鑰'}
+                {activeCredentials?.ready ? '連線測試金鑰已設定' : '尚未設定連線測試金鑰'}
               </Typography>
             </View>
             <Typography type="body-xs" color="muted">
               MerchantID：{activeCredentials?.merchantId ?? '未設定'}
               {activeCredentials?.source === 'ecpay_test' ? '（綠界公用測試特店）' : ''}
+            </Typography>
+            <Typography type="body-xs" color="muted">
+              這組金鑰只用於下面的「驗證與綠界的連線」，確認伺服器連得上綠界。它不會用來建立任何物流單，也不影響賣家能不能收取貨付款。
             </Typography>
             <Typography type="body-xs" color="muted">
               {activeCredentials?.source === 'ecpay_test'
@@ -442,8 +445,11 @@ export default function AdminLogisticsScreen() {
             </Typography>
             <Typography type="body-xs" color="muted">
               目前有 {query.data?.sellerCredentialCount ?? 0}{' '}
-              位賣家填了自己的綠界特店金鑰，這些訂單會用賣家自己的帳號建單；其餘退回這裡設定的平台金鑰。金鑰存在
+              位賣家填了自己的綠界特店金鑰。貨到付款一律用賣家自己的帳號建單，沒有平台金鑰的退路：未設定的賣家，他的商品在買家結帳頁不會出現取貨付款選項。金鑰存在
               seller_ecpay_credentials，沒有任何 RLS 政策，只有物流函式讀得到。
+            </Typography>
+            <Typography type="body-xs" color="muted">
+              這樣代收貨款一定是綠界直接匯給該賣家，平台不經手金流，也就沒有代收轉付與撥款的義務。
             </Typography>
           </View>
         </SectionCard>

@@ -99,6 +99,17 @@ export default function CheckoutScreen() {
         sellerStatuses?.[item.product.seller_id]?.is_logistics_active === true,
     );
 
+  /*
+   * 門市電子地圖要用「賣家自己的綠界特店」簽章，所以得指名一位賣家。
+   * 上面的 sellerReady 已保證這批商品的每位賣家都已開通（都有自有金鑰），
+   * 而超商門市代號不分特店通用，因此取第一位賣家即可；跨店訂單建單時
+   * 每一筆仍各自用自己賣家的金鑰。
+   */
+  const mapSellerId = useMemo(
+    () => sellerIds.find((id): id is string => !!id) ?? null,
+    [sellerIds],
+  );
+
   /** 平台後台開啟、且賣家已開通的綠界貨到付款選項。 */
   const ecpaySubTypes = useMemo(() => {
     if (!logistics?.is_enabled) return [];
@@ -343,10 +354,15 @@ export default function CheckoutScreen() {
             </Typography>
           ) : null}
 
-          {cvsSubType ? (
+          {cvsSubType && mapSellerId ? (
             <>
               <Separator />
-              <CvsStorePicker subType={cvsSubType} value={pickup} onChange={setPickup} />
+              <CvsStorePicker
+                subType={cvsSubType}
+                sellerId={mapSellerId}
+                value={pickup}
+                onChange={setPickup}
+              />
               <Typography type="body-xs" color="muted">
                 到店取貨時支付代收金額 {formatPrice(total)}（商品金額 +
                 運費），賣家出貨後會收到寄貨編號。

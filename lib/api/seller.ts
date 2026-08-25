@@ -19,7 +19,8 @@ import type {
 /**
  * 賣家自己的綠界特店金鑰。存進 seller_ecpay_credentials（沒有任何 RLS 政策，
  * 只有 ecpay-logistics 這支 edge function 讀得到），前端只送不收。
- * hashKey / hashIv 留空 = 沿用已儲存的金鑰；三欄全空 = 改用平台金鑰。
+ * hashKey / hashIv 留空 = 沿用已儲存的金鑰；三欄全空 = 清除已儲存的金鑰
+ * （平台不會代為收款，清除後這位賣家無法提供取貨付款，只能走宅配）。
  */
 export type SellerEcpayInput = {
   merchantId: string;

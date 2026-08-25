@@ -125,11 +125,19 @@ export function useLogisticsConfig() {
   });
 }
 
-/** Opens the ECPay store map: returns the URL to hand to the system browser. */
+/**
+ * Opens the ECPay store map: returns the URL to hand to the system browser.
+ *
+ * sellerId 是必填的：電子地圖表單帶的 MerchantID 決定代收貨款會進到哪一個綠界帳戶，
+ * 所以必須指名這次要出貨的賣家，後端只會用那位賣家自己的特店金鑰簽章。
+ */
 export function useStoreMapUrl() {
   return useMutation({
-    mutationFn: (input: { logisticsSubType: LogisticsSubType; orderId?: string }) =>
-      callLogistics('map_url', input),
+    mutationFn: (input: {
+      logisticsSubType: LogisticsSubType;
+      sellerId: string;
+      orderId?: string;
+    }) => callLogistics('map_url', input),
   });
 }
 

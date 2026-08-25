@@ -1094,8 +1094,18 @@ export const SELLER_LOGISTICS_ACTIVE_LABEL = '✅ 超商取貨付款功能已開
 export const SELLER_LOGISTICS_PENDING_LABEL =
   '⚠️ 您的綠界帳號目前正在官方審核中（預計 2-3 個工作天），審核完成後系統將自動為您開啟取貨付款功能，您目前仍可正常上架商品。';
 
-/** 買家端看到的說明：這位賣家還不能提供取貨付款。 */
-export const CVS_SELLER_INACTIVE_HINT = '此賣家的超商取貨付款尚在綠界審核中，目前只能選擇宅配。';
+/**
+ * 賣家還沒填自己的綠界特店金鑰。取貨付款的貨款由綠界直接匯到特店持有人的帳戶，
+ * 所以平台無法代收、也不會借用自己的特店，未設定前該賣家的商品只能走宅配。
+ */
+export const SELLER_LOGISTICS_NEEDS_CREDENTIALS_LABEL =
+  '請填寫你自己的綠界商店代號與 HashKey／HashIV 才能開通取貨付款。貨款會由綠界直接匯入你的綠界帳戶，平台不經手金流。';
+
+/**
+ * 買家端看到的說明：這位賣家還不能提供取貨付款。
+ * 刻意不提「審核中」——賣家可能只是還沒設定自己的綠界帳號，而平台不會代為收款。
+ */
+export const CVS_SELLER_INACTIVE_HINT = '此賣家尚未開通超商取貨付款，目前只能選擇宅配。';
 
 /** 綠界 C2C 寄件人姓名：本名 2~5 個字（退貨需憑本人身分證領取）。null = 通過。 */
 export function validateSenderName(value: string): string | null {

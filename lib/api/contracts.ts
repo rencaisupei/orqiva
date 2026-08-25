@@ -44,9 +44,12 @@ export type SellerVerifyResult = {
   reason: string;
   message: string;
   senderReady: boolean;
-  /** true = 用賣家自己的綠界特店金鑰驗證，false = 退回平台金鑰。 */
+  /**
+   * true = 這位賣家已存自己的綠界特店金鑰。false = 不能提供貨到付款；
+   * 平台**不會**改用自己的金鑰代收（貨款會直接進特店持有人的帳戶）。
+   */
   hasOwnCredentials: boolean;
-  credentialSource: 'env' | 'ecpay_test' | 'seller' | null;
+  /** 賣家自己的特店代號；沒有自有金鑰時為 null。 */
   merchantId: string | null;
   checkedAt: string;
 };
@@ -60,6 +63,8 @@ export type SellerEcpaySettings = {
     hasHashKey: boolean;
     hasHashIv: boolean;
     updatedAt: string | null;
+    /** 三項齊全 = 可以開通貨到付款。沒有平台金鑰的退路。 */
+    ready: boolean;
   };
   status: {
     isActive: boolean;
@@ -71,7 +76,8 @@ export type SellerEcpaySettings = {
     isEnabled: boolean;
     environment: 'stage' | 'production';
     apiHost: string;
-    fallbackReady: boolean;
+    /** 恆為 true：貨到付款一律用賣家自己的綠界帳戶，平台不代收。 */
+    requiresOwnCredentials: boolean;
     /** 平台目前開放的貨到付款方式，賣家據此知道要不要填寄件地址。 */
     enabledSubTypes: LogisticsSubType[];
   };

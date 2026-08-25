@@ -8,6 +8,7 @@ import { useVerifySellerLogistics } from '@/lib/api/logistics';
 import { BRAND } from '@/lib/brand';
 import {
   SELLER_LOGISTICS_ACTIVE_LABEL,
+  SELLER_LOGISTICS_NEEDS_CREDENTIALS_LABEL,
   SELLER_LOGISTICS_PENDING_LABEL,
   type SellerShippingProfile,
 } from '@/lib/types';
@@ -79,6 +80,14 @@ export function SellerLogisticsStatusCard({
     tone = 'danger';
     title = '取貨付款檢查未通過';
     body = profile?.verification_message ?? '檢查時發生錯誤，請稍後再試一次。';
+  } else if (profile?.verification_reason === 'missing_seller_credentials') {
+    /*
+     * 沒填自己的綠界特店金鑰。這不是「等審核」，而是必須自己動手設定 ——
+     * 取貨付款的貨款由綠界直接匯進特店持有人的帳戶，平台無法代收。
+     */
+    tone = 'warning';
+    title = '請設定你自己的綠界物流帳號';
+    body = profile?.verification_message ?? SELLER_LOGISTICS_NEEDS_CREDENTIALS_LABEL;
   } else if (status === 'unverified' && !checking) {
     tone = 'neutral';
     title = '尚未檢查開通狀態';

@@ -12,6 +12,11 @@ import { LOGISTICS_SUB_TYPE_LABEL, type CvsSubType } from '@/lib/types';
 type Props = {
   /** 買家在結帳頁選的取貨超商，決定電子地圖要開哪一家。 */
   subType: CvsSubType;
+  /**
+   * 這次要出貨的賣家。地圖表單用他自己的綠界特店簽章，代收貨款才會進他的帳戶，
+   * 所以沒有這個值就不能開地圖。
+   */
+  sellerId: string;
   value: CvsPickup | null;
   onChange: (value: CvsPickup | null) => void;
   orderId?: string;
@@ -24,7 +29,7 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
  * 綠界的地圖必須以表單 POST 開啟網頁，因此透過系統／App 內瀏覽器（不使用內嵌
  * iframe，綠界文件明確禁止），選完後由後端回拋寫入，App 再拉回結果。
  */
-export function CvsStorePicker({ subType, value, onChange, orderId }: Props) {
+export function CvsStorePicker({ subType, sellerId, value, onChange, orderId }: Props) {
   const [token, setToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pulling, setPulling] = useState(false);
@@ -74,7 +79,7 @@ export function CvsStorePicker({ subType, value, onChange, orderId }: Props) {
   const openMap = () => {
     setError(null);
     mapUrl.mutate(
-      { logisticsSubType: subType, orderId },
+      { logisticsSubType: subType, sellerId, orderId },
       {
         onSuccess: async ({ token: newToken, url }) => {
           setToken(newToken);
